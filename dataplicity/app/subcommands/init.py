@@ -135,6 +135,7 @@ class Init(SubCommand):
                     os.makedirs(path)
                     os.chmod(path, 0777)
                 except OSError:
-                    sys.stderr.write('Unable to create directory {} ({})'.format(constants.SETTINGS_PATH, e))
+                    sys.stderr.write('Unable to create directory {} ({})\n'.format(constants.SETTINGS_PATH, e))
+                    return -1
                 else:
-                    sys.stdout.write("created {}\n".format(constants.SETTINGS_PATH))
+                    sys.stdout.write("created {}\n".format(path))
