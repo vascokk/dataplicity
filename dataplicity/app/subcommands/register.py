@@ -50,7 +50,7 @@ class Register(SubCommand):
 
         print "Registering device..."
         result = remote.call("device.register",
-                             auth=auth_token,
+                             auth_token=auth_token,
                              name=name,
                              serial=serial,
                              device_class_name=device_class_name,
