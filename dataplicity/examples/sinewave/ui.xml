@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui>
+    <interface id="dataplicity">
+        <mastertabcontainer title="${device.name}" id="top-tabs">
+            <tab title="Wave 1">
+                <graph title="Wave 1"
+                    sampler="wave1"
+                    min="-${device.settings.waves.wave1.amplitude}"
+                    max="${device.settings.waves.wave1.amplitude}"
+                    xunit="Time" yunit="Waviness"/>
+                <form button="Update" title="Wave parameters">
+                    <textedit title="Amplitude"
+                        source="device.settings.waves.wave1.amplitude"
+                        destination="device.settings.waves.wave1.amplitude" type="float" />
+                    <textedit title="Frequency"
+                        source="device.settings.waves.wave1.frequency"
+                        destination="device.settings.waves.wave1.frequency" type="float" />
+                </form>
+            </tab>
+            <tab title="Wave 2">
+                <graph title="Wave 2"
+                    sampler="wave2"
+                    min="-${device.settings.waves.wave2.amplitude}"
+                    max="${device.settings.waves.wave2.amplitude}"
+                    xunit="Time" yunit="Waviness"/>
+                <form button="Update">
+                    <textedit title="Amplitude"
+                        source="device.settings.waves.wave2.amplitude"
+                        destination="device.settings.waves.wave2.amplitude" type="float" />
+                    <textedit title="Frequency"
+                        source="device.settings.waves.wave2.frequency"
+                        destination="device.settings.waves.wave2.frequency" type="float" />
+                </form>
+            </tab>
+        </mastertabcontainer>
+    </interface>
+</ui>
