@@ -3,7 +3,7 @@ from setuptools import setup
 from dataplicity import __version__ as VERSION
 
 classifiers = [
-    'Development Status :: 1 - Planning',
+    'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
     'Programming Language :: Python',
 ]
@@ -24,6 +24,7 @@ setup(name='dataplicity',
                 ],
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
-      install_requires=['python-daemon']
+      install_requires=['python-daemon',
+                        'fs']
       #data_files=[("/etc/dataplicity", ["dataplicity/app/logging.conf"]), ],
       )
