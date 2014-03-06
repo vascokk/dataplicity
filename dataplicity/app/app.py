@@ -43,6 +43,7 @@ class App(object):
     """Dataplicity device management"""
 
     def __init__(self):
+        self._conf = None
         self.subcommands = {name: cls(self)
                             for name, cls in SubCommandMeta.registry.iteritems()}
 
@@ -90,7 +91,6 @@ class App(object):
                 # handler = logging.handlers.SysLogHandler(address='/dev/log')
                 # log.addHandler(handler)
 
-
     def make_client(self, log):
         if self.args.conf:
             path = self.args.conf
@@ -98,12 +98,21 @@ class App(object):
         client = Client(path, log=log)
         return client
 
+    @property
+    def conf(self):
+        if self._conf is None:
+            self._conf = self.args.conf or tools.find_conf()
+            if self._conf is None:
+                raise ValueError("'dataplicity.conf' was not found")
+        return self._conf
+
+
     def run(self):
         parser = self._get_argparser()
         args = self.args = parser.parse_args(sys.argv[1:])
         self.init_logging(self.args.logging)
 
-        self.conf = self.args.conf or tools.find_conf()
+        #self.conf = self.args.conf or tools.find_conf()
 
         subcommand = self.subcommands[args.subcommand]
         subcommand.args = args

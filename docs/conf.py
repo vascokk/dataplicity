@@ -44,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Dataplicity'
-copyright = u'2014, Will McGugan'
+copyright = u'2014, Dataplicity Ltd'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -33,7 +33,8 @@ class Publish(SubCommand):
         log.setLevel(logging.ERROR)
         args = self.args
 
-        conf_path = args.conf or tools.find_conf()
+        conf_path = self.app.conf
+
         dataplicity_path = dirname(conf_path)
 
         if args.build:

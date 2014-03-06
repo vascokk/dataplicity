@@ -15,7 +15,7 @@ def do_build(dataplicity_path):
     with fsopendir(dataplicity_path) as src_fs:
         version = firmware.get_version(src_fs)
         print "Building version {:010}...".format(version)
-        filename = "firmware-{:010}.zip".format(version)
+        filename = "firmware-{}.zip".format(version)
         firmware_path = join('__firmware__', filename)
         src_fs.makedir('__firmware__', allow_recreate=True)
 

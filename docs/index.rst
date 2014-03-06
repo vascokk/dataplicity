@@ -13,6 +13,11 @@ Contents:
 
    quickstart
 
+   dataplicitycommand
+   dataplicityconf
+   developing
+   deploying
+
 
 
 Indices and tables
