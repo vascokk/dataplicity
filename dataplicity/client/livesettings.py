@@ -4,6 +4,7 @@ Settings synced with the server
 """
 
 from dataplicity.client.settings import read_contents
+from dataplicity import atomicwrite
 
 from cStringIO import StringIO
 import os
@@ -158,7 +159,7 @@ class LiveSettings(object):
 
     def write(self, contents):
         """Write out the new contents of a settings file"""
-        with open(self.path, 'wt') as f:
+        with atomicwrite.open(self.path, 'wt') as f:
             f.write(contents)
         self._settings = None
         self.load()
