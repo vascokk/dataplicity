@@ -7,8 +7,8 @@ log = logging.getLogger('dataplicity')
 
 
 class Manage(SubCommand):
+    """Launch a browser to manage this device"""
     help = "Launch browser to manage"
-
 
     def add_arguments(self, parser):
         parser.add_argument('-u', '--geturl', dest="url_only", action="store_true",

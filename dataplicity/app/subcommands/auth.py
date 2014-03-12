@@ -4,6 +4,7 @@ from dataplicity.constants import *
 
 
 class Auth(SubCommand):
+    """Get an authorisation token"""
     help = """Get a authorisation token from the server"""
 
     def add_arguments(self, parser):

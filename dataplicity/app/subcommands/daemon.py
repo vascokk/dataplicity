@@ -193,7 +193,7 @@ class FlushFile(file):
 
 
 class D(SubCommand):
-    """Installs Dataplicity Device management daemon"""
+    """Run a Dataplicity daemon process"""
     help = """Run the Dataplicity daemon"""
 
     def add_arguments(self, parser):

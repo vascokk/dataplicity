@@ -43,6 +43,7 @@ path = {FIRMWARE_PATH}
 
 
 class Init(SubCommand):
+    """Initialize this device for first use"""
     help = "Initialize this device for first use"
 
     def add_arguments(self, parser):

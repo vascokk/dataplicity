@@ -15,6 +15,7 @@ log = logging.getLogger('dataplicity')
 
 
 class Publish(SubCommand):
+    """Publish a firmware zip"""
     help = "Publish firmware"
 
     def add_arguments(self, parser):

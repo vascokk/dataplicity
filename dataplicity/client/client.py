@@ -8,6 +8,7 @@ from dataplicity.constants import *
 from time import time
 import os.path
 import logging
+import random
 
 
 class Client(object):
@@ -54,6 +55,8 @@ class Client(object):
         start = time()
         self.log.debug("syncing...")
         samplers_updated = []
+        random.seed()
+        sync_id = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in xrange(12))
         with self.remote.batch() as batch:
 
             # Authenticate
@@ -61,7 +64,8 @@ class Client(object):
                                'device.check_auth',
                                device_class=self.device_class,
                                serial=self.serial,
-                               auth_token=self.auth_token)
+                               auth_token=self.auth_token,
+                               sync_id=sync_id)
 
             batch.call_with_id('firmware_result',
                                'device.check_firmware',

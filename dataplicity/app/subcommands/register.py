@@ -9,6 +9,7 @@ log = logging.getLogger('dataplicity')
 
 
 class Register(SubCommand):
+    """Register this device"""
     help = "Register this device"
 
     def add_arguments(self, parser):

@@ -7,11 +7,20 @@ The dataplicity command line app can be used to *build*, *publish* and *run* Dat
 
     dataplicity -h
 
-If there is an error running one of the commands, and the error message is not helpful, you can get a full Python traceback with the ``--debug`` switch, which should appear before the name of the subcommand.
+Subcommands
+-----------
+
+To run a subcommand (see below for a list), supply the subcommand name as the first argument to ``dataplicity``. A subcommand, may have its own set of switches and options that should appear after the subcommand name on the command line. For example::
+
+    dataplicity manage --geturl
+
+If there is an error running one of the commands, and the error message is not helpful, you can get a full Python traceback with the ``--debug`` switch, which should appear before the name of the subcommand. For example, if the ``dataplicity manage`` command produced an error, you would re-run the command with something like the following::
+
+    dataplicity --debug manage --geturl
 
 To get a description of a subcommand and list all available command line switches, run the command with the ``-h`` switch. For example::
 
-    dataplicity run -h
+    dataplicity manage -h
 
 
 AUTH
@@ -52,7 +61,7 @@ Download and install firmware for a given device class. This requires that ``dat
 INIT
 ####
 
-Perpares a machine for running Dataplicity projects by creating the required directories and generating default conf files. This command takes a valid Dataplicity login details and will write an authorization token to `/etc/dataplicity/dataplicity.conf`. For example::
+Prepares a machine for running Dataplicity projects by creating the required directories and generating default conf files. This command takes a valid Dataplicity login details and will write an authorization token to `/etc/dataplicity/dataplicity.conf`. For example::
 
     dataplicity init -u USERNAME -p PASSWORD
 

@@ -5,8 +5,9 @@ log = logging.getLogger('dataplicity')
 
 
 class MOTD(SubCommand):
-    help = "Register this device"
+    """Get a message of the day"""
+    help = "Get a message of the day"
 
     def run(self):
         client = self.app.make_client(log)
-        client.remote.call('system.get_motd')
+        print client.remote.call('system.get_motd')

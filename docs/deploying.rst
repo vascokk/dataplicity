@@ -11,10 +11,12 @@ The USERNAME and PASSWORD values should be replaced with your Dataplicity login 
 
 Once the device has been initialized, the following command will download and install the current firmware::
 
-    dataplicity deploy
+    dataplicity deploy "DEVICE CLASS"
 
-You may need to prefix the above commands with ``sudo`` on some systems.
+Replacing DEVICE CLASS with the name of the device class (you can find this in the Developer section of the Dataplicity website).
 
-Once deployed, the firmare may be run as a daemon with the following command:
+Once deployed, the firmware may be run as a daemon with the following command:
 
     dataplicity d
+
+You may need to prefix the above commands with ``sudo`` on some systems.

@@ -10,6 +10,7 @@ import os.path
 
 
 class Install(SubCommand):
+    """Install firmware"""
     help = "Install firmware"
 
     def add_arguments(self, parser):

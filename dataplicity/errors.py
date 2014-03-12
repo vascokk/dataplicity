@@ -2,7 +2,7 @@
 
 
 class DataplicityError(Exception):
-	"""A catch-all for dataplicity errors"""
+    """A catch-all for dataplicity errors"""
 
 
 class ConfigError(DataplicityError):
