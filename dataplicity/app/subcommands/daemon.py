@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.client import Client
-from dataplicity.client.task import TaskManager
-from dataplicity.client.sampler import SamplerManager
 from dataplicity import constants
 from dataplicity.client import settings
 
@@ -66,7 +64,10 @@ class Daemon(object):
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self.client.sync()
+        try:
+            self.client.sync()
+        except:
+            self.log.exception("sync failed")
         self.client.tasks.start()
         self.log.debug('ready')
         sync_push_thread = Thread(target=self._push_wait,
@@ -144,8 +145,8 @@ class Daemon(object):
     def poll(self, t):
         try:
             self.client.sync()
-        except Exception as e:
-            self.log.exception(e)
+        except Exception:
+            self.log.exception('poll failed')
 
     def handle_client_command(self, client):
         """Read lines sent by client"""

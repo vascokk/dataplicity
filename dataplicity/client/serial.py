@@ -16,6 +16,7 @@
 
 from uuid import getnode
 
+
 def get_default_serial():
     mac = hex(getnode())[2:].upper()
-    return max
+    return mac

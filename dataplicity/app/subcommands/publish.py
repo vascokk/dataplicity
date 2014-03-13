@@ -25,10 +25,6 @@ class Publish(SubCommand):
                             help="Increment the version number after publishing")
         parser.add_argument('-b', '--build', dest="build", action="store_true", default=False,
                             help="Build the current firmware")
-        # parser.add_argument('-u', '--user', dest="user", metavar="USERNAME", default=None, required=True,
-        #                     help="Your dataplicity.com username")
-        # parser.add_argument('-p', '--password', dest="password", default=None, required=True,
-        #                     help="Your dataplicity.com password")
 
     def run(self):
         log.setLevel(logging.ERROR)
@@ -44,7 +40,7 @@ class Publish(SubCommand):
         with fsopendir(dataplicity_path) as src_fs:
             version = firmware.get_version(src_fs)
 
-            filename = "firmware-{:010}.zip".format(version)
+            filename = "firmware-{}.zip".format(version)
             firmware_path = join('__firmware__', filename)
             try:
                 firmware_contents = src_fs.getcontents(firmware_path, 'rb')

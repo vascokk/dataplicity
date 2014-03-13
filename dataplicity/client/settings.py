@@ -168,6 +168,14 @@ def read(*paths):
     raise errors.StartupError("conf not found, looked for %s" % paths_txt)
 
 
+def read_default(*paths):
+    """Read settings or return an empty cfg if no conf file is found"""
+    try:
+        return read(*paths)
+    except errors.StartupError:
+        return DPConfigParser()
+
+
 def read_from_file(conf_file, filename='?'):
     cfg = DPConfigParser()
     cfg.readfp(conf_file, filename=filename)

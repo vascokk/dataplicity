@@ -3,6 +3,7 @@ from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.jsonrpc import JSONRPC
+from dataplicity import errors
 from dataplicity.constants import *
 
 from time import time
@@ -26,7 +27,7 @@ class Client(object):
         self._init(conf, conf_dir)
 
     def _init(self, conf, conf_dir):
-        self.firmware_conf = settings.read(os.path.join(conf_dir, 'firmware.conf'))
+        self.firmware_conf = settings.read_default(os.path.join(conf_dir, 'firmware.conf'))
         self.current_firmware_version = int(self.firmware_conf.get('firmware', 'version', 1))
         self.log.info('running firmware {:010}'.format(self.current_firmware_version))
         self.rpc_url = conf.get('server',
@@ -54,6 +55,11 @@ class Client(object):
     def sync(self):
         start = time()
         self.log.debug("syncing...")
+
+        if not self.auth_token:
+            self.log.error("sync failed -- no auth token, have you run 'dataplicity register'?")
+            return
+
         samplers_updated = []
         random.seed()
         sync_id = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in xrange(12))

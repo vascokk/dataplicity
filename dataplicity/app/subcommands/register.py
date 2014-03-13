@@ -70,12 +70,19 @@ class Register(SubCommand):
                 batch.call_with_id("create_samplers_result",
                                    "device.create_samplers",
                                    sampler_names=samplers)
-                batch.call_with_id('url_result',
-                                   'device.get_manage_url')
             if not batch.get_result('auth_result'):
                 print "Unable to authenticate with the Dataplicity server, check username and password"
                 return -1
             batch.get_result('create_samplers_result')
 
-        url = batch.get_result('url_result')
+        with remote.batch() as batch:
+            batch.call_with_id('auth_result',
+                               'device.check_auth',
+                               device_class=client.device_class,
+                               serial=client.serial,
+                               auth_token=client.auth_token)
+            batch.call_with_id('url_result',
+                               'device.get_manage_url')
+        url = batch.get_result('auth_result')
+
         print "Run 'dataplicity manage' or visit {} to manage your device".format(url)
