@@ -18,5 +18,9 @@ from uuid import getnode
 
 
 def get_default_serial():
-    mac = hex(getnode())[2:].upper()
-    return mac
+    serial = "{:016X}".format(getnode())
+    return serial
+
+
+if __name__ == "__main__":
+    print get_default_serial()

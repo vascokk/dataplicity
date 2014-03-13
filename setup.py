@@ -26,5 +26,4 @@ setup(name='dataplicity',
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['python-daemon',
                         'fs']
-      #data_files=[("/etc/dataplicity", ["dataplicity/app/logging.conf"]), ],
       )
