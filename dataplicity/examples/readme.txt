@@ -1,0 +1,1 @@
+This directory contains example projects. See quickstart.rst or online documentation for how to run these projects.
