@@ -1,5 +1,4 @@
-===========
 Dataplicity
 ===========
 
-The platform for connected devices
+Dataplicity is a platform for connected devices.

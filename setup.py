@@ -8,10 +8,12 @@ classifiers = [
     'Programming Language :: Python',
 ]
 
-long_desc = """An interface to Dataplicity platform"""
+with open('README.txt') as f:
+    long_desc = f.read()
 
 setup(name='dataplicity',
       version=VERSION,
+      description="Platform for connected devices",
       long_description=long_desc,
       author='Adixein',
       author_email='support@dataplicity.com',
@@ -21,9 +23,11 @@ setup(name='dataplicity',
                 'dataplicity.app',
                 'dataplicity.app.subcommands',
                 'dataplicity.client',
+                'dataplicity.tasks'
                 ],
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['python-daemon',
-                        'fs']
+                        'fs',
+                        'setuptools']
       )
