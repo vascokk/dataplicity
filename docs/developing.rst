@@ -5,7 +5,7 @@ Developing a Dataplicity Project is an iterative cycle of making changes and tes
 
 A firmware consists of a snapshot of the project directory, minus any irrelevant files (temporary files, source control files and derived files etc).
 
-The current firmware version is store in an INI file called ``firmware.conf`` which should be in the same directory as ``dataplicity.conf``. The following is an example of a typical ``firmware.conf`` file::
+The current firmware version is stored in an INI file called ``firmware.conf``, which should be in the same directory as ``dataplicity.conf``. The following is an example of a typical ``firmware.conf`` file::
 
     [firmware]
     version = 9

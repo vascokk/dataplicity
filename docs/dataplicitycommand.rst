@@ -3,18 +3,18 @@ Dataplicity Command
 
 After installing the dataplicity Python module, you should now be able to run a command line app called `dataplicity`.
 
-The dataplicity command line app can be used to *build*, *publish* and *run* Dataplicity projects, by using one of the available subcommands. Run the following to list the available subcommands::
+The dataplicity command line app can be used to *build*, *publish* and *run* Dataplicity projects via a number of *subcommands*. Run the following to list the available subcommands::
 
     dataplicity -h
 
 Subcommands
 -----------
 
-To run a subcommand (see below for a list), supply the subcommand name as the first argument to ``dataplicity``. A subcommand, may have its own set of switches and options that should appear after the subcommand name on the command line. For example::
+To run a subcommand (see below for a list), supply the subcommand name as the first argument to ``dataplicity``. A subcommand may have its own set of switches and options that should appear after the subcommand name on the command line. For example::
 
     dataplicity manage --geturl
 
-If there is an error running one of the commands, and the error message is not helpful, you can get a full Python traceback with the ``--debug`` switch, which should appear before the name of the subcommand. For example, if the ``dataplicity manage`` command produced an error, you would re-run the command with something like the following::
+If there is an error running one of the subcommands (and the error message is not helpful) you can get a full Python traceback with the ``--debug`` switch, which should appear before the name of the subcommand. For example, if the ``dataplicity manage`` command produced an error, you would re-run the command with something like the following::
 
     dataplicity --debug manage --geturl
 

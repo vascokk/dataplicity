@@ -5,6 +5,7 @@ import logging
 import logging.handlers
 import logging.config
 
+from dataplicity import __version__
 from dataplicity import jsonrpc
 from dataplicity.client import Client
 from dataplicity.client import tools
@@ -50,7 +51,7 @@ class App(object):
     def _get_argparser(self):
         parser = argparse.ArgumentParser("dataplicity",
                                          description=getattr(self, '__doc__', ''))
-        parser.add_argument('-v', '--version', action="version", version="0.2",
+        parser.add_argument('-v', '--version', action="version", version=__version__,
                             help="Display version and exit")
         parser.add_argument('-d', '--debug', action="store_true", dest="debug", default=False,
                             help="Enables debug output")

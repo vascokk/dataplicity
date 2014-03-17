@@ -1,7 +1,7 @@
 Deploying
 =========
 
-Deploying firmware is the process of downloading firmware from the Dataplicity server and installing it on a **device** (typically a linux computer).
+Deploying firmware is the process of downloading firmware from the Dataplicity server and installing it on a *device* (typically a linux computer).
 
 To deploy a firmware first initialize the device with the following command::
 
@@ -15,7 +15,7 @@ Once the device has been initialized, the following command will download and in
 
 Replacing DEVICE CLASS with the name of the device class (you can find this in the Developer section of the Dataplicity website).
 
-Once deployed, the firmware may be run as a daemon with the following command:
+Once deployed, the firmware may be run as a daemon with the following command::
 
     dataplicity d
 

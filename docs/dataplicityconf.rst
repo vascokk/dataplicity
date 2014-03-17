@@ -8,11 +8,11 @@ A INI file consists of a section introduced with square brackets, followed by a 
     [section]
     # This is a comment
     foo = bar
-    # The following is a multiple line value, not the indentation
+    # The following is a multiple line value, note the indentation
     hobbits = Sam
         Bilbo
 
-Dataplicity extends this format slightly with sections that introduce and create an internal object. Such sections are introduced in the section title (in square brackets) with the name of the object followed by a colon, and the object's name. Here's an example::
+Dataplicity extends this format slightly with sections that introduce and create an internal object. Such sections are introduced in the section title (in square brackets) with the name of the object followed by a colon, then the object's name. Here's an example::
 
     [hobbit:sam]
     name = Samwise Gamgee
@@ -20,13 +20,13 @@ Dataplicity extends this format slightly with sections that introduce and create
     [hobbit:bilbo]
     name = Bilbo Baggins
 
-Object sections can be repeated for each desired object, and typically contain the same subset of keys and values.
+Object sections can be repeated for each desired object, and typically contain the same set of keys and values.
 
 
 Extending Dataplicity Conf
 --------------------------
 
-A dataplicity.conf can *extend* another base conf file. When a conf file is extended in the way, the values it contains will be added to the values from the extended conf file (potentially overwriting them). To extend a conf file, add a [extends] section with a value called 'conf' which should be an absolute path to the extended conf file.
+A dataplicity.conf can *extend* another base conf file. When a conf file is extended in the way, the values it contains will be added to the values from the extended conf file (potentially overwriting them). To extend a conf file, add a [extends] section with a value called 'conf', which should be an absolute path to the extended conf file.
 
 Most dataplicity.conf files in a Dataplicity project will start with the following section::
 
@@ -49,12 +49,12 @@ Most Dataplicity sub-commands will accept an alternative conf with the --conf sw
 Required Sections
 -----------------
 
-A Dataplicity conf requires the following sections.
+A Dataplicity conf requires the following sections:
 
 [server]
 ~~~~~~~~
 
-* **url** URL of Dataplicity api,
+* **url** URL of Dataplicity api
 
 [device]
 ~~~~~~~~
@@ -63,7 +63,7 @@ The device section contains data related to the device. With the exception of *c
 
 * **name** The name of the device
 * **serial** A unique serial number (or string) for this device
-* **auth** An authorisation token
+* **auth** An authorization token
 * **settings** A path to live settings
 * **class** The name of the device class. A device class should be a short descriptive name used to identify devices running this firmware.
 
@@ -79,30 +79,32 @@ The device section contains data related to the device. With the exception of *c
 
 This section is used if the firmware contains additional Python code (for extended functionality).
 
-  **path** A list of paths to be added to Python path. Typically this will be ``./py``.
+  **path** A list of paths to be added to Python path. Typically this will be ``./py``. This is only required if the project references code that isn't already on the Python path.
 
 [samplers]
 
 If the Project writes any sample data, then this section must be present.
 
-* **path** A location to store the sample data between syncs. Typically `/tmp/samplers`
+* **path** A location to store the sample data between syncs, typically `/tmp/samplers`.
+
+When a device records samples, it writes the sample data to a file under `path`. When the device syncs successfully with the server the sample data on the device is cleared -- so only enough storage to store samples between syncs is required.
 
 
 Samplers
 --------
 
-A sampler is a stream of timestamped numeric data, which can be graphed on the web interface. Samplers are introduced with a [sampler:] section and unique name. For example the sinewave example contains the following::
+A sampler is a stream of timestamped numeric data which can be graphed on the web interface. Samplers are introduced with a [sampler:] section and unique name. For example the sinewave example contains the following::
 
     [sampler:wave1]
     [sampler:wave2]
 
-This creates two samplers; ``wave1`` and ``wave2``.
+This creates two samplers; ``wave1`` and ``wave2``. These names are used to refer to the samples in the user interface.
 
 
 Tasks
 -----
 
-In Dataplicity, a Task, is essentially a thread that performs a specific operation in regular intervals. Typically tasks will sample data from various sources, but may perform other operations.
+In Dataplicity, a Task, is essentially a thread that performs a specific operation at regular intervals. Typically tasks will sample data from various sources, but may perform other operations.
 
 A task is created in dataplicity.conf with a [task:] section. The following is an example of a task that will sample system load every 60 seconds::
 
@@ -117,17 +119,17 @@ A task is created in dataplicity.conf with a [task:] section. The following is a
 A task section requires the following values:
 
 * **run** A Python import that references a class derived from `Task`. In the above example, ``dataplicity.tasks.LoadSampler`` is one of the tasks built in to dataplicity, but could also reference a custom Task class.
-* **poll** A numeric value that indicates the number of seconds between calls to the ``poll`` method of the task
+* **poll** A numeric value that indicates the number of seconds between calls to the ``poll`` method of the task.
 
-Some samplers require additional configuration which can be added to a task section by prefixing a key with ``data-``. In the above example the value ``data-sampler`` is passed to the Task and lets it know which sampler to store the system load in.
+Some samplers require additional configuration which can be added to a task section by prefixing a key with ``data-``. In the above example the value ``data-sampler`` is passed to the Task and lets it know which sampler to record the system load to.
 
 
 Settings
 --------
 
-Dataplicity settings are INI files that can be synchronised with the Dataplicity server and modified via the web interface. This allows devices to be remotely administered even if the device is currently offline.
+Dataplicity settings are INI files that can be synchronized with the Dataplicity server and modified via the web interface. This allows devices to be remotely administered even if the device is currently offline.
 
-To introduce a new settings file, user a [settings:] section with a name for the settings container. The sinewave example contains the following settings section::
+To introduce a new settings file, use a [settings:] section with a name for the settings container. The sinewave example contains the following settings section::
 
     [settings:waves]
     defaults = ./waves.ini
