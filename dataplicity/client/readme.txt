@@ -1,0 +1,1 @@
+This directory contains code for interacting with the Dataplicity server. The code here is used by the 'dataplicity' command line app, and with the exception of the tasks interface probably shouldn't be used directly.
