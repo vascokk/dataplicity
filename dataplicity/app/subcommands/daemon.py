@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from dataplicity.app.subcommand import SubCommand
+from dataplicity.app import comms
 from dataplicity.client import Client
 from dataplicity import constants
 from dataplicity.client import settings
@@ -121,7 +122,7 @@ class Daemon(object):
                 return
 
         except Exception as e:
-            self.log.exception()
+            self.log.exception('error in daemon main loop')
 
         finally:
             try:
@@ -173,17 +174,12 @@ class Daemon(object):
                 client.close()
 
     def on_client_command(self, command):
-        if command == "SYNC":
-            self.log("SYNC client command")
-            self.manager.sync()
-        elif command == "STATUS":
-            self.log("STATUS client command")
-            return "running"
-        elif command == "SHUTDOWN":
-            self.log("SHUTDOWN client command")
-            self.client.tasks.request_shutdown()
-        elif command == "RESTART":
+        if command == 'RESTART':
+            self.log.info('restart requested')
             self.exit(' '.join(sys.argv))
+        elif command == 'STOP':
+            self.log.info('stop requested')
+            self.exit()
 
 
 class FlushFile(file):
@@ -197,13 +193,17 @@ class D(SubCommand):
     """Run a Dataplicity daemon process"""
     help = """Run the Dataplicity daemon"""
 
+    @property
+    def comms(self):
+        return comms.Comms()
+
     def add_arguments(self, parser):
         parser.add_argument('-f', '--foreground', dest='foreground', action="store_true", default=False,
-                            help="Run daemon in foreground")
-        parser.add_argument('-k', '--kill', dest="kill", action="store_true", default=False,
-                            help="Kill currently running daemon")
+                            help="run daemon in foreground")
+        parser.add_argument('-s', '--stop', dest="stop", action="store_true", default=False,
+                            help="stop the daemon")
         parser.add_argument('-r', '--restart', dest='restart', action="store_true",
-                            help="restart running server")
+                            help="restart running daemon")
 
     def make_daemon(self, debug=None):
         conf_path = self.args.conf or constants.CONF_PATH
@@ -224,16 +224,13 @@ class D(SubCommand):
 
     def run(self):
         args = self.args
+
         if args.restart:
-            dataplicity_daemon = self.make_daemon(debug=False)
-            dataplicity_daemon.comms('RESTART')
+            self.comms.restart()
             return 0
 
-        if args.kill:
-            dataplicity_daemon = self.make_daemon(debug=False)
-            pid = dataplicity_daemon.get_pid()
-            if pid is not None:
-                os.system("kill %s" % pid)
+        if args.stop:
+            self.comms.stop()
             return 0
 
         try:

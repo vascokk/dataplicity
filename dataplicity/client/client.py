@@ -2,9 +2,11 @@ from dataplicity.client import settings, serial
 from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
+from dataplicity.app import comms
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import errors
 from dataplicity.constants import *
+
 
 from time import time
 import os.path
@@ -100,13 +102,6 @@ class Client(object):
 
         batch.get_result('authenticate_result')
 
-        firmware_result = batch.get_result('firmware_result')
-        if firmware_result['current']:
-            self.log.debug('firmware is current')
-        else:
-            # Install new firmware
-            pass
-
         # Remove snapshots that were successfully synced
         # Unsuccessful snapshots remain on disk, so the next sync will re-attempt them.
         for sampler_name in samplers_updated:
@@ -125,6 +120,22 @@ class Client(object):
             self.livesettings.update(changed_conf, self.tasks)
             changed_conf_names = ", ".join(sorted(changed_conf.keys()))
             self.log.debug("settings file(s) changed: {}".format(changed_conf_names))
+
+
+        firmware_result = batch.get_result('firmware_result')
+        if firmware_result['current']:
+            self.log.debug('firmware is current')
+        else:
+            firmware_b64 = firmware_result['firmware']
+            device_class = firmware_result['device_class']
+            version = firmware_result['version']
+            self.log.debug("new firmware, version v{} for device class '{}'".format(version, device_class))
+            self.log.info("installing firmware v{}".format(version))
+            install_path = firmware.install_encoded(device_class, version, firmware_b64)
+
+            self.log('firmware installed in "{}"'.format(install_path))
+            comms = comms.Comms()
+            comms.restart()
 
 
 if __name__ == "__main__":

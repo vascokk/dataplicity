@@ -5,11 +5,12 @@ from ConfigParser import SafeConfigParser
 
 from fs.utils import copyfile, copydir
 from fs.errors import ResourceNotFoundError
+from fs.tempfs import TempFS
+import zipfile
 
 import os
+import base64
 from os.path import basename, join
-
-
 from fnmatch import fnmatch
 from logging import getLogger
 
@@ -92,6 +93,30 @@ def install(device_class, version, firmware_fs, dst_fs):
     copydir(firmware_fs, install_fs, overwrite=True)
     return dst_fs.getsyspath(dst_path)
 
+
+def install_encoded(device_class, version, firmware_b64, activate=True):
+    """Install firmware from a b64 encoded zip file"""
+    # TODO:  implement this in a less memory hungry way
+    # decode from b64
+    firmware_bin = base64.b64decode(firmware_b64)
+    # Make a file-like object
+    firmware_file = StringIO(firmware_bin)
+    # Open zip
+    firmware_fs = ZipFS(firmware_file)
+    # Open firmware dir
+    dst_fs = OSFS(constants.FIRMWARE_PATH, create=True)
+    # Install
+    install_path = install(device_class, version, firmware_fs, dst_fs)
+    # Move symlink to active firmware
+    if activate:
+        active(device_class, version, dst_fs)
+
+    # Clean up any temporary files
+    firmware_fs.close()
+    dst_fs.close()
+
+    # Return install_path
+    return install_path
 
 def activate(device_class, version, dst_fs):
     """Make a given version active"""
