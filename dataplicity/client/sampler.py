@@ -2,7 +2,6 @@ from dataplicity import errors
 
 from time import time
 import os
-from os import rename
 from os.path import join, getsize, abspath, dirname, exists
 from functools import partial
 from threading import RLock
@@ -34,7 +33,7 @@ class SamplerManager(object):
     def init_from_conf(cls, client, conf):
 
         samplers_path = conf.get('samplers', 'path', '/tmp/dataplicity/samplers/')
-        sampler_manager = SamplerManager(samplers_path)
+        sampler_manager = cls(samplers_path)
 
         for section, name in conf.qualified_sections('sampler'):
             if not conf.get_bool(section, 'enabled', True):
@@ -191,5 +190,3 @@ if __name__ == "__main__":
     print sampler.read_samples()
     sampler.reset()
     print sampler.read_samples()
-
-
