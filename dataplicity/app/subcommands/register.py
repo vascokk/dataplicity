@@ -83,6 +83,6 @@ class Register(SubCommand):
                                auth_token=client.auth_token)
             batch.call_with_id('url_result',
                                'device.get_manage_url')
-        url = batch.get_result('auth_result')
+        url = batch.get_result('url_result')
 
         print "Run 'dataplicity manage' or visit {} to manage your device".format(url)
