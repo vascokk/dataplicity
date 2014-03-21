@@ -86,7 +86,7 @@ class Event(object):
 @register_event("TEXT")
 class TextEvent(Event):
 
-    def init(self, title, text, text_format="TEXT"):
+    def init(self, title='', text='', text_format="TEXT"):
         self.title = title
         self.text = text
         self.text_format = text_format
@@ -94,6 +94,7 @@ class TextEvent(Event):
     def serialize(self):
         return {"timestamp": self.timestamp,
                 "event_type": self.event_type,
+                "title": self.title,
                 "text": self.text,
                 "text_format": self.text_format}
 
@@ -105,14 +106,22 @@ class TimelineManager(object):
         self.path = path
         self.timelines = {}
 
+    def __nonzero__(self):
+    	return bool(self.timelines)
+
+    def __iter__(self):
+    	return self.timelines.itervalues()
+
     @classmethod
     def init_from_conf(cls, client, conf):
         timelines_path = conf.get('timelines', 'path', constants.TIMELINE_PATH)
+        timelines_path = os.path.join(timelines_path, client.device_class)
         timeline_manager = cls(timelines_path)
 
         for section, name in conf.qualified_sections('timeline'):
             max_events = conf.get(section, 'max_events', None)
             timeline_manager.new_timeline(name, max_events=max_events)
+        return timeline_manager
 
     def new_timeline(self, name, max_events=None):
         """Create a new timeline and store it"""
@@ -140,11 +149,11 @@ class Timeline(object):
     def __repr__(self):
         return "Timeline({!r}, {!r}, max_events={!r})".format(self.path, self.name, self.max_events)
 
-    @classmethod
-    def init_from_conf(cls, client, conf):
-        timeline_path = conf.get('timelines', 'path', constants.TIMELINE_PATH)
-        max_events = conf.get('timeline', 'max_events', None)
-        return Timeline(timeline_path, max_events=max_events)
+    # @classmethod
+    # def init_from_conf(cls, client, conf):
+    #     timeline_path = conf.get('timelines', 'path', constants.TIMELINE_PATH)
+    #     max_events = conf.get('timeline', 'max_events', None)
+    #     return Timeline(timeline_path, max_events=max_events)
 
     def new_event(self, event_type, timestamp=None, *args, **kwargs):
         """Create and return an event, to be used as a context manager"""

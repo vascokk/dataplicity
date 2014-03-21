@@ -2,6 +2,7 @@ from dataplicity.client import settings, serial
 from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
+from dataplicity.client.timeline import TimelineManager
 from dataplicity.app import comms
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import errors
@@ -47,6 +48,7 @@ class Client(object):
         self.tasks = TaskManager.init_from_conf(self, conf)
         self.samplers = SamplerManager.init_from_conf(self, conf)
         self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
+        self.timelines = TimelineManager.init_from_conf(self, conf)
 
         self.sample_now = self.samplers.sample_now
         self.sample = self.samplers.sample
@@ -100,6 +102,14 @@ class Client(object):
                                "device.update_conf_map",
                                conf_map=conf_map)
 
+            # Update timeline(s)
+            if self.timelines:
+                for timeline in self.timelines:
+                    batch.call_with_id('timeline_result_{}'.format(timeline.name),
+                                       'device.add_events',
+                                       name=timeline.name,
+                                       events=timeline.get_events())
+
         batch.get_result('authenticate_result')
 
         # Remove snapshots that were successfully synced
@@ -112,15 +122,27 @@ class Client(object):
                 self.log.exception("Error adding samples to {} ({})".format(sampler_name, e))
             else:
                 sampler.remove_snapshot()
+
+        try:
+            changed_conf = batch.get_result("conf_result")
+        except:
+            self.log.exception('error sending settings')
+        else:
+            if changed_conf:
+                self.livesettings.update(changed_conf, self.tasks)
+                changed_conf_names = ", ".join(sorted(changed_conf.keys()))
+                self.log.debug("settings file(s) changed: {}".format(changed_conf_names))
+
+        for timeline in self.timelines:
+            try:
+                timeline_result = batch.get_result('timeline_result_{}'.format(timeline.name))
+            except:
+                self.log.exception('error sending timeline')
+            else:
+                timeline.clear_events(timeline_result)
+
         ellapsed = time() - start
         self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
-
-        changed_conf = batch.get_result("conf_result")
-        if changed_conf:
-            self.livesettings.update(changed_conf, self.tasks)
-            changed_conf_names = ", ".join(sorted(changed_conf.keys()))
-            self.log.debug("settings file(s) changed: {}".format(changed_conf_names))
-
 
         firmware_result = batch.get_result('firmware_result')
         if firmware_result['current']:
