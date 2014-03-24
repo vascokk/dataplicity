@@ -90,7 +90,7 @@ def install(device_class, version, firmware_fs, dst_fs):
     if not dst_fs.exists(dst_path):
         dst_fs.makedir(dst_path, allow_recreate=True, recursive=True)
     install_fs = dst_fs.opendir(dst_path)
-    copydir(firmware_fs, install_fs, overwrite=True)
+    copydir(firmware_fs, install_fs)
     return dst_fs.getsyspath(dst_path)
 
 

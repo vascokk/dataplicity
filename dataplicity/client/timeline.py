@@ -5,15 +5,16 @@ Creates a database of timestamped events.
 
 from dataplicity import constants
 
+import os.path
 from time import time
 from random import randint
 from json import dumps, loads
 from operator import itemgetter
-import os.path
+from base64 import b64encode
+from os.path import basename
 
 from fs.osfs import OSFS
 from fs.errors import FSError
-
 
 import logging
 log = logging.getLogger('dataplicity')
@@ -57,11 +58,21 @@ class Event(object):
         self.init(*args, **kwargs)
         super(Event, self).__init__()
 
+    def init(self, title='', text='', text_format="TEXT"):
+        self.title = title
+        self.text = text
+        self.text_format = text_format
+
+    def to_data(self):
+        return {"timestamp": self.timestamp,
+                "event_type": self.event_type,
+                "title": self.title,
+                "text": self.text,
+                "text_format": self.text_format,
+                "attachments": self.attachments}
+
     def __repr__(self):
         return "<event {} {}>".format(self.event_type, self.event_id)
-
-    def serialize(self):
-        raise NotImplementedError
 
     def __enter__(self):
         return self
@@ -73,8 +84,17 @@ class Event(object):
     def attach(self, filename, name=None):
         if name is None:
             name = filename
-        # TODO: attachments
-        print "Attaching", filename
+        with open(filename, 'rb') as f:
+            data_bin = f.read()
+        data_b64 = b64encode(data_bin)
+        filename_base = basename(filename)
+        attachment = {
+            "data": data_b64,
+            "encoding": 'base64',
+            "name": name or filename_base,
+            "filename": filename_base
+        }
+        self.attachments.append(attachment)
         return self
 
     def write(self):
@@ -85,18 +105,12 @@ class Event(object):
 
 @register_event("TEXT")
 class TextEvent(Event):
+    pass
 
-    def init(self, title='', text='', text_format="TEXT"):
-        self.title = title
-        self.text = text
-        self.text_format = text_format
 
-    def serialize(self):
-        return {"timestamp": self.timestamp,
-                "event_type": self.event_type,
-                "title": self.title,
-                "text": self.text,
-                "text_format": self.text_format}
+@register_event('IMAGE')
+class ImageEvent(Event):
+    pass
 
 
 class TimelineManager(object):
@@ -133,7 +147,7 @@ class TimelineManager(object):
         try:
             timeline = self.timelines[timeline_name]
         except KeyError:
-            raise UnknownTimelineError("No timeline called '{}' exists".format('timeline_name'))
+            raise UnknownTimelineError("No timeline called '{}' exists".format(timeline_name))
         else:
             return timeline
 
@@ -212,10 +226,10 @@ class Timeline(object):
                 pass
 
     def _write_event(self, event_id, event):
-        if hasattr(event, 'serialize'):
-            event = event.serialize()
-        event['_id'] = event_id
-        event_json = dumps(event)
+        if hasattr(event, 'to_data'):
+            event = event.to_data()
+        event['event_id'] = event_id
+        event_json = dumps(event, indent=4)
         filename = "{}.json".format(event_id)
         with self.fs.open(filename, 'wb') as f:
             f.write(event_json)
