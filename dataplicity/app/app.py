@@ -40,6 +40,10 @@ DEFAULT_LOGGING = {
     }
 
 
+class ProjectNotFoundError(Exception):
+    pass
+
+
 class App(object):
     """Dataplicity device management"""
 
@@ -87,15 +91,13 @@ class App(object):
                                     level=logging.DEBUG)
             else:
                 logging.config.dictConfig(DEFAULT_LOGGING)
-                # log = logging.getLogger('dataplicity')
-                # log.setLevel(logging.DEBUG)
-                # handler = logging.handlers.SysLogHandler(address='/dev/log')
-                # log.addHandler(handler)
 
     def make_client(self, log):
         if self.args.conf:
             path = self.args.conf
         path = tools.find_conf()
+        if path is None:
+            raise ProjectNotFoundError('unable to locate dataplicity.conf for project')
         client = Client(path, log=log)
         return client
 
@@ -104,7 +106,7 @@ class App(object):
         if self._conf is None:
             self._conf = self.args.conf or tools.find_conf()
             if self._conf is None:
-                raise ValueError("'dataplicity.conf' was not found")
+                raise ProjectNotFoundError('unable to locate dataplicity.conf for project')
         return self._conf
 
 

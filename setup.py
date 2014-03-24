@@ -28,6 +28,6 @@ setup(name='dataplicity',
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['python-daemon',
-                        'fs',
+                        'fs>=0.5.0',
                         'setuptools']
       )
