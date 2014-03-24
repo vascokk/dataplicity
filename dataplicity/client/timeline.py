@@ -107,10 +107,10 @@ class TimelineManager(object):
         self.timelines = {}
 
     def __nonzero__(self):
-    	return bool(self.timelines)
+        return bool(self.timelines)
 
     def __iter__(self):
-    	return self.timelines.itervalues()
+        return self.timelines.itervalues()
 
     @classmethod
     def init_from_conf(cls, client, conf):
@@ -148,12 +148,6 @@ class Timeline(object):
 
     def __repr__(self):
         return "Timeline({!r}, {!r}, max_events={!r})".format(self.path, self.name, self.max_events)
-
-    # @classmethod
-    # def init_from_conf(cls, client, conf):
-    #     timeline_path = conf.get('timelines', 'path', constants.TIMELINE_PATH)
-    #     max_events = conf.get('timeline', 'max_events', None)
-    #     return Timeline(timeline_path, max_events=max_events)
 
     def new_event(self, event_type, timestamp=None, *args, **kwargs):
         """Create and return an event, to be used as a context manager"""
