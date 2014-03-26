@@ -189,8 +189,13 @@ class Daemon(object):
             return "OK"
         elif command == "SYNC":
             self.log.info('sync requested')
-            self.sync_now()
-            return "OK"
+
+            try:
+                self.sync_now()
+            except Exception as e:
+                return str(e)
+            else:
+                return "OK"
         return "BADCOMMAND"
 
 
@@ -249,7 +254,7 @@ class D(SubCommand):
 
         if args.sync:
             self.comms.sync()
-            return
+            return 0
 
         try:
             if args.foreground:

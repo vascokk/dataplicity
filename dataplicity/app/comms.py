@@ -36,16 +36,13 @@ class Comms(object):
         return True
 
     def sync(self):
-        self('SYNC')
-        return True
+        return self('SYNC')
 
     def restart(self):
-        self('RESTART')
-        return True
+        return self('RESTART')
 
     def stop(self):
-        self('STOP')
-        return True
+        return self('STOP')
 
     def status(self):
         try:
