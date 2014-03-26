@@ -144,10 +144,15 @@ class Daemon(object):
                 os.system(self.exit_command)
 
     def poll(self, t):
+        self.sync_now(t)
+
+    def sync_now(self, t=None):
+        if t is None:
+            t = time.time()
         try:
             self.client.sync()
         except Exception:
-            self.log.exception('poll failed')
+            self.log.exception('sync failed')
 
     def handle_client_command(self, client):
         """Read lines sent by client"""
@@ -177,9 +182,16 @@ class Daemon(object):
         if command == 'RESTART':
             self.log.info('restart requested')
             self.exit(' '.join(sys.argv))
+            return "OK"
         elif command == 'STOP':
             self.log.info('stop requested')
             self.exit()
+            return "OK"
+        elif command == "SYNC":
+            self.log.info('sync requested')
+            self.sync_now()
+            return "OK"
+        return "BADCOMMAND"
 
 
 class FlushFile(file):
@@ -204,6 +216,8 @@ class D(SubCommand):
                             help="stop the daemon")
         parser.add_argument('-r', '--restart', dest='restart', action="store_true",
                             help="restart running daemon")
+        parser.add_argument('-y', '--sync', dest="sync", action="store_true", default=False,
+                            help="sync now")
 
     def make_daemon(self, debug=None):
         conf_path = self.args.conf or constants.CONF_PATH
@@ -232,6 +246,10 @@ class D(SubCommand):
         if args.stop:
             self.comms.stop()
             return 0
+
+        if args.sync:
+            self.comms.sync()
+            return
 
         try:
             if args.foreground:

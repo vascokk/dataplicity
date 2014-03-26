@@ -18,7 +18,7 @@ from uuid import getnode
 
 
 def get_default_serial():
-    serial = "{:016X}".format(getnode())
+    serial = "{:016X}".format(getnode()).lower()
     return serial
 
 

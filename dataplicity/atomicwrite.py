@@ -18,7 +18,7 @@ class AtomicWriter(object):
         if exc_type is None:
             if self._f is not None:
                 self._f.flush()
-                os.fsync(f.fileno())
+                os.fsync(self._f.fileno())
                 self._f.close()
                 self._f = None
                 os.rename(self.tmp_path, self.path)
