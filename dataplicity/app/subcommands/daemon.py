@@ -183,13 +183,14 @@ class Daemon(object):
             self.log.info('restart requested')
             self.exit(' '.join(sys.argv))
             return "OK"
+
         elif command == 'STOP':
             self.log.info('stop requested')
             self.exit()
             return "OK"
+
         elif command == "SYNC":
             self.log.info('sync requested')
-
             try:
                 self.sync_now()
             except Exception as e:
