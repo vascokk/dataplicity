@@ -13,22 +13,13 @@ class Comms(object):
         self.port = port
 
     def __call__(self, command):
-        response = []
         sock = None
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((self.ip, self.port))
             sock.sendall("%s\n" % command.upper())
-            append_char = response.append
-            while 1:
-                try:
-                    data = sock.recv(1)
-                except socket.error:
-                    break
-                if data in ('\n', ''):
-                    break
-                append_char(data)
-            return ''.join(response)
+            data = sock.recv(128)
+            return data.rstrip('\n')
 
         finally:
             if sock is not None:
