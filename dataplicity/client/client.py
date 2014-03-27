@@ -53,6 +53,8 @@ class Client(object):
         self.sample_now = self.samplers.sample_now
         self.sample = self.samplers.sample
 
+        self.get_timeline = self.timelines.get_timeline
+
     def get_settings(self, name):
         self.livesettings.get(name, reload=True)
 

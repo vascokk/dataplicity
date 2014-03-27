@@ -81,11 +81,14 @@ class Event(object):
         if exc_type is None:
             self.write()
 
-    def attach(self, filename, name=None):
+    def attach_file(self, filename, name=None):
         if name is None:
             name = filename
         with open(filename, 'rb') as f:
             data_bin = f.read()
+        return self.attach_binary(data_bin, filename=filename, name=name)
+
+    def attach_bytes(self, data_bin, filename=None, name=None):
         data_b64 = b64encode(data_bin)
         filename_base = basename(filename)
         attachment = {
@@ -163,12 +166,6 @@ class Timeline(object):
     def __repr__(self):
         return "Timeline({!r}, {!r}, max_events={!r})".format(self.path, self.name, self.max_events)
 
-    # @classmethod
-    # def init_from_conf(cls, client, conf):
-    #     timeline_path = conf.get('timelines', 'path', constants.TIMELINE_PATH)
-    #     max_events = conf.get('timeline', 'max_events', None)
-    #     return Timeline(timeline_path, max_events=max_events)
-
     def new_event(self, event_type, timestamp=None, *args, **kwargs):
         """Create and return an event, to be used as a context manager"""
         if self.max_events is not None:
@@ -195,6 +192,19 @@ class Timeline(object):
         event = self.new_event(event_type, timestamp=timestamp, *args, **kwargs)
         event.write()
         return self
+
+    def new_photo(self, file=None, bytes=None, title='Photo', text=None, filename=None):
+        event = self.new_event('IMAGE', title=title, text=text, filename=filename)
+
+        if hasattr(file, 'getvalue'):
+            bytes = file.getvalue()
+        elif file is not None:
+            bytes = file.read()
+        else:
+            if bytes is None:
+                raise ValueError("A value for 'file' or 'bytes' is required")
+        event.attach_bin(event)
+        return event
 
     def get_events(self, sort=True):
         """Get all accumulated events"""
