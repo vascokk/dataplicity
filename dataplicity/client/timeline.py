@@ -6,6 +6,7 @@ Creates a database of timestamped events.
 from dataplicity import constants
 
 import os.path
+from os.path import splitext
 from time import time
 from random import randint
 from json import dumps, loads
@@ -81,21 +82,24 @@ class Event(object):
         if exc_type is None:
             self.write()
 
-    def attach_file(self, filename, name=None):
+    def attach_file(self, filename, name=None, ext=None):
         if name is None:
             name = filename
         with open(filename, 'rb') as f:
             data_bin = f.read()
         return self.attach_binary(data_bin, filename=filename, name=name)
 
-    def attach_bytes(self, data_bin, filename=None, name=None):
+    def attach_bytes(self, data_bin, filename=None, name=None, ext=None):
+        if ext is None and filename is not None:
+            ext = splitext(filename)[-1]
         data_b64 = b64encode(data_bin)
         filename_base = basename(filename)
         attachment = {
             "data": data_b64,
             "encoding": 'base64',
             "name": name or filename_base,
-            "filename": filename_base
+            "filename": filename_base,
+            "ext": ext
         }
         self.attachments.append(attachment)
         return self
