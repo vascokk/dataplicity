@@ -3,7 +3,7 @@ Dataplicity Command
 
 After installing the dataplicity Python module, you should now be able to run a command line app called `dataplicity`.
 
-The dataplicity command line app can be used to *build*, *publish* and *run* Dataplicity projects via a number of *subcommands*. Run the following to list the available subcommands::
+The dataplicity command line app can be used to *build*, *publish* and *run* Dataplicity projects, via a number of *subcommands*. Run the following to list the available subcommands::
 
     dataplicity -h
 
@@ -85,11 +85,17 @@ Launches a web browser to manage the current device. For example::
 REGISTER
 ########
 
-Register the current dataplicity project with the Dataplicity server. This command should be run from a project directory when developing::
+Register the current Dataplicity project with the Dataplicity server. This command should be run from a project directory when developing::
 
     dataplicity register
 
 RUN
 ###
 
-Runs the local dataplicity project in the foreground. This command is mainly for development, logs will be written to stdout.
+Runs the local Dataplicity project in the foreground. This command is mainly for development, logs will be written to stdout.
+
+
+SYNC
+####
+
+Sync the running Dataplicity project with the server. This will cause the daemon to immediately sync with the server, outside of the regular sync schedule.

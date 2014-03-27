@@ -9,4 +9,5 @@ __all__ = ["motd",
            "auth",
            "deploy",
            "manage",
-           "event"]
+           "event",
+           "sync"]

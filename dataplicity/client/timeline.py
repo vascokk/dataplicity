@@ -124,10 +124,10 @@ class TimelineManager(object):
         self.timelines = {}
 
     def __nonzero__(self):
-    	return bool(self.timelines)
+        return bool(self.timelines)
 
     def __iter__(self):
-    	return self.timelines.itervalues()
+        return self.timelines.itervalues()
 
     @classmethod
     def init_from_conf(cls, client, conf):
