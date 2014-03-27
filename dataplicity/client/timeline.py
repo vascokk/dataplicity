@@ -59,7 +59,7 @@ class Event(object):
         self.init(*args, **kwargs)
         super(Event, self).__init__()
 
-    def init(self, title='', text='', text_format="TEXT", **kwargs):
+    def init(self, title='untitled', text='', text_format="TEXT", **kwargs):
         self.title = title
         self.text = text
         self.text_format = text_format
@@ -121,7 +121,7 @@ class TextEvent(Event):
 @register_event('IMAGE')
 class ImageEvent(Event):
 
-    def init(self, title='', text='', text_format='', filename='', name='', ext=''):
+    def init(self, title='untitled', text='', text_format='TEXT', filename='', name='', ext=''):
         self.title = title
         self.text = text
         self.text_format = text_format
@@ -218,8 +218,8 @@ class Timeline(object):
         event.write()
         return self
 
-    def new_photo(self, file=None, **kwargs):
-        event = self.new_event('IMAGE', name="photo", **kwargs)
+    def new_photo(self, file, filename=None, ext=None, **kwargs):
+        event = self.new_event('IMAGE', **kwargs)
 
         if hasattr(file, 'getvalue'):
             bytes = file.getvalue()
@@ -228,7 +228,7 @@ class Timeline(object):
         else:
             if bytes is None:
                 raise ValueError("A value for 'file' or 'bytes' is required")
-        event.attach_bytes(bytes)
+        event.attach_bytes(bytes, name='photo', filename=filename, ext=ext)
         return event
 
     def get_events(self, sort=True):
