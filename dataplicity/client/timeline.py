@@ -218,8 +218,8 @@ class Timeline(object):
         event.write()
         return self
 
-    def new_photo(self, file=None, bytes=None, title='Photo', name=None, text=None, filename=None, ext=None):
-        event = self.new_event('IMAGE', title=title, text=text, name=name, ext=ext, filename=filename)
+    def new_photo(self, file=None, bytes=None, title='Photo', text=None, filename=None, ext=None):
+        event = self.new_event('IMAGE', name="photo", title=title, text=text, ext=ext, filename=filename)
 
         if hasattr(file, 'getvalue'):
             bytes = file.getvalue()
