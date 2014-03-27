@@ -59,7 +59,7 @@ class Event(object):
         self.init(*args, **kwargs)
         super(Event, self).__init__()
 
-    def init(self, title='', text='', text_format="TEXT"):
+    def init(self, title='', text='', text_format="TEXT", **kwargs):
         self.title = title
         self.text = text
         self.text_format = text_format
@@ -117,7 +117,25 @@ class TextEvent(Event):
 
 @register_event('IMAGE')
 class ImageEvent(Event):
-    pass
+
+    def init(self, title='', text='', text_format='', filename='', name='', ext=''):
+        self.title = title
+        self.text = text
+        self.text_format = text_format
+        self.filename = filename
+        self.name = name
+        self.ext = ext
+
+    def to_data(self):
+        return {"timestamp": self.timestamp,
+                "event_type": self.event_type,
+                "title": self.title,
+                "text": self.text,
+                "text_format": self.text_format,
+                "filename": self.filename,
+                "name": self.name,
+                "ext": self.ext,
+                "attachments": self.attachments}
 
 
 class TimelineManager(object):
@@ -197,8 +215,8 @@ class Timeline(object):
         event.write()
         return self
 
-    def new_photo(self, file=None, bytes=None, title='Photo', name=None, text=None, filename=None):
-        event = self.new_event('IMAGE', title=title, text=text, filename=filename)
+    def new_photo(self, file=None, bytes=None, title='Photo', name=None, text=None, filename=None, ext=None):
+        event = self.new_event('IMAGE', title=title, text=text, name=name, ext=ext, filename=filename)
 
         if hasattr(file, 'getvalue'):
             bytes = file.getvalue()

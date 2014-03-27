@@ -381,6 +381,8 @@ class Task(Thread):
                     command = self._q.get(timeout=self._poll_interval)
                 except Empty:
                     break
+                if command is None:
+                    break
                 if isinstance(command, TaskCommand):
                     if isinstance(command, ShutdownTaskCommand):
                         # ShutdownTaskCommand
