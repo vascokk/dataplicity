@@ -26,7 +26,7 @@ class TakePhoto(Task):
         """Start the camera and return the camera instance"""
         camera = picamera.PiCamera()
         camera.resolution = (640, 480)
-        camera.start_preview()
+        #camera.start_preview()
         return camera
 
     def on_shutdown(self):
