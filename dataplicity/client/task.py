@@ -392,15 +392,16 @@ class Task(Thread):
                 if command is not None:
                     self._on_command(command)
 
-            T = time()
-            # Inject poll calls at regular intervals
-            if last_poll_time is None or T - last_poll_time > self._poll_interval:
-                try:
-                    self.poll()
-                except Exception as e:
-                    self.log.exception("error on poll")
-                self.poll_count += 1
-                last_poll_time = T
+            if not flushing:
+                T = time()
+                # Inject poll calls at regular intervals
+                if last_poll_time is None or T - last_poll_time > self._poll_interval:
+                    try:
+                        self.poll()
+                    except Exception:
+                        self.log.exception("error on poll")
+                    self.poll_count += 1
+                    last_poll_time = T
 
         self.log.debug("stopped")
 
