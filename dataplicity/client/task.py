@@ -195,7 +195,7 @@ class TaskManager(object):
         if self.started:
             # Notify all the threads we're stopping
             for task in self.tasks:
-                task.stop()
+                task.request_shutdown()
             # Wait for threads to finish
             for task in self.tasks:
                 task.join()
@@ -216,7 +216,7 @@ class TaskCommand(object):
     pass
 
 
-class ShutdownTaskCommand(object):
+class ShutdownTaskCommand(TaskCommand):
     pass
 
 
@@ -364,6 +364,7 @@ class Task(Thread):
             self.log.exception("on_startup exception, task will *not* run")
             return
 
+        flushing = False
         while not self._terminate_event.is_set():
 
             # Condition to break when all pending commands have been processed
@@ -378,15 +379,14 @@ class Task(Thread):
             max_command_loop_time = self._poll_interval / 2.0  # Seems like a sensible compromise
             while time() - command_loop_start_time < max_command_loop_time:
                 try:
-                    command = self._q.get(timeout=self._poll_interval)
+                    command = self._q.get(timeout=self._poll_interval if not flushing else 0.1)
                 except Empty:
-                    break
-                if command is None:
                     break
                 if isinstance(command, TaskCommand):
                     if isinstance(command, ShutdownTaskCommand):
                         # ShutdownTaskCommand
                         self._accept_new_commands = False
+                        flushing = True
                         continue
                 # A command packet of None is a null operation used to wake up the queue
                 if command is not None:

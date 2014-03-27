@@ -225,7 +225,7 @@ class Timeline(object):
         else:
             if bytes is None:
                 raise ValueError("A value for 'file' or 'bytes' is required")
-        event.attach_bin(event)
+        event.attach_bytes(bytes)
         return event
 
     def get_events(self, sort=True):
