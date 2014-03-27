@@ -93,7 +93,10 @@ class Event(object):
         if ext is None and filename is not None:
             ext = splitext(filename)[-1]
         data_b64 = b64encode(data_bin)
-        filename_base = basename(filename)
+        if filename is not None:
+            filename_base = basename(filename)
+        else:
+            filename_base = None
         attachment = {
             "data": data_b64,
             "encoding": 'base64',
