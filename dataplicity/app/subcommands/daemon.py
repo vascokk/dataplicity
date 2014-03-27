@@ -156,20 +156,14 @@ class Daemon(object):
 
     def handle_client_command(self, client):
         """Read lines sent by client"""
-        client.setblocking(False)
-        buf = ''
+        #client.setblocking(False)
         try:
             try:
-                while 1:
-                    c = client.recv(4096)
-                    if not c:
-                        break
-                    buf += c
-                    while '\n' in buf:
-                        line, buf = c.split('\n', 1)
-                        reply = self.on_client_command(line)
-                        if reply is not None:
-                            client.sendall(reply.rstrip('\n') + '\n')
+                command = client.recv(128).rstrip('\n')
+                if command:
+                    reply = self.on_client_command(command)
+                if reply is not None:
+                    client.sendall(reply.rstrip('\n') + '\n')
             except socket.error:
                 pass
 
