@@ -44,8 +44,9 @@ class TakePhoto(Task):
 
         # Create a new event photo
         event = timeline.new_photo(camera_file,
+                                   title="Frame {:06}".format(self.frame_no),
                                    text="Captured by the Raspberry Pi Camera",
-                                   filename="photo_{:06}.jpg".format(self.frame_no))
+                                   ext="jpeg")
         # Write the event
         event.write()
         # Keep track of the frame number
