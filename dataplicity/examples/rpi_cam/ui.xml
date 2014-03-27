@@ -3,7 +3,7 @@
     <interface id="dataplicity">
         <heading>This is the UI for examples.rpi.cam</heading>
         <text>
-        	Check the timeline, you should see a new picture every 10 minutes
+        	Check the timeline, you should see a new picture every minute
         </text>
     </interface>
 </ui>
