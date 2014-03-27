@@ -8,6 +8,7 @@ except:
     import sys
     # Attempt a friendly error message
     sys.stderr.write("Python module 'picamera' is required for this example\n")
+    sys.stderr.write("Try 'sudo pip install picamera'")
     raise
 
 
@@ -24,9 +25,13 @@ class TakePhoto(Task):
     def start_camera(self):
         """Start the camera and return the camera instance"""
         camera = picamera.PiCamera()
-        camera.resolution = (1024, 768)
+        camera.resolution = (640, 480)
         camera.start_preview()
         return camera
+
+    def on_shutdown(self):
+        # Gracefully close the camera
+        self.camera.close()
 
     def poll(self):
         # Write a frame to memory
