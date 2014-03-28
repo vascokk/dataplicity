@@ -38,5 +38,5 @@ class Comms(object):
     def status(self):
         try:
             return True, self('STATUS')
-        except CommsError:
+        except:
             return False, ''

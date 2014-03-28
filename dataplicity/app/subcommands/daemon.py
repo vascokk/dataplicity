@@ -191,6 +191,11 @@ class Daemon(object):
                 return str(e)
             else:
                 return "OK"
+
+        elif command == "STATUS":
+            self.log.info('status requested')
+            return "running"
+
         return "BADCOMMAND"
 
 
@@ -216,6 +221,8 @@ class D(SubCommand):
                             help="stop the daemon")
         parser.add_argument('-r', '--restart', dest='restart', action="store_true",
                             help="restart running daemon")
+        parser.add_argument('-t', '--status', dest="status", action="store_true",
+                            help="status of the daemon")
         parser.add_argument('-y', '--sync', dest="sync", action="store_true", default=False,
                             help="sync now")
 
@@ -249,6 +256,14 @@ class D(SubCommand):
 
         if args.sync:
             self.comms.sync()
+            return 0
+
+        if args.status:
+            running, msg = self.comms.status()
+            if not running:
+                sys.stdout.write('not running\n')
+            else:
+                sys.stdout.write(msg + '\n')
             return 0
 
         try:
