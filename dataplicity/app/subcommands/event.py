@@ -26,7 +26,7 @@ class Event(SubCommand):
         if args.image:
             try:
                 with timeline.new_event('IMAGE', text=args.text, title=args.title) as event:
-                    event.attach(args.image, name="photo")
+                    event.attach_file(args.image, name="photo")
             except IOError:
                 sys.stderr.write('image file not found')
         else:

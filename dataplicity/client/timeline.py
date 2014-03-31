@@ -87,7 +87,7 @@ class Event(object):
             name = filename
         with open(filename, 'rb') as f:
             data_bin = f.read()
-        return self.attach_binary(data_bin, filename=filename, name=name)
+        return self.attach_bytes(data_bin, filename=filename, name=name)
 
     def attach_bytes(self, data_bin, filename=None, name=None, ext=None):
         if ext is None and filename is not None:
