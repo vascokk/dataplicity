@@ -51,11 +51,13 @@ class TimelineFullError(TimelineError):
 
 class Event(object):
     """base class for events"""
+
     def __init__(self, timeline, event_id, timestamp, *args, **kwargs):
         self.timeline = timeline
         self.event_id = event_id
         self.timestamp = timestamp
         self.attachments = []
+        self.data = {}
         self.init(*args, **kwargs)
         super(Event, self).__init__()
 
@@ -65,15 +67,17 @@ class Event(object):
         self.text_format = text_format
 
     def to_data(self):
+        """Get a JSON serializable structyre for this event"""
         return {"timestamp": self.timestamp,
                 "event_type": self.event_type,
                 "title": self.title,
                 "text": self.text,
                 "text_format": self.text_format,
+                "data": self.data.copy(),
                 "attachments": self.attachments}
 
     def __repr__(self):
-        return "<event {} {}>".format(self.event_type, self.event_id)
+        return "<event {}>".format(self.event_id)
 
     def __enter__(self):
         return self
@@ -83,6 +87,7 @@ class Event(object):
             self.write()
 
     def attach_file(self, filename, name=None, ext=None):
+        """Attach a file to this event"""
         if name is None:
             name = filename
         with open(filename, 'rb') as f:
@@ -90,6 +95,7 @@ class Event(object):
         return self.attach_bytes(data_bin, filename=filename, name=name)
 
     def attach_bytes(self, data_bin, filename=None, name=None, ext=None):
+        """Attach binary data to this event"""
         if ext is None and filename is not None:
             ext = splitext(filename)[-1]
         data_b64 = b64encode(data_bin)
@@ -115,11 +121,13 @@ class Event(object):
 
 @register_event("TEXT")
 class TextEvent(Event):
+    """A simple text event"""
     pass
 
 
 @register_event('IMAGE')
 class ImageEvent(Event):
+    """An event with an image"""
 
     def init(self, title='untitled', text='', text_format='TEXT', filename='', name='', ext=''):
         self.title = title
@@ -138,6 +146,7 @@ class ImageEvent(Event):
                 "filename": self.filename,
                 "name": self.name,
                 "ext": self.ext,
+                "data": self.data,
                 "attachments": self.attachments}
 
 
@@ -181,6 +190,7 @@ class TimelineManager(object):
 
 
 class Timeline(object):
+    """A timeline is a sequence of timestamped events."""
 
     def __init__(self, path, name, max_events=None):
         self.path = path
@@ -212,19 +222,18 @@ class Timeline(object):
         log.debug('new event {!r}'.format(event))
         return event
 
-    def add_event(self, event_type, timestamp=None, *args, **kwargs):
-        """Add a new event of a given type to the timeline"""
-        event = self.new_event(event_type, timestamp=timestamp, *args, **kwargs)
-        event.write()
-        return self
-
     def new_photo(self, file, filename=None, ext=None, **kwargs):
+        """Create a new photo object"""
         event = self.new_event('IMAGE', **kwargs)
 
         if hasattr(file, 'getvalue'):
             bytes = file.getvalue()
         elif file is not None:
-            bytes = file.read()
+            if isinstance(file, basestring):
+                with open(file, 'rb') as f:
+                    bytes = f.read()
+            else:
+                bytes = file.read()
         else:
             if bytes is None:
                 raise ValueError("A value for 'file' or 'bytes' is required")

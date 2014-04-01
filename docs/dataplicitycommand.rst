@@ -7,6 +7,7 @@ The dataplicity command line app can be used to *build*, *publish* and *run* Dat
 
     dataplicity -h
 
+
 Subcommands
 -----------
 
@@ -57,6 +58,17 @@ DEPLOY
 Download and install firmware for a given device class. This requires that ``dataplicity init`` has been run. For example::
 
     dataplicity deploy "examples.Sine Wave"
+
+EVENT
+#####
+
+Insert a event in to a timeline. The following example will create a simple text event::
+
+    dataplicity event mytimeline "Some information about the event" --title="Something happened!"
+
+This example will post a photo event::
+
+    dataplicity event photos "Say Cheese" --title="Remote camera" --image ~/Pictures/photo.jpg
 
 INIT
 ####

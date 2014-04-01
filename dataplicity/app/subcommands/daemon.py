@@ -106,12 +106,11 @@ class Daemon(object):
                         self.handle_client_command(client)
                         continue
 
-                    t = time.time()
                     try:
-                        self.poll(t)
-                        time.sleep(0.25)
+                        self.poll(time.time())
+                        #time.sleep(0.25)
                     except Exception as e:
-                        self.log.debug('error in poll')
+                        self.log.exception('error in poll')
 
             except SystemExit:
                 self.log.debug("exit requested")

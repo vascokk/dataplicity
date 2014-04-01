@@ -19,15 +19,13 @@ class TakePhoto(Task):
         """Initialize the task"""
         self.timeline_name = self.conf.get('timeline', 'camera')
         self.frame_no = 1
-        self.camera = self.start_camera()
-        self.log.debug('Raspberry Pi camera started')
+        self.camera = None
 
-    def start_camera(self):
+    def on_startup(self):
         """Start the camera and return the camera instance"""
-        camera = picamera.PiCamera()
+        self.camera = camera = picamera.PiCamera()
         camera.resolution = (640, 480)
-        #camera.start_preview()
-        return camera
+        self.log.debug('Raspberry Pi camera started')
 
     def on_shutdown(self):
         # Gracefully close the camera

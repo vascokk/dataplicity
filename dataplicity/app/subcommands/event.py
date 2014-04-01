@@ -23,6 +23,7 @@ class Event(SubCommand):
         args = self.args
         client = self.app.make_client(log)
         timeline = client.timelines.get_timeline(args.timeline)
+
         if args.image:
             try:
                 with timeline.new_event('IMAGE', text=args.text, title=args.title) as event:
