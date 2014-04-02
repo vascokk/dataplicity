@@ -7,6 +7,7 @@ from dataplicity.app import comms
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import errors
 from dataplicity.constants import *
+from dataplicity import firmware
 
 
 from time import time
