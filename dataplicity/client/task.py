@@ -364,10 +364,13 @@ class Task(Thread):
             self.log.exception("on_startup exception, task will *not* run")
             return
 
-        try:
-            self.poll()
-        except Exception:
-            self.log.exception("error on first poll")
+        # Can't do the poll just yet!
+        # Must happen after settings change signal
+
+        # try:
+        #     self.poll()
+        # except Exception:
+        #     self.log.exception("error on first poll")
 
         flushing = False
         while not self._terminate_event.is_set():
