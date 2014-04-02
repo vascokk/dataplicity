@@ -6,10 +6,13 @@ from ConfigParser import SafeConfigParser
 from fs.utils import copyfile, copydir
 from fs.errors import ResourceNotFoundError
 from fs.tempfs import TempFS
+from fs.zipfs import ZipFS
+from fs.osfs import OSFS
 import zipfile
 
 import os
 import base64
+from cStringIO import StringIO
 from os.path import basename, join
 from fnmatch import fnmatch
 from logging import getLogger
@@ -109,7 +112,7 @@ def install_encoded(device_class, version, firmware_b64, activate=True):
     install_path = install(device_class, version, firmware_fs, dst_fs)
     # Move symlink to active firmware
     if activate:
-        active(device_class, version, dst_fs)
+        activate(device_class, version, dst_fs)
 
     # Clean up any temporary files
     firmware_fs.close()
@@ -117,6 +120,7 @@ def install_encoded(device_class, version, firmware_b64, activate=True):
 
     # Return install_path
     return install_path
+
 
 def activate(device_class, version, dst_fs):
     """Make a given version active"""

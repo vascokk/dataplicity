@@ -19,7 +19,8 @@ import random
 class Client(object):
     """The main interface to the dataplicity server"""
 
-    def __init__(self, conf_paths, log=None):
+    def __init__(self, conf_paths, check_firmware=True, log=None):
+        self.check_firmware = check_firmware
         if log is None:
             log = logging.getLogger('dataplicity.client')
         self.log = log
@@ -80,9 +81,10 @@ class Client(object):
                                auth_token=self.auth_token,
                                sync_id=sync_id)
 
-            batch.call_with_id('firmware_result',
-                               'device.check_firmware',
-                               current_version=self.current_firmware_version)
+            if self.check_firmware:
+                batch.call_with_id('firmware_result',
+                                   'device.check_firmware',
+                                   current_version=self.current_firmware_version)
 
             # Add samples
             for sampler_name in self.samplers.enumerate_samplers():
@@ -147,20 +149,20 @@ class Client(object):
         ellapsed = time() - start
         self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
 
-        firmware_result = batch.get_result('firmware_result')
-        if firmware_result['current']:
-            self.log.debug('firmware is current')
-        else:
-            firmware_b64 = firmware_result['firmware']
-            device_class = firmware_result['device_class']
-            version = firmware_result['version']
-            self.log.debug("new firmware, version v{} for device class '{}'".format(version, device_class))
-            self.log.info("installing firmware v{}".format(version))
-            install_path = firmware.install_encoded(device_class, version, firmware_b64)
+        if self.check_firmware:
+            firmware_result = batch.get_result('firmware_result')
+            if firmware_result['current']:
+                self.log.debug('firmware is current')
+            else:
+                firmware_b64 = firmware_result['firmware']
+                device_class = firmware_result['device_class']
+                version = firmware_result['version']
+                self.log.debug("new firmware, version v{} for device class '{}'".format(version, device_class))
+                self.log.info("installing firmware v{}".format(version))
+                install_path = firmware.install_encoded(device_class, version, firmware_b64)
 
-            self.log('firmware installed in "{}"'.format(install_path))
-            comms = comms.Comms()
-            comms.restart()
+                self.log('firmware installed in "{}"'.format(install_path))
+                comms.Comms().restart()
 
 
 if __name__ == "__main__":

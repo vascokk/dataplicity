@@ -29,7 +29,9 @@ class Daemon(object):
 
         self.log = logging.getLogger('dataplicity')
 
-        client = self.client = Client(conf_path, log=self.log)
+        client = self.client = Client(conf_path,
+                                      check_firmware=not foreground,
+                                      log=self.log)
         conf = client.conf
 
         self.poll_rate_seconds = conf.get_float("daemon", "poll", 60.0)
