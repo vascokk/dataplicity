@@ -86,7 +86,7 @@ class LiveSettingsManager(object):
         if self._settings:
             for name, conf in self._settings.iteritems():
                 settings = self._settings[name]
-            tasks.send_signal_from('settings_update', name, name, settings.settings)
+                tasks.send_signal_from('settings_update', name, name, settings.settings)
 
     def update(self, conf_map, tasks):
         """Update new conf files"""
