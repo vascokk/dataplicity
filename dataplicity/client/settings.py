@@ -31,6 +31,10 @@ class ConfigSection(object):
 class DPConfigParser(SafeConfigParser):
     """Custom ConfigParser that has a get that can return defaults"""
 
+    def __init__(self, *args, **kwargs):
+        SafeConfigParser.__init__(self, *args, **kwargs)
+        self.path = '?'
+
     def __repr__(self):
         return "<settings {}>".format(basename(self.path))
 
