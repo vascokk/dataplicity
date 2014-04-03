@@ -33,7 +33,7 @@ class DPConfigParser(SafeConfigParser):
 
     def __init__(self, *args, **kwargs):
         SafeConfigParser.__init__(self, *args, **kwargs)
-        self.path = '?'
+        self.path = ''
 
     def __repr__(self):
         return "<settings {}>".format(basename(self.path))
