@@ -120,6 +120,7 @@ class Client(object):
         # Remove snapshots that were successfully synced
         # Unsuccessful snapshots remain on disk, so the next sync will re-attempt them.
         for sampler_name in samplers_updated:
+            sampler = self.samplers.get_sampler(sampler_name)
             try:
                 if not batch.get_result("samples.{}".format(sampler_name)):
                     self.log("failed to get sampler results '{}'".format(sampler_name))
