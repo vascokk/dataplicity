@@ -7,6 +7,7 @@ from dataplicity import constants
 
 import sys
 import os
+import os.path
 
 
 conf_template = """
@@ -34,7 +35,7 @@ settings = {SETTINGS_PATH}
 
 [daemon]
 port = 3366
-conf = {FIRMWARE_PATH}/current/dataplicity.conf
+conf = {FIRMWARE_CONF_PATH}
 
 [firmware]
 path = {FIRMWARE_PATH}
@@ -52,24 +53,34 @@ class Init(SubCommand):
         parser.add_argument('--class', dest="cls", metavar="DEVICE CLASS", default="default",
                             help="the device class to use")
         parser.add_argument('-d', '--conf-dir', dest="output", metavar="PATH", default="/etc/dataplicity/",
-                            help="Location to write device configuration")
+                            help="location to write device configuration")
         parser.add_argument('--serial', dest="serial", metavar="SERIAL", default=None,
-                            help="Serial number for this device, omit to generate a serial number automatically")
+                            help="serial number for this device, omit to generate a serial number automatically")
         parser.add_argument('--name-prefix', dest="name_prefix", metavar="PREFIX", default='',
-                            help="A string to prefix device name with")
+                            help="a string to prefix device name with")
         parser.add_argument('--name', dest="name", metavar="NAME", default=None,
-                            help="A friendly name for this device")
+                            help="a friendly name for this device")
         parser.add_argument('-f', '--force', default=False, action="store_true",
-                            help="Force overwrite of conf file if it exists")
+                            help="force overwrite of conf file if it exists")
         parser.add_argument('--dry', default=False, action="store_true",
-                            help="Don't write a file, just write it to stdout")
-        parser.add_argument('-u', '--user', dest="user", metavar="USERNAME", default=None, required=True,
-                            help="Your dataplicity.com username")
-        parser.add_argument('-p', '--password', dest="password", default=None, required=True,
-                            help="Your dataplicity.com password")
+                            help="don't write the conf file, just print it to stdout")
+        parser.add_argument('-u', '--user', dest="user", metavar="USERNAME", default=None, required=False,
+                            help="your dataplicity.com username")
+        parser.add_argument('-p', '--password', dest="password", metavar="PASSWORD", default=None, required=False,
+                            help="your dataplicity.com password")
 
     def run(self):
         args = self.args
+
+        user = args.user
+        if user is None:
+            user = raw_input('username: ')
+
+        password = args.password
+        if password is None:
+            import getpass
+            password = getpass.getpass('password: ')
+
         output_dir = args.output
         device_conf_path = os.path.join(output_dir, 'dataplicity.conf')
 
@@ -84,18 +95,21 @@ class Init(SubCommand):
         from dataplicity import jsonrpc
         remote = jsonrpc.JSONRPC(args.server)
 
+        sys.stdout.write('authenticating with server...\n')
         auth_token = remote.call('device.auth',
                                  serial=serial,
-                                 username=args.user,
-                                 password=args.password)
+                                 username=user,
+                                 password=password)
 
+        FIRMWARE_CONF_PATH = os.path.join(constants.FIRMWARE_PATH, 'current/dataplicity.conf')
         template_data = {"serial": serial,
                          "name": name,
                          "class": args.cls,
                          "auth_token": auth_token,
                          "SERVER_URL": args.server or constants.SERVER_URL,
                          "SETTINGS_PATH": constants.SETTINGS_PATH,
-                         "FIRMWARE_PATH": constants.FIRMWARE_PATH}
+                         "FIRMWARE_PATH": constants.FIRMWARE_PATH,
+                         "FIRMWARE_CONF_PATH": FIRMWARE_CONF_PATH}
         conf_contents = conf_template.format(**template_data)
 
         if os.path.exists(device_conf_path) and not (args.force or args.dry):
