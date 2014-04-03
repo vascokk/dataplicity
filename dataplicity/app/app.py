@@ -6,7 +6,6 @@ import logging.handlers
 import logging.config
 
 from dataplicity import __version__
-from dataplicity import jsonrpc
 from dataplicity.client import Client
 from dataplicity.client import tools
 from dataplicity.app.subcommand import SubCommandMeta
@@ -20,24 +19,24 @@ DEFAULT_LOGGING = {
         'verbose': {
             'format': "[%(name)s:%(levelname)s]: %(message)s",
             'datefmt': "[%d/%b/%Y %H:%M:%S]"
-            },
         },
+    },
     'handlers': {
 
         'syslog': {
             'class': 'logging.handlers.SysLogHandler',
             'address': '/dev/log',
             'formatter': 'verbose',
-            },
         },
+    },
     'loggers': {
         'dataplicity': {
             'handlers': ['syslog'],
             'level': logging.DEBUG,
             'propagate': True,
-            },
-        }
+        },
     }
+}
 
 
 class ProjectNotFoundError(Exception):
@@ -109,13 +108,10 @@ class App(object):
                 raise ProjectNotFoundError('unable to locate dataplicity.conf for project')
         return self._conf
 
-
     def run(self):
         parser = self._get_argparser()
         args = self.args = parser.parse_args(sys.argv[1:])
         self.init_logging(self.args.logging)
-
-        #self.conf = self.args.conf or tools.find_conf()
 
         subcommand = self.subcommands[args.subcommand]
         subcommand.args = args
@@ -126,5 +122,7 @@ class App(object):
             if self.args.debug:
                 raise
             sys.stderr.write(str(e) + '\n')
-            sys.stderr.write('use the --debug switch for a full traceback\n')
+            cmd = sys.argv[0].rsplit('/', 1)[-1]
+            debug_cmd = ' '.join([cmd, '--debug'] + sys.argv[1:])
+            sys.stderr.write("(run '{}' for a full traceback)\n".format(debug_cmd))
             return -1
