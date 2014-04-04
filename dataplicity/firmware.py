@@ -144,6 +144,6 @@ def get_ui(firmware_fs):
         conf = settings.read_from_file(f)
     ui_path = conf.get('register', 'ui')
     try:
-        return firmware_fs.getcontents(ui_path)
+        return firmware_fs.getcontents(ui_path, 'rb')
     except ResourceNotFoundError:
         return None
