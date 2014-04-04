@@ -81,6 +81,12 @@ class Client(object):
                                auth_token=self.auth_token,
                                sync_id=sync_id)
 
+            # Tell the server which firmware we're running
+            batch.call_with_id('set_firmware_result',
+                               'device.set_firmware',
+                               version=self.current_firmware_version)
+
+            # Check for new firmware (if required)
             if self.check_firmware:
                 batch.call_with_id('firmware_result',
                                    'device.check_firmware',
@@ -115,7 +121,14 @@ class Client(object):
                                        name=timeline.name,
                                        events=timeline.get_events())
 
+        # get_result will throw exceptions with (hopefully) helpful error messages if they fail
         batch.get_result('authenticate_result')
+
+        # If the server doesn't have the current firmware, we don't want to break the rest of the sync
+        try:
+            batch.get_result('set_firmware_result')
+        except Exception:
+            self.log.exception("error setting current firmware version")
 
         # Remove snapshots that were successfully synced
         # Unsuccessful snapshots remain on disk, so the next sync will re-attempt them.
@@ -125,7 +138,7 @@ class Client(object):
                 if not batch.get_result("samples.{}".format(sampler_name)):
                     self.log("failed to get sampler results '{}'".format(sampler_name))
             except Exception as e:
-                self.log.exception("Error adding samples to {} ({})".format(sampler_name, e))
+                self.log.exception("error adding samples to {} ({})".format(sampler_name, e))
             else:
                 sampler.remove_snapshot()
 
