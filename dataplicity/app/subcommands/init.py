@@ -30,6 +30,8 @@ class = {class}
 serial = {serial}
 # Auth token
 auth = {auth_token}
+# Text used to identify the device when using --auto
+auto_device_text = {auto_device_text}
 # Directory where dataplicity will store 'live' settings which can be updated by the server
 settings = {SETTINGS_PATH}
 
@@ -44,13 +46,19 @@ path = {FIRMWARE_PATH}
 
 
 class Init(SubCommand):
-    """Initialize this device for first use"""
+    """Initialize this device for first use.
+
+    There are two ways to initialize a device, either supply your username & password (with -u and -p), or use the --auto switch which authorizes the device after it has been confirmed via the web interface.
+
+    Note: If you don't supply your username and password on the command line, you will be prompted to enter it interactively.
+
+    """
     help = "Initialize this device for first use"
 
     def add_arguments(self, parser):
         parser.add_argument('--server', dest="server", metavar="SERVER URL", default=constants.SERVER_URL,
                             help="URL for Dataplicity api")
-        parser.add_argument('--class', dest="cls", metavar="DEVICE CLASS", default="default",
+        parser.add_argument('--class', dest="cls", metavar="DEVICE CLASS", default=None,
                             help="the device class to use")
         parser.add_argument('-d', '--conf-dir', dest="output", metavar="PATH", default="/etc/dataplicity/",
                             help="location to write device configuration")
@@ -68,18 +76,25 @@ class Init(SubCommand):
                             help="your dataplicity.com username")
         parser.add_argument('-p', '--password', dest="password", metavar="PASSWORD", default=None, required=False,
                             help="your dataplicity.com password")
+        parser.add_argument('--auto', dest="auto", required=False, default='', metavar="TEXT TO IDENTIFY DEVICE",
+                            help="auto-register online")
 
     def run(self):
         args = self.args
+        auto = args.auto
 
         user = args.user
         if user is None:
             user = raw_input('username: ')
 
         password = args.password
-        if password is None:
+        if password is None and not auto:
             import getpass
             password = getpass.getpass('password: ')
+
+        if auto and not args.cls:
+            sys.stdout.write('device class (--class) must be specified with --auto\n')
+            return -1
 
         output_dir = args.output
         device_conf_path = os.path.join(output_dir, 'dataplicity.conf')
@@ -96,16 +111,33 @@ class Init(SubCommand):
         remote = jsonrpc.JSONRPC(args.server)
 
         sys.stdout.write('authenticating with server...\n')
-        auth_token = remote.call('device.auth',
-                                 serial=serial,
-                                 username=user,
-                                 password=password)
+        if auto:
+            auth_token = "file:/var/dataplicity/authtoken"
+
+            approval = remote.call('device.request_approval',
+                                    username=user,
+                                    device_class=args.cls,
+                                    serial=serial,
+                                    name=args.name,
+                                    info=auto)
+            if approval['state'] == 'approved':
+                auth_token = approval['auth_token']
+            else:
+                sys.stdout.write('device is pending approval\n')
+
+        else:
+            auth_token = remote.call('device.auth',
+                                     serial=serial,
+                                     username=user,
+                                     password=password)
+            sys.stdout.write('device authenticated\n')
 
         FIRMWARE_CONF_PATH = os.path.join(constants.FIRMWARE_PATH, 'current/dataplicity.conf')
         template_data = {"serial": serial,
                          "name": name,
-                         "class": args.cls,
+                         "class": args.cls or 'default',
                          "auth_token": auth_token,
+                         "auto_device_text": auto,
                          "SERVER_URL": args.server or constants.SERVER_URL,
                          "SETTINGS_PATH": constants.SETTINGS_PATH,
                          "FIRMWARE_PATH": constants.FIRMWARE_PATH,

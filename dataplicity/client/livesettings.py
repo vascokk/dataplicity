@@ -98,6 +98,7 @@ class LiveSettingsManager(object):
 
 
 class LiveSettings(object):
+    """Settings object that may be updated by the server"""
 
     def __init__(self, path, defaults_path):
         self.path = path
@@ -105,6 +106,9 @@ class LiveSettings(object):
         self._settings = None
         self.timestamp = None
         self._contents = None
+
+    def __repr__(self):
+        return '<settings "{}">'.format(self.path)
 
     @property
     def contents(self):
@@ -116,9 +120,25 @@ class LiveSettings(object):
         return self._settings
 
     def init(self):
-        if not os.path.exists(self.path) and os.path.exists(self.defaults_path):
-            copyfile(self.defaults_path, self.path)
-            log.debug('copied default settings from {} to {}'.format(self.defaults_path, self.path))
+        if os.path.exists(self.defaults_path):
+            if not os.path.exists(self.path):
+                # New settings, just copy value
+                copyfile(self.defaults_path, self.path)
+                log.debug('copied default settings from {} to {}'.format(self.defaults_path, self.path))
+            else:
+                # Settings already exists
+                # Attempt to merge any new default values
+                _contents, default_settings = read_contents(self.defaults_path, blank=True)
+                updated = False
+                for section in default_settings.sections():
+                    for option in default_settings.options(section):
+                        if not self.settings.has_option(section, option):
+                            value = default_settings.get(section, option)
+                            self.settings.set(section, option, value)
+                            log.debug('added new default to {} {}/{}="{}"'.format(self, section, option, value))
+                            updated = True
+                if updated:
+                    self.export()
 
     def get_timestamp(self):
         try:
@@ -156,6 +176,7 @@ class LiveSettings(object):
         self.settings.write(f)
         contents = f.getvalue()
         f.close()
+        log.debug('written settings {}'.format(self))
         return contents
 
     def write(self, contents):
@@ -166,6 +187,7 @@ class LiveSettings(object):
         self.load()
 
     def jsonify(self):
+        """Settings in a json object"""
         return {
             "timestamp": self.timestamp,
             "settings": self._contents

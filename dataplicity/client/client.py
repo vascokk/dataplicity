@@ -11,6 +11,7 @@ from dataplicity import firmware
 
 
 from time import time
+import os
 import os.path
 import logging
 import random
@@ -45,7 +46,8 @@ class Client(object):
             self.serial = serial.get_default_serial()
             self.log.info('auto generated device serial, %r', self.serial)
         self.device_class = conf.get('device', 'class')
-        self.auth_token = conf.get('device', 'auth')
+        self._auth_token = conf.get('device', 'auth')
+        self.auto_register_info = conf.get('device', 'auto_device_text', None)
 
         self.tasks = TaskManager.init_from_conf(self, conf)
         self.samplers = SamplerManager.init_from_conf(self, conf)
@@ -57,12 +59,60 @@ class Client(object):
 
         self.get_timeline = self.timelines.get_timeline
 
+
+    @property
+    def auth_token(self):
+        """get the auth_token, which may be in dataplicity.cfg, or reference another file"""
+        if self._auth_token.startswith('file:'):
+            auth_token_path = self._auth_token.split(':', 1)[-1]
+            try:
+                with open(auth_token_path, 'rt') as f:
+                    auth_token = f.read()
+            except IOError:
+                return None
+            else:
+                self._auth_token = auth_token
+            return auth_token
+        else:
+            return self._auth_token
+
+
     def get_settings(self, name):
         self.livesettings.get(name, reload=True)
 
     def sync(self):
         start = time()
         self.log.debug("syncing...")
+
+        if not self.auth_token and self._auth_token.startswith('file:'):
+            auth_token_path = self._auth_token.split(':', 1)[-1]
+            approval = self.remote.call('device.check_approval',
+                                         device_class=self.device_class,
+                                         serial=self.serial,
+                                         info=self.auto_register_info)
+            if approval['state'] != 'approved':
+                # Device is not yet approved, can't continue with sync
+                state = approval['state']
+                if state == 'pending':
+                    # Waiting on approval
+                    log.debug('device approval pending...')
+                else:
+                    # denied
+                    log.error('device approval {}'.format(state))
+                return
+            else:
+                # Device is approved. Write the auth_token.
+                try:
+                    os.makedirs(os.path.dirname(auth_token_path))
+                except OSError:
+                    pass
+                try:
+                    with open(auth_token_path, 'wb') as f:
+                        self._auth_token = approval['auth_token']
+                        f.write(self._auth_token)
+                except:
+                    log.exception('unable to write auth token')
+                    # Will error out on the next command
 
         if not self.auth_token:
             self.log.error("sync failed -- no auth token, have you run 'dataplicity register'?")
