@@ -14,6 +14,7 @@ import sys
 
 
 class UpdateUI(SubCommand):
+    """Update UI XML for this firmware"""
     help = "Update UI XML for this firmware"
 
     def add_arguments(self, parser):

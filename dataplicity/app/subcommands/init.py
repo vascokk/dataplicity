@@ -32,6 +32,8 @@ serial = {serial}
 auth = {auth_token}
 # Text used to identify the device when using --auto
 auto_device_text = {auto_device_text}
+# Company ID when using --auto
+auto_device_company =  {auto_device_company}
 # Directory where dataplicity will store 'live' settings which can be updated by the server
 settings = {SETTINGS_PATH}
 
@@ -111,17 +113,19 @@ class Init(SubCommand):
         remote = jsonrpc.JSONRPC(args.server)
 
         sys.stdout.write('authenticating with server...\n')
+        auto_device_company = None
         if auto:
             auth_token = "file:/var/dataplicity/authtoken"
 
             approval = remote.call('device.request_approval',
-                                    username=user,
-                                    device_class=args.cls,
-                                    serial=serial,
-                                    name=args.name,
-                                    info=auto)
+                                   username=user,
+                                   device_class=args.cls,
+                                   serial=serial,
+                                   name=args.name,
+                                   info=auto)
             if approval['state'] == 'approved':
                 auth_token = approval['auth_token']
+                auto_device_company = approval['company']
             else:
                 sys.stdout.write('device is pending approval\n')
 
@@ -138,6 +142,7 @@ class Init(SubCommand):
                          "class": args.cls or 'default',
                          "auth_token": auth_token,
                          "auto_device_text": auto,
+                         "auto_device_company": auto_device_company,
                          "SERVER_URL": args.server or constants.SERVER_URL,
                          "SETTINGS_PATH": constants.SETTINGS_PATH,
                          "FIRMWARE_PATH": constants.FIRMWARE_PATH,

@@ -107,6 +107,11 @@ RUN
 Runs the local Dataplicity project in the foreground. This command is mainly for development, logs will be written to stdout.
 
 
+UPDATEUI
+########
+
+Upload the user interface XML associated with the firmware.
+
 SYNC
 ####
 
