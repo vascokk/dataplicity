@@ -139,6 +139,7 @@ class LiveSettings(object):
                             updated = True
                 if updated:
                     self.export()
+        self.load()
 
     def get_timestamp(self):
         try:

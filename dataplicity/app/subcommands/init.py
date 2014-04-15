@@ -24,16 +24,22 @@ url = {SERVER_URL}
 [device]
 # Name of the device to be displayed in the device tree
 name = {name}
+
 # The device class
 class = {class}
+
 # A unique serial number
 serial = {serial}
+
 # Auth token
 auth = {auth_token}
+
 # Text used to identify the device when using --auto
 auto_device_text = {auto_device_text}
-# Company ID when using --auto
-auto_device_company =  {auto_device_company}
+
+# Company subdomain or ID when using --auto
+company =  {company}
+
 # Directory where dataplicity will store 'live' settings which can be updated by the server
 settings = {SETTINGS_PATH}
 
@@ -80,6 +86,8 @@ class Init(SubCommand):
                             help="your dataplicity.com password")
         parser.add_argument('--auto', dest="auto", required=False, default='', metavar="TEXT TO IDENTIFY DEVICE",
                             help="auto-register online")
+        parser.add_argument('--company', dest="company", required=False, default='', metavar="SUBDOMAIN",
+                            help="Your company subdomain, if using --auto")
 
     def run(self):
         args = self.args
@@ -95,7 +103,11 @@ class Init(SubCommand):
             password = getpass.getpass('password: ')
 
         if auto and not args.cls:
-            sys.stdout.write('device class (--class) must be specified with --auto\n')
+            sys.stderr.write('device class (--class) must be specified with --auto\n')
+            return -1
+
+        if auto and not args.company:
+            sys.stderr.write('company (--company) must be specified with --auto\n')
             return -1
 
         output_dir = args.output
@@ -117,17 +129,20 @@ class Init(SubCommand):
         if auto:
             auth_token = "file:/var/dataplicity/authtoken"
 
-            approval = remote.call('device.request_approval',
-                                   username=user,
-                                   device_class=args.cls,
-                                   serial=serial,
-                                   name=args.name,
-                                   info=auto)
-            if approval['state'] == 'approved':
-                auth_token = approval['auth_token']
-                auto_device_company = approval['company']
+            if args.company:
+                auto_device_company = args.company
             else:
-                sys.stdout.write('device is pending approval\n')
+                approval = remote.call('device.request_approval',
+                                       username=user,
+                                       device_class=args.cls,
+                                       serial=serial,
+                                       name=args.name,
+                                       info=auto)
+                if approval['state'] == 'approved':
+                    auth_token = approval['auth_token']
+                else:
+                    sys.stdout.write('device is pending approval\n')
+                auto_device_company = approval.get('company', '')
 
         else:
             auth_token = remote.call('device.auth',
@@ -142,7 +157,7 @@ class Init(SubCommand):
                          "class": args.cls or 'default',
                          "auth_token": auth_token,
                          "auto_device_text": auto,
-                         "auto_device_company": auto_device_company,
+                         "company": auto_device_company,
                          "SERVER_URL": args.server or constants.SERVER_URL,
                          "SETTINGS_PATH": constants.SETTINGS_PATH,
                          "FIRMWARE_PATH": constants.FIRMWARE_PATH,

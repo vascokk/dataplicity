@@ -28,9 +28,14 @@ class Client(object):
         conf_paths = conf_paths or None
         if not isinstance(conf_paths, list):
             conf_paths = [conf_paths]
-        conf = self.conf = settings.read(*conf_paths)
-        conf_dir = os.path.dirname(conf.path)
-        self._init(conf, conf_dir)
+        print conf_paths
+        try:
+            conf = self.conf = settings.read(*conf_paths)
+            conf_dir = os.path.dirname(conf.path)
+            self._init(conf, conf_dir)
+        except:
+            log.exception('unable to start')
+            raise
 
     def _init(self, conf, conf_dir):
         self.firmware_conf = settings.read_default(os.path.join(conf_dir, 'firmware.conf'))
@@ -45,7 +50,9 @@ class Client(object):
         if self.serial is None:
             self.serial = serial.get_default_serial()
             self.log.info('auto generated device serial, %r', self.serial)
+        self.name = conf.get('device', 'name', self.serial)
         self.device_class = conf.get('device', 'class')
+        self.company = conf.get('device', 'company', None)
         self._auth_token = conf.get('device', 'auth')
         self.auto_register_info = conf.get('device', 'auto_device_text', None)
 
@@ -58,7 +65,6 @@ class Client(object):
         self.sample = self.samplers.sample
 
         self.get_timeline = self.timelines.get_timeline
-
 
     @property
     def auth_token(self):
@@ -76,7 +82,6 @@ class Client(object):
         else:
             return self._auth_token
 
-
     def get_settings(self, name):
         self.livesettings.get(name, reload=True)
 
@@ -87,18 +92,19 @@ class Client(object):
         if not self.auth_token and self._auth_token.startswith('file:'):
             auth_token_path = self._auth_token.split(':', 1)[-1]
             approval = self.remote.call('device.check_approval',
-                                         device_class=self.device_class,
-                                         serial=self.serial,
-                                         info=self.auto_register_info)
+                                        company=self.company,
+                                        serial=self.serial,
+                                        name=self.name,
+                                        info=self.auto_register_info)
             if approval['state'] != 'approved':
                 # Device is not yet approved, can't continue with sync
                 state = approval['state']
                 if state == 'pending':
                     # Waiting on approval
-                    log.debug('device approval pending...')
+                    self.log.debug('device approval pending...')
                 else:
                     # denied
-                    log.error('device approval {}'.format(state))
+                    self.log.error('device approval {}'.format(state))
                 return
             else:
                 # Device is approved. Write the auth_token.
