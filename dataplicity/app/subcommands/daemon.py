@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.app import comms
 from dataplicity.client import Client
+from dataplicity.client.exceptions import ForceRestart, ClientException
 from dataplicity import constants
 from dataplicity.client import settings
 
@@ -39,7 +40,6 @@ class Daemon(object):
         self.pid_path = abspath(conf.get('daemon', 'pidfile', '/var/run/dataplicity.pid'))
 
         self.server_closing_event = Event()
-        #self.comms = comms.Comms()
 
         # Command to execute with the daemon exits
         self.exit_command = None
@@ -67,17 +67,17 @@ class Daemon(object):
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        try:
-            self.client.sync()
-        except:
-            self.log.exception("sync failed")
+        # try:
+        #     self.client.sync()
+        # except:
+        #     self.log.exception("sync failed")
         self.client.tasks.start()
         self.log.debug('ready')
-        sync_push_thread = Thread(target=self._push_wait,
-                                  args=(self.client,
-                                        self.server_closing_event,
-                                        lambda: None))
-        sync_push_thread.daemon = True
+        # sync_push_thread = Thread(target=self._push_wait,
+        #                           args=(self.client,
+        #                                 self.server_closing_event,
+        #                                 lambda: None))
+        # sync_push_thread.daemon = True
         try:
             if not self.foreground:
                 pid = str(os.getpid())
@@ -88,7 +88,7 @@ class Daemon(object):
                     self.log.exception("Unable to write pid file (%s)", e)
                     raise
 
-            sync_push_thread.start()
+            # sync_push_thread.start()
             try:
                 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server_socket.bind(('127.0.0.1', 8888))
@@ -101,18 +101,19 @@ class Daemon(object):
             try:
                 while not self.exit_event.isSet():
                     try:
+                        self.poll(time.time())
+                    except ClientException:
+                        raise
+                    except Exception as e:
+                        self.log.exception('error in poll')
+
+                    try:
                         client, _address = server_socket.accept()
                     except socket.timeout:
                         pass
                     else:
                         self.handle_client_command(client)
                         continue
-
-                    try:
-                        self.poll(time.time())
-                        #time.sleep(0.25)
-                    except Exception as e:
-                        self.log.exception('error in poll')
 
             except SystemExit:
                 self.log.debug("exit requested")
@@ -122,8 +123,13 @@ class Daemon(object):
                 self.log.debug("user Exit")
                 return
 
+        except ForceRestart:
+            self.log.info('restarting...')
+            self.exit(' '.join(sys.argv))
+
         except Exception as e:
             self.log.exception('error in daemon main loop')
+
 
         finally:
             try:
@@ -136,7 +142,7 @@ class Daemon(object):
             self.log.debug("closing")
             self.server_closing_event.set()
             self.client.tasks.stop()
-            sync_push_thread.join(2)
+            #sync_push_thread.join(2)
             self.log.debug("goodbye")
 
             if self.exit_event.isSet() and self.exit_command is not None:
@@ -152,6 +158,8 @@ class Daemon(object):
             t = time.time()
         try:
             self.client.sync()
+        except ClientException:
+            raise
         except Exception:
             self.log.exception('sync failed')
 
@@ -232,7 +240,10 @@ class D(SubCommand):
         conf_path = abspath(conf_path)
 
         conf = settings.read(conf_path)
-        conf_path = conf.get('daemon', 'conf', conf_path)
+        firmware_conf_path = conf.get('daemon', 'conf', conf_path)
+        # It may not exist if there is no installed firmware
+        if os.path.exists(firmware_conf_path):
+            conf_path = firmware_conf_path
 
         if debug is None:
             debug = self.args.debug or self.args.foreground

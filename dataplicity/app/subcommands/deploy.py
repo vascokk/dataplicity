@@ -82,7 +82,7 @@ class Deploy(SubCommand):
                          dst_fs)
 
         fw_path = dst_fs.getsyspath('/')
-        print "installed firmware {:010} to {}".format(version, fw_path)
+        print "installed firmware {} to {}".format(version, fw_path)
 
         firmware.activate(device_class, version, dst_fs)
-        print "activated {:010}".format(version)
+        print "activated {}".format(version)

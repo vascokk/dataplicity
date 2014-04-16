@@ -3,6 +3,7 @@ from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.client.timeline import TimelineManager
+from dataplicity.client.exceptions import ForceRestart
 from dataplicity.app import comms
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import constants
@@ -28,46 +29,48 @@ class Client(object):
         if log is None:
             log = logging.getLogger('dataplicity.client')
         self.log = log
-        conf_paths = conf_paths or None
+        conf_paths = conf_paths or []
         if not isinstance(conf_paths, list):
             conf_paths = [conf_paths]
-        print conf_paths
+        self.conf_paths = conf_paths
+        self._init()
+
+    def _init(self):
         try:
-            conf = self.conf = settings.read(*conf_paths)
+            conf = self.conf = settings.read(*self.conf_paths)
             conf_dir = os.path.dirname(conf.path)
-            self._init(conf, conf_dir)
+
+            self.firmware_conf = settings.read_default(os.path.join(conf_dir, 'firmware.conf'))
+            self.current_firmware_version = int(self.firmware_conf.get('firmware', 'version', 1))
+            self.firmware_path = conf.get('firmware', 'path')
+            self.log.info('running firmware {:010}'.format(self.current_firmware_version))
+            self.rpc_url = conf.get('server',
+                                    'url',
+                                    constants.SERVER_URL)
+            self.remote = JSONRPC(self.rpc_url)
+
+            self.serial = conf.get('device', 'serial', None)
+            if self.serial is None:
+                self.serial = serial.get_default_serial()
+                self.log.info('auto generated device serial, %r', self.serial)
+            self.name = conf.get('device', 'name', self.serial)
+            self.device_class = conf.get('device', 'class')
+            self.company = conf.get('device', 'company', None)
+            self._auth_token = conf.get('device', 'auth')
+            self.auto_register_info = conf.get('device', 'auto_device_text', None)
+
+            self.tasks = TaskManager.init_from_conf(self, conf)
+            self.samplers = SamplerManager.init_from_conf(self, conf)
+            self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
+            self.timelines = TimelineManager.init_from_conf(self, conf)
+
+            self.sample_now = self.samplers.sample_now
+            self.sample = self.samplers.sample
+
+            self.get_timeline = self.timelines.get_timeline
         except:
-            log.exception('unable to start')
+            self.log.exception('unable to start')
             raise
-
-    def _init(self, conf, conf_dir):
-        self.firmware_conf = settings.read_default(os.path.join(conf_dir, 'firmware.conf'))
-        self.current_firmware_version = int(self.firmware_conf.get('firmware', 'version', 1))
-        self.log.info('running firmware {:010}'.format(self.current_firmware_version))
-        self.rpc_url = conf.get('server',
-                                'url',
-                                constants.SERVER_URL)
-        self.remote = JSONRPC(self.rpc_url)
-
-        self.serial = conf.get('device', 'serial', None)
-        if self.serial is None:
-            self.serial = serial.get_default_serial()
-            self.log.info('auto generated device serial, %r', self.serial)
-        self.name = conf.get('device', 'name', self.serial)
-        self.device_class = conf.get('device', 'class')
-        self.company = conf.get('device', 'company', None)
-        self._auth_token = conf.get('device', 'auth')
-        self.auto_register_info = conf.get('device', 'auto_device_text', None)
-
-        self.tasks = TaskManager.init_from_conf(self, conf)
-        self.samplers = SamplerManager.init_from_conf(self, conf)
-        self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
-        self.timelines = TimelineManager.init_from_conf(self, conf)
-
-        self.sample_now = self.samplers.sample_now
-        self.sample = self.samplers.sample
-
-        self.get_timeline = self.timelines.get_timeline
 
     @property
     def auth_token(self):
@@ -121,12 +124,20 @@ class Client(object):
                         self._auth_token = approval['auth_token']
                         f.write(self._auth_token)
                 except:
-                    log.exception('unable to write auth token')
+                    self.log.exception('unable to write auth token')
                     # Will error out on the next command
 
         if not self.auth_token:
             self.log.error("sync failed -- no auth token, have you run 'dataplicity register'?")
             return
+
+        if not os.path.exists(self.firmware_path):
+            self.log.debug("no firmware installed")
+            try:
+                self.deploy()
+            except:
+                self.log.exception("unable to deploy firmware")
+            raise ForceRestart("new firmware")
 
         samplers_updated = []
         random.seed()
@@ -240,6 +251,7 @@ class Client(object):
 
     def deploy(self):
         """Deploy latest firmware"""
+        self.log.info("requesting firmware...")
         with self.remote.batch() as batch:
             batch.call_with_id('register_result',
                                'device.register',
@@ -250,11 +262,14 @@ class Client(object):
             batch.call_with_id('auth_result',
                                'device.check_auth',
                                device_class=self.device_class,
-                               serial=serial,
+                               serial=self.serial,
                                auth_token=self.auth_token)
             batch.call_with_id('firmware_result',
                                'device.get_firmware')
-        batch.get_result('register_result')
+        try:
+            batch.get_result('register_result')
+        except Exception as e:
+            self.log.warning(e)
         batch.get_result('auth_result')
 
         fw = batch.get_result('firmware_result')
