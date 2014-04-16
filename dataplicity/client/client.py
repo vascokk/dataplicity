@@ -5,16 +5,19 @@ from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.client.timeline import TimelineManager
 from dataplicity.app import comms
 from dataplicity.jsonrpc import JSONRPC
-from dataplicity import errors
-from dataplicity.constants import *
+from dataplicity import constants
 from dataplicity import firmware
 
+from fs.zipfs import ZipFS
+from fs.osfs import OSFS
 
 from time import time
 import os
 import os.path
 import logging
 import random
+from base64 import b64decode
+from cStringIO import StringIO
 
 
 class Client(object):
@@ -43,7 +46,7 @@ class Client(object):
         self.log.info('running firmware {:010}'.format(self.current_firmware_version))
         self.rpc_url = conf.get('server',
                                 'url',
-                                SERVER_URL)
+                                constants.SERVER_URL)
         self.remote = JSONRPC(self.rpc_url)
 
         self.serial = conf.get('device', 'serial', None)
@@ -89,6 +92,7 @@ class Client(object):
         start = time()
         self.log.debug("syncing...")
 
+        # If we don't have an auth_token, we are waiting for permission
         if not self.auth_token and self._auth_token.startswith('file:'):
             auth_token_path = self._auth_token.split(':', 1)[-1]
             approval = self.remote.call('device.check_approval',
@@ -233,6 +237,48 @@ class Client(object):
 
                 self.log('firmware installed in "{}"'.format(install_path))
                 comms.Comms().restart()
+
+    def deploy(self):
+        """Deploy latest firmware"""
+        with self.remote.batch() as batch:
+            batch.call_with_id('register_result',
+                               'device.register',
+                               auth_token=self.auth_token,
+                               name=self.name or self.serial,
+                               serial=self.serial,
+                               device_class_name=self.device_class)
+            batch.call_with_id('auth_result',
+                               'device.check_auth',
+                               device_class=self.device_class,
+                               serial=serial,
+                               auth_token=self.auth_token)
+            batch.call_with_id('firmware_result',
+                               'device.get_firmware')
+        batch.get_result('register_result')
+        batch.get_result('auth_result')
+
+        fw = batch.get_result('firmware_result')
+        if not fw['firmware']:
+            self.log.warning('no firmware available!')
+            return False
+        version = fw['version']
+
+        firmware_bin = b64decode(fw['firmware'])
+        firmware_file = StringIO(firmware_bin)
+        firmware_fs = ZipFS(firmware_file)
+
+        dst_fs = OSFS(constants.FIRMWARE_PATH, create=True)
+
+        firmware.install(self.device_class,
+                         version,
+                         firmware_fs,
+                         dst_fs)
+
+        fw_path = dst_fs.getsyspath('/')
+        self.log.info("installed firmware {:010} to {}".format(version, fw_path))
+
+        firmware.activate(self.device_class, version, dst_fs)
+        self.log.info("activated firmware {:010}".format(version))
 
 
 if __name__ == "__main__":
