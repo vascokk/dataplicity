@@ -33,10 +33,12 @@ exclude = *.pyc
 
 
 def _get_list(value):
+    """Get a list of values from a setting"""
     return [line.strip() for line in value.split('\n')]
 
 
 def get_conf(src_fs):
+    """Get the conf from a firmware fs"""
     cfg = SafeConfigParser()
     with src_fs.open('dataplicity.conf') as f:
         cfg.readfp(f)
@@ -44,6 +46,7 @@ def get_conf(src_fs):
 
 
 def get_version(src_fs):
+    """Get a version number from the firmware"""
     if not src_fs.exists('firmware.conf'):
         src_fs.setcontents('firmware.conf', DEFAULT_FIRMWARE_CONF)
     cfg = SafeConfigParser()
@@ -54,6 +57,7 @@ def get_version(src_fs):
 
 
 def bump(src_fs):
+    """Increment the firmware version stored in firmware.conf"""
     version = int(get_version(src_fs))
     new_version = version + 1
     cfg = SafeConfigParser()
@@ -62,7 +66,7 @@ def bump(src_fs):
     cfg.set('firmware', 'version', str(new_version))
     with src_fs.open('firmware.conf', 'wb') as f:
         cfg.write(f)
-    print "firmware version bumped to {:04}".format(new_version)
+    print "firmware version bumped to {}".format(new_version)
     return new_version
 
 
@@ -94,7 +98,15 @@ def install(device_class, version, firmware_fs, dst_fs):
         dst_fs.makedir(dst_path, allow_recreate=True, recursive=True)
     install_fs = dst_fs.opendir(dst_path)
     copydir(firmware_fs, install_fs)
-    return dst_fs.getsyspath(dst_path)
+    install_path = dst_fs.getsyspath(dst_path)
+
+    try:
+        os.chmod(install_path, 0o0775)
+    except:
+        pass
+
+    # Return install_path
+    return install_path
 
 
 def install_encoded(device_class, version, firmware_b64, activate=True):
