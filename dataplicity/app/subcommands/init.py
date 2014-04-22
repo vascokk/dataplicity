@@ -94,7 +94,7 @@ class Init(SubCommand):
         auto = args.auto
 
         user = args.user
-        if user is None:
+        if user is None and not auto:
             user = raw_input('username: ')
 
         password = args.password
@@ -128,21 +128,7 @@ class Init(SubCommand):
         auto_device_company = None
         if auto:
             auth_token = "file:/var/dataplicity/authtoken"
-
-            if args.company:
-                auto_device_company = args.company
-            else:
-                approval = remote.call('device.request_approval',
-                                       username=user,
-                                       device_class=args.cls,
-                                       serial=serial,
-                                       name=args.name,
-                                       info=auto)
-                if approval['state'] == 'approved':
-                    auth_token = approval['auth_token']
-                else:
-                    sys.stdout.write('device is pending approval\n')
-                auto_device_company = approval.get('company', '')
+            auto_device_company = args.company
 
         else:
             auth_token = remote.call('device.auth',
