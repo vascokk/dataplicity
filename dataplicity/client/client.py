@@ -99,6 +99,7 @@ class Client(object):
         if not self.auth_token and self._auth_token.startswith('file:'):
             auth_token_path = self._auth_token.split(':', 1)[-1]
             approval = self.remote.call('device.check_approval',
+                                        device_class=self.device_class,
                                         company=self.company,
                                         serial=self.serial,
                                         name=self.name,
