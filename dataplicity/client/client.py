@@ -198,8 +198,8 @@ class Client(object):
         # If the server doesn't have the current firmware, we don't want to break the rest of the sync
         try:
             batch.get_result('set_firmware_result')
-        except Exception:
-            self.log.exception("error setting current firmware version")
+        except Exception as e:
+            self.log.warning("unable to set firmware ({})".format(e))
 
         # Remove snapshots that were successfully synced
         # Unsuccessful snapshots remain on disk, so the next sync will re-attempt them.
