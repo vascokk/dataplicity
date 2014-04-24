@@ -129,7 +129,16 @@ class Init(SubCommand):
         if auto:
             auth_token = "file:/var/dataplicity/authtoken"
             auto_device_subdomain = args.subdomain
-
+            # check if authtoken file already exists. If it does, delete it
+            token_file = auth_token.split(':')[1]
+            if os.path.exists(token_file):
+                try:
+                    os.remove(token_file)
+                except Exception as e:
+                    # Helpful errors FTW
+                    sys.stderr.write("couldn't delete auth file\n")
+                    sys.stderr.write("do you need to run this command with 'sudo'?\n")
+                    return -1
         else:
             auth_token = remote.call('device.auth',
                                      serial=serial,
