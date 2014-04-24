@@ -29,9 +29,9 @@ Dataplicity supports an alternative method to deploy devices that doesn't requir
 
 To enable the *zero configration* deploy, a dataplicity.conf should be generated with the following command::
 
-    dataplicity init --auto "TEXT TO IDENTIFY DEVICE" --class "DEVICE CLASS" --company SUBDOMAIN
+    dataplicity init --auto "TEXT TO IDENTIFY DEVICE" --class "DEVICE CLASS" --subdomain SUBDOMAIN
 
-The text for the --auto switch should be a memorable string (to identify the device online). Your company should also be specified with the --company switch, and should be your company *subdomain*.
+The text for the --auto switch should be a memorable string (to identify the device online). Your subdomain should also be specified with the --subdomain switch, and should be your company *subdomain*.
 
 You can now run the daemon with the following::
 

@@ -55,7 +55,11 @@ class Client(object):
                 self.log.info('auto generated device serial, %r', self.serial)
             self.name = conf.get('device', 'name', self.serial)
             self.device_class = conf.get('device', 'class')
-            self.company = conf.get('device', 'company', None)
+            self.subdomain = conf.get('device', 'subdomain', None)
+            if not self.subdomain:
+                # try legacy settings
+                self.subdomain = conf.get('device', 'company', None)
+
             self._auth_token = conf.get('device', 'auth')
             self.auto_register_info = conf.get('device', 'auto_device_text', None)
 
@@ -100,7 +104,7 @@ class Client(object):
             auth_token_path = self._auth_token.split(':', 1)[-1]
             approval = self.remote.call('device.check_approval',
                                         device_class=self.device_class,
-                                        company=self.company,
+                                        subdomain=self.subdomain,
                                         serial=self.serial,
                                         name=self.name,
                                         info=self.auto_register_info)

@@ -38,7 +38,7 @@ auth = {auth_token}
 auto_device_text = {auto_device_text}
 
 # Company subdomain or ID when using --auto
-company =  {company}
+subdomain =  {subdomain}
 
 # Directory where dataplicity will store 'live' settings which can be updated by the server
 settings = {SETTINGS_PATH}
@@ -86,7 +86,7 @@ class Init(SubCommand):
                             help="your dataplicity.com password")
         parser.add_argument('--auto', dest="auto", required=False, default='', metavar="TEXT TO IDENTIFY DEVICE",
                             help="auto-register online")
-        parser.add_argument('--company', dest="company", required=False, default='', metavar="SUBDOMAIN",
+        parser.add_argument('--subdomain', dest="subdomain", required=False, default='', metavar="SUBDOMAIN",
                             help="Your company subdomain, if using --auto")
 
     def run(self):
@@ -106,8 +106,8 @@ class Init(SubCommand):
             sys.stderr.write('device class (--class) must be specified with --auto\n')
             return -1
 
-        if auto and not args.company:
-            sys.stderr.write('company (--company) must be specified with --auto\n')
+        if auto and not args.subdomain:
+            sys.stderr.write('subdomain (--subdomain) must be specified with --auto\n')
             return -1
 
         output_dir = args.output
@@ -125,10 +125,10 @@ class Init(SubCommand):
         remote = jsonrpc.JSONRPC(args.server)
 
         sys.stdout.write('authenticating with server...\n')
-        auto_device_company = None
+        auto_device_subdomain = None
         if auto:
             auth_token = "file:/var/dataplicity/authtoken"
-            auto_device_company = args.company
+            auto_device_subdomain = args.subdomain
 
         else:
             auth_token = remote.call('device.auth',
@@ -143,7 +143,7 @@ class Init(SubCommand):
                          "class": args.cls or 'default',
                          "auth_token": auth_token,
                          "auto_device_text": auto,
-                         "company": auto_device_company,
+                         "subdomain": auto_device_subdomain,
                          "SERVER_URL": args.server or constants.SERVER_URL,
                          "SETTINGS_PATH": constants.SETTINGS_PATH,
                          "FIRMWARE_PATH": constants.FIRMWARE_PATH,
