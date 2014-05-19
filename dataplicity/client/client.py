@@ -22,6 +22,35 @@ from base64 import b64decode
 from cStringIO import StringIO
 
 
+def _wait_on_url(url, closing_event, log):
+    """Wait for a long running http request, and respond to a closing event"""
+    WAIT_SLEEP = 5
+    while not closing_event.is_set():
+        url_file = None
+        try:
+            try:
+                url_file = urlopen(url)
+            except Exception as e:
+                log.warning("failed to connect to {}, retry in {} seconds".format(url, WAIT_SLEEP))
+                for sleep in WAIT_SLEEP:
+                    if closing_event.is_set():
+                        return None
+                    sleep(1)
+                continue
+
+            url_file.fp.settimeout(1)
+            while not closing_event.is_set():
+                try:
+                    response = f.fp.recv(512)
+                except socket.timeout:
+                    continue
+                return response
+        finally:
+            if url_file is not None:
+                url_file.close()
+    return None
+
+
 class Client(object):
     """The main interface to the dataplicity server"""
 
@@ -81,28 +110,23 @@ class Client(object):
             raise
 
     def connect_wait(self, closing_event, sync_func):
-        WAIT_SLEEP = 5
+        # Number of seconds to wait between unsuccessful connections
+        try:
 
-        while not closing_event.is_set():
-            push_url = "{}?auth={}".format(self.push_url, self.serial)
-            push_url_file = None
-            try:
-                push_url_file = urlopen(push_url)
-                response = push_url_file.read().strip()
-            except:
-                self.log.exception("error reading from push url")
-                # If there is some connectivity error we don't want to hammer the server
-                sleep(WAIT_SLEEP)
-                continue
-            finally:
-                if push_url_file is not None:
-                    push_url_file.close()
-            if response == "SYNCNOW":
-                try:
-                    sync_func()
-                except:
-                    self.log.exception("push sync callback failed")
-        self.log.debug('connect_wait thread exiting')
+            while not closing_event.is_set():
+                push_url = "{}?serial={}".format(self.push_url, self.serial)
+                response = _wait_on_url(push_url, closing_event, self.log).strip()
+
+                if response == "SYNCNOW":
+                    try:
+                        sync_func()
+                    except:
+                        self.log.exception("push sync callback failed")
+
+                sleep(1)
+
+        finally:
+            self.log.debug('connect_wait thread exiting')
 
     @property
     def auth_token(self):
