@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.app import comms
-from dataplicity.client import Thread, Client
+from dataplicity.client import Client
 from dataplicity.client.exceptions import ForceRestart, ClientException
 from dataplicity import constants
 from dataplicity.client import settings
@@ -13,7 +13,7 @@ import sys
 import os
 import time
 import socket
-from threading import Event
+from threading import Event, Thread
 from os.path import abspath
 import logging
 
@@ -54,7 +54,7 @@ class Daemon(object):
             return None
 
     def _push_wait(self, client, event, sync_func):
-        client.connect_wait(event=event, sync_func=sync_func)
+        client.connect_wait(event, sync_func)
 
     def exit(self, command=None):
         """Exit daemon now, and run optional command"""
@@ -72,7 +72,7 @@ class Daemon(object):
         sync_push_thread = Thread(target=self._push_wait,
                                   args=(self.client,
                                         self.server_closing_event,
-                                        lambda: None))
+                                        self.sync_now))
         sync_push_thread.daemon = True
         try:
             if not self.foreground:
@@ -137,10 +137,9 @@ class Daemon(object):
             self.log.debug("closing")
             self.server_closing_event.set()
             self.client.tasks.stop()
-            sync_push_thread.join(2)
             self.log.debug("goodbye")
 
-            if self.exit_event.isSet() and self.exit_command is not None:
+            if self.exit_event.is_set() and self.exit_command is not None:
                 time.sleep(1)  # Maybe redundant
                 self.log.debug("Executing %s" % self.exit_command)
                 os.system(self.exit_command)

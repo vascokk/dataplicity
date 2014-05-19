@@ -20,6 +20,7 @@ import logging
 import random
 from base64 import b64decode
 from cStringIO import StringIO
+from threading import Lock
 
 
 def _wait_on_url(url, closing_event, log):
@@ -30,21 +31,20 @@ def _wait_on_url(url, closing_event, log):
         try:
             try:
                 url_file = urlopen(url)
-            except Exception as e:
-                log.warning("failed to connect to {}, retry in {} seconds".format(url, WAIT_SLEEP))
-                for sleep in WAIT_SLEEP:
+            except Exception:
+                log.exception("failed to connect to {}, retry in {} seconds".format(url, WAIT_SLEEP))
+                for _sleep in xrange(WAIT_SLEEP):
                     if closing_event.is_set():
                         return None
                     sleep(1)
                 continue
-
-            url_file.fp.settimeout(1)
-            while not closing_event.is_set():
-                try:
-                    response = f.fp.recv(512)
-                except socket.timeout:
-                    continue
-                return response
+            try:
+                # This blocks
+                # Don't know of a simple way to make it non-blocking with https
+                response = url_file.read()
+            except:
+                return None
+            return response
         finally:
             if url_file is not None:
                 url_file.close()
@@ -63,6 +63,7 @@ class Client(object):
         if not isinstance(conf_paths, list):
             conf_paths = [conf_paths]
         self.conf_paths = conf_paths
+        self._sync_lock = Lock()
         self._init()
 
     def _init(self):
@@ -110,20 +111,18 @@ class Client(object):
             raise
 
     def connect_wait(self, closing_event, sync_func):
-        # Number of seconds to wait between unsuccessful connections
         try:
 
             while not closing_event.is_set():
                 push_url = "{}?serial={}".format(self.push_url, self.serial)
                 response = _wait_on_url(push_url, closing_event, self.log).strip()
-
+                if response is not None:
+                    self.log.debug('push wait received: "{}"'.format(response))
                 if response == "SYNCNOW":
                     try:
                         sync_func()
                     except:
                         self.log.exception("push sync callback failed")
-
-                sleep(1)
 
         finally:
             self.log.debug('connect_wait thread exiting')
@@ -148,6 +147,11 @@ class Client(object):
         self.livesettings.get(name, reload=True)
 
     def sync(self):
+        # Serialize syncing
+        with self._sync_lock:
+            self._sync()
+
+    def _sync(self):
         start = time()
         self.log.debug("syncing...")
 

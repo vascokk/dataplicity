@@ -1,5 +1,5 @@
 SERVER_URL = "https://api.dataplicity.com"
-PUSH_URL = "https://sync.dataplicity.com"
+PUSH_URL = "https://sync.dataplicity.com/pushwait/"
 CONF_PATH = "/etc/dataplicity/dataplicity.conf"
 SETTINGS_PATH = "/var/dataplicity/"
 FIRMWARE_PATH = "/srv/dataplicity/fw/"
