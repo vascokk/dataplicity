@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.app import comms
-from dataplicity.client import Client
+from dataplicity.client import Thread, Client
 from dataplicity.client.exceptions import ForceRestart, ClientException
 from dataplicity import constants
 from dataplicity.client import settings
@@ -13,13 +13,14 @@ import sys
 import os
 import time
 import socket
-from threading import Thread, Event
+from threading import Event
 from os.path import abspath
 import logging
 
 
 class Daemon(object):
     """Dataplicity device management process"""
+
     def __init__(self,
                  conf_path=None,
                  foreground=False,
@@ -53,7 +54,6 @@ class Daemon(object):
             return None
 
     def _push_wait(self, client, event, sync_func):
-        return
         client.connect_wait(event=event, sync_func=sync_func)
 
     def exit(self, command=None):
@@ -67,17 +67,13 @@ class Daemon(object):
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        # try:
-        #     self.client.sync()
-        # except:
-        #     self.log.exception("sync failed")
         self.client.tasks.start()
         self.log.debug('ready')
-        # sync_push_thread = Thread(target=self._push_wait,
-        #                           args=(self.client,
-        #                                 self.server_closing_event,
-        #                                 lambda: None))
-        # sync_push_thread.daemon = True
+        sync_push_thread = Thread(target=self._push_wait,
+                                  args=(self.client,
+                                        self.server_closing_event,
+                                        lambda: None))
+        sync_push_thread.daemon = True
         try:
             if not self.foreground:
                 pid = str(os.getpid())
@@ -88,7 +84,7 @@ class Daemon(object):
                     self.log.exception("Unable to write pid file (%s)", e)
                     raise
 
-            # sync_push_thread.start()
+            sync_push_thread.start()
             try:
                 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server_socket.bind(('127.0.0.1', 8888))
@@ -130,7 +126,6 @@ class Daemon(object):
         except Exception as e:
             self.log.exception('error in daemon main loop')
 
-
         finally:
             try:
                 #server_socket.shutdown(socket.SHUT_RDWR)
@@ -142,7 +137,7 @@ class Daemon(object):
             self.log.debug("closing")
             self.server_closing_event.set()
             self.client.tasks.stop()
-            #sync_push_thread.join(2)
+            sync_push_thread.join(2)
             self.log.debug("goodbye")
 
             if self.exit_event.isSet() and self.exit_command is not None:
@@ -208,11 +203,11 @@ class Daemon(object):
         return "BADCOMMAND"
 
 
-class FlushFile(file):
-    def write(self, data):
-        ret = super(FlushFile, self).write(data)
-        self.flush()
-        return ret
+# class FlushFile(file):
+#     def write(self, data):
+#         ret = super(FlushFile, self).write(data)
+#         self.flush()
+#         return ret
 
 
 class D(SubCommand):

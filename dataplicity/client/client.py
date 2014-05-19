@@ -12,7 +12,8 @@ from dataplicity import firmware
 from fs.zipfs import ZipFS
 from fs.osfs import OSFS
 
-from time import time
+from urllib2 import urlopen
+from time import time, sleep
 import os
 import os.path
 import logging
@@ -47,6 +48,9 @@ class Client(object):
             self.rpc_url = conf.get('server',
                                     'url',
                                     constants.SERVER_URL)
+            self.push_url = conf.get('server',
+                                     'push_url',
+                                     constants.PUSH_URL)
             self.remote = JSONRPC(self.rpc_url)
 
             self.serial = conf.get('device', 'serial', None)
@@ -75,6 +79,30 @@ class Client(object):
         except:
             self.log.exception('unable to start')
             raise
+
+    def connect_wait(self, closing_event, sync_func):
+        WAIT_SLEEP = 5
+
+        while not closing_event.is_set():
+            push_url = "{}?auth={}".format(self.push_url, self.serial)
+            push_url_file = None
+            try:
+                push_url_file = urlopen(push_url)
+                response = push_url_file.read().strip()
+            except:
+                self.log.exception("error reading from push url")
+                # If there is some connectivity error we don't want to hammer the server
+                sleep(WAIT_SLEEP)
+                continue
+            finally:
+                if push_url_file is not None:
+                    push_url_file.close()
+            if response == "SYNCNOW":
+                try:
+                    sync_func()
+                except:
+                    self.log.exception("push sync callback failed")
+        self.log.debug('connect_wait thread exiting')
 
     @property
     def auth_token(self):
