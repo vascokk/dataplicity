@@ -112,9 +112,10 @@ class Client(object):
 
     def connect_wait(self, closing_event, sync_func):
         try:
-
             while not closing_event.is_set():
-                push_url = "{}?serial={}".format(self.push_url, self.serial)
+                push_url = "{}?serial={}&auth={}".format(self.push_url,
+                                                         self.serial,
+                                                         self._auth_token)
                 response = _wait_on_url(push_url, closing_event, self.log).strip()
                 if response is not None:
                     self.log.debug('push wait received: "{}"'.format(response))
