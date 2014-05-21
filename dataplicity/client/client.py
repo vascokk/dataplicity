@@ -12,7 +12,7 @@ from dataplicity import firmware
 from fs.zipfs import ZipFS
 from fs.osfs import OSFS
 
-from urllib2 import urlopen
+from urllib2 import urlopen, HTTPError
 from time import time, sleep
 import os
 import os.path
@@ -31,6 +31,8 @@ def _wait_on_url(url, closing_event, log):
         try:
             try:
                 url_file = urlopen(url)
+            except HTTPError as e:
+                log.warning("failed to connect to {} ({}), retry in {} seconds".format(url, e, WAIT_SLEEP))
             except Exception:
                 log.exception("failed to connect to {}, retry in {} seconds".format(url, WAIT_SLEEP))
                 for _sleep in xrange(WAIT_SLEEP):
