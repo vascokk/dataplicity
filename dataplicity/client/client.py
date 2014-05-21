@@ -26,6 +26,14 @@ from threading import Lock
 def _wait_on_url(url, closing_event, log):
     """Wait for a long running http request, and respond to a closing event"""
     WAIT_SLEEP = 5
+
+    def do_wait():
+        """Wait for n seconds, or until closing event is set"""
+        for _sleep in xrange(WAIT_SLEEP):
+            if closing_event.is_set():
+                return None
+            sleep(1)
+
     while not closing_event.is_set():
         url_file = None
         try:
@@ -33,12 +41,10 @@ def _wait_on_url(url, closing_event, log):
                 url_file = urlopen(url)
             except HTTPError as e:
                 log.warning("failed to connect to {} ({}), retry in {} seconds".format(url, e, WAIT_SLEEP))
+                do_wait()
             except Exception:
                 log.exception("failed to connect to {}, retry in {} seconds".format(url, WAIT_SLEEP))
-                for _sleep in xrange(WAIT_SLEEP):
-                    if closing_event.is_set():
-                        return None
-                    sleep(1)
+                do_wait()
                 continue
             try:
                 # This blocks
@@ -118,8 +124,9 @@ class Client(object):
                 push_url = "{}?serial={}&auth={}".format(self.push_url,
                                                          self.serial,
                                                          self._auth_token)
-                response = _wait_on_url(push_url, closing_event, self.log).strip()
+                response = _wait_on_url(push_url, closing_event, self.log)
                 if response is not None:
+                    response = response.strip()
                     self.log.debug('push wait received: "{}"'.format(response))
                 if response == "SYNCNOW":
                     try:
