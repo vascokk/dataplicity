@@ -27,12 +27,13 @@ def _wait_on_url(url, closing_event, log):
     """Wait for a long running http request, and respond to a closing event"""
     WAIT_SLEEP = 5
 
-    def do_wait():
+    def do_wait(wait_seconds):
         """Wait for n seconds, or until closing event is set"""
-        for _sleep in xrange(WAIT_SLEEP):
+        for _ in xrange(wait_seconds):
             if closing_event.is_set():
-                return None
+                return True
             sleep(1)
+        return False
 
     while not closing_event.is_set():
         url_file = None
@@ -40,18 +41,26 @@ def _wait_on_url(url, closing_event, log):
             try:
                 url_file = urlopen(url)
             except HTTPError as e:
+                # Server probably down or some other connectivity issue
                 log.warning("failed to connect to {} ({}), retry in {} seconds".format(url, e, WAIT_SLEEP))
-                do_wait()
+                if do_wait(WAIT_SLEEP):
+                    break
+                continue
             except Exception:
+                # Something else
                 log.exception("failed to connect to {}, retry in {} seconds".format(url, WAIT_SLEEP))
-                do_wait()
+                if do_wait(WAIT_SLEEP):
+                    break
                 continue
             try:
                 # This blocks
                 # Don't know of a simple way to make it non-blocking with https
                 response = url_file.read()
             except:
-                return None
+                log.exception("unable to read response from {}".format(url))
+                sleep(1)
+                continue
+
             return response
         finally:
             if url_file is not None:
