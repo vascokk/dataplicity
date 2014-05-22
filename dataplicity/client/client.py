@@ -22,10 +22,12 @@ from base64 import b64decode
 from cStringIO import StringIO
 from threading import Lock
 
+# Number of seconds to wait between failed connections
+CONNECT_WAIT = 5
+
 
 def _wait_on_url(url, closing_event, log):
     """Wait for a long running http request, and respond to a closing event"""
-    WAIT_SLEEP = 5
 
     def do_wait(wait_seconds):
         """Wait for n seconds, or until closing event is set"""
@@ -42,14 +44,14 @@ def _wait_on_url(url, closing_event, log):
                 url_file = urlopen(url)
             except HTTPError as e:
                 # Server probably down or some other connectivity issue
-                log.warning("failed to connect to {} ({}), retry in {} seconds".format(url, e, WAIT_SLEEP))
-                if do_wait(WAIT_SLEEP):
+                log.warning("failed to connect to {} ({}), retry in {} seconds".format(url, e, CONNECT_WAIT))
+                if do_wait(CONNECT_WAIT):
                     break
                 continue
             except Exception:
                 # Something else
-                log.exception("failed to connect to {}, retry in {} seconds".format(url, WAIT_SLEEP))
-                if do_wait(WAIT_SLEEP):
+                log.exception("failed to connect to {}, retry in {} seconds".format(url, CONNECT_WAIT))
+                if do_wait(CONNECT_WAIT):
                     break
                 continue
             try:
@@ -105,6 +107,7 @@ class Client(object):
                 self.serial = serial.get_default_serial()
                 self.log.info('auto generated device serial, %r', self.serial)
             self.name = conf.get('device', 'name', self.serial)
+            self.log.info('device name "{}", "serial" {}'.format(self.name, self.serial))
             self.device_class = conf.get('device', 'class')
             self.subdomain = conf.get('device', 'subdomain', None)
             if not self.subdomain:
@@ -136,12 +139,23 @@ class Client(object):
                 response = _wait_on_url(push_url, closing_event, self.log)
                 if response is not None:
                     response = response.strip()
-                    self.log.debug('push wait received: "{}"'.format(response))
                 if response == "SYNCNOW":
+                    self.log.debug("server requested sync")
                     try:
                         sync_func()
                     except:
                         self.log.exception("push sync callback failed")
+                elif response == "TIMEOUT":
+                    # Timed out, just connect again
+                    continue
+                else:
+                    self.log.debug('push wait received: "{}"'.format(response))
+                    # Some error occurred, or invalid response
+                    # Wait for a moment, so as not to hammer the server
+                    for _ in xrange(CONNECT_WAIT):
+                        if closing_event.is_set():
+                            return
+                        sleep(1)
 
         finally:
             self.log.debug('connect_wait thread exiting')
