@@ -8,7 +8,7 @@ from dataplicity import atomicwrite
 
 from cStringIO import StringIO
 import os
-from os.path import join, normpath, abspath, dirname
+from os.path import join
 from threading import RLock
 from shutil import copyfile
 

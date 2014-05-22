@@ -60,7 +60,8 @@ def _wait_on_url(url, closing_event, log):
                 response = url_file.read()
             except:
                 log.exception("unable to read response from {}".format(url))
-                sleep(1)
+                if do_wait(CONNECT_WAIT):
+                    break
                 continue
 
             return response
