@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Developing Dataplicity Projects &mdash; Dataplicity 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Dataplicity 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="Deploying" href="deploying.html" />
+    <link rel="prev" title="Dataplicity Configuration" href="dataplicityconf.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="deploying.html" title="Deploying"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dataplicityconf.html" title="Dataplicity Configuration"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="developing-dataplicity-projects">
+<h1>Developing Dataplicity Projects<a class="headerlink" href="#developing-dataplicity-projects" title="Permalink to this headline">¶</a></h1>
+<p>Developing a Dataplicity Project is an iterative cycle of making changes and testing. When you are happy with a given version it can be <strong>published</strong> to the Dataplicity server. This will make the update available to all devices with the same device class.</p>
+<p>A firmware consists of a snapshot of the project directory, minus any irrelevant files (temporary files, source control files and derived files etc).</p>
+<p>The current firmware version is stored in an INI file called <tt class="docutils literal"><span class="pre">firmware.conf</span></tt>, which should be in the same directory as <tt class="docutils literal"><span class="pre">dataplicity.conf</span></tt>. The following is an example of a typical <tt class="docutils literal"><span class="pre">firmware.conf</span></tt> file:</p>
+<div class="highlight-python"><div class="highlight"><pre>[firmware]
+version = 9
+exclude = *.pyc
+    __*__
+    .*
+    .hg
+    .git
+</pre></div>
+</div>
+<p>The one and only section, [firmware], contains the current version of the firmware and a list of wildcard paths to exclude from the project directory when it is published.</p>
+<div class="section" id="building-publishing">
+<h2>Building &amp; Publishing<a class="headerlink" href="#building-publishing" title="Permalink to this headline">¶</a></h2>
+<p>To build the current firmware, run <tt class="docutils literal"><span class="pre">dataplicity</span> <span class="pre">build</span></tt> from the project directory. This will zip up files in the project directory, with the exception of any paths matching an exclude wildcard, and store the resulting firmware in a directory called <cite>__firmware__</cite>.</p>
+<p>To publish a firmware (upload it to the server), use <cite>dataplicity publish</cite>.</p>
+<p>Build and publish can also be combined in to a single step with the <tt class="docutils literal"><span class="pre">--build</span></tt> switch on publish. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity publish --build
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Developing Dataplicity Projects</a><ul>
+<li><a class="reference internal" href="#building-publishing">Building &amp; Publishing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dataplicityconf.html"
+                        title="previous chapter">Dataplicity Configuration</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="deploying.html"
+                        title="next chapter">Deploying</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/developing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="deploying.html" title="Deploying"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dataplicityconf.html" title="Dataplicity Configuration"
+             >previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Dataplicity Ltd.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

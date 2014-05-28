@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dataplicity Configuration &mdash; Dataplicity 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Dataplicity 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="Developing Dataplicity Projects" href="developing.html" />
+    <link rel="prev" title="Dataplicity Command" href="dataplicitycommand.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="developing.html" title="Developing Dataplicity Projects"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dataplicitycommand.html" title="Dataplicity Command"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="dataplicity-configuration">
+<h1>Dataplicity Configuration<a class="headerlink" href="#dataplicity-configuration" title="Permalink to this headline">¶</a></h1>
+<p>Every dataplicity service contains a file named &#8216;dataplicity.conf&#8217;, which is in standard INI file format.</p>
+<p>A INI file consists of a section introduced with square brackets, followed by a list of key = value pairs. Here&#8217;s an example INI file:</p>
+<div class="highlight-python"><div class="highlight"><pre>[section]
+# This is a comment
+foo = bar
+# The following is a multiple line value, note the indentation
+hobbits = Sam
+    Bilbo
+</pre></div>
+</div>
+<p>Dataplicity extends this format slightly with sections that introduce and create an internal object. Such sections are introduced in the section title (in square brackets) with the name of the object followed by a colon, then the object&#8217;s name. Here&#8217;s an example:</p>
+<div class="highlight-python"><div class="highlight"><pre>[hobbit:sam]
+name = Samwise Gamgee
+
+[hobbit:bilbo]
+name = Bilbo Baggins
+</pre></div>
+</div>
+<p>Object sections can be repeated for each desired object, and typically contain the same set of keys and values.</p>
+<div class="section" id="extending-dataplicity-conf">
+<h2>Extending Dataplicity Conf<a class="headerlink" href="#extending-dataplicity-conf" title="Permalink to this headline">¶</a></h2>
+<p>A dataplicity.conf can <em>extend</em> another base conf file. When a conf file is extended in the way, the values it contains will be added to the values from the extended conf file (potentially overwriting them). To extend a conf file, add a [extends] section with a value called &#8216;conf&#8217;, which should be an absolute path to the extended conf file.</p>
+<p>Most dataplicity.conf files in a Dataplicity project will start with the following section:</p>
+<div class="highlight-python"><div class="highlight"><pre>[extends]
+conf = /etc/dataplicity/dataplicity.conf
+</pre></div>
+</div>
+<p>This tells Dataplicity to first read all the keys from <tt class="docutils literal"><span class="pre">/etc/dataplicity/dataplicity.conf</span></tt>, which is created by the <tt class="docutils literal"><span class="pre">dataplicity</span> <span class="pre">init</span></tt> command and contains constants and authentication information.</p>
+<p>Conf files may be extended more than once. One use for this is to override selected values for development. For instance, you could have a &#8216;dataplicity-dev.conf&#8217; file that extends &#8216;dataplicity,conf&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">extends</span><span class="p">]</span>
+<span class="n">conf</span> <span class="o">=</span> <span class="n">dataplicity</span><span class="o">.</span><span class="n">com</span>
+
+<span class="p">[</span><span class="n">device</span><span class="p">]</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Test Project&quot;</span>
+</pre></div>
+</div>
+<p>Most Dataplicity sub-commands will accept an alternative conf with the &#8211;conf switch</p>
+</div>
+<div class="section" id="required-sections">
+<h2>Required Sections<a class="headerlink" href="#required-sections" title="Permalink to this headline">¶</a></h2>
+<p>A Dataplicity conf requires the following sections:</p>
+<div class="section" id="server">
+<h3>[server]<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><strong>url</strong> URL of Dataplicity api</li>
+</ul>
+</div>
+<div class="section" id="device">
+<h3>[device]<a class="headerlink" href="#device" title="Permalink to this headline">¶</a></h3>
+<p>The device section contains data related to the device. With the exception of <em>class</em> this data is generated by the <tt class="docutils literal"><span class="pre">dataplicity</span> <span class="pre">init</span></tt> command.</p>
+<ul class="simple">
+<li><strong>name</strong> The name of the device</li>
+<li><strong>serial</strong> A unique serial number (or string) for this device</li>
+<li><strong>auth</strong> An authorization token</li>
+<li><strong>settings</strong> A path to live settings</li>
+<li><strong>class</strong> The name of the device class. A device class should be a short descriptive name used to identify devices running this firmware.</li>
+</ul>
+</div>
+<div class="section" id="register">
+<h3>[register]<a class="headerlink" href="#register" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><strong>ui</strong> A relative path to the user interface XML. THis will typically be <tt class="docutils literal"><span class="pre">./ui.xml</span></tt>.</li>
+</ul>
+</div>
+<div class="section" id="py">
+<h3>[py]<a class="headerlink" href="#py" title="Permalink to this headline">¶</a></h3>
+<p>This section is used if the firmware contains additional Python code (for extended functionality).</p>
+<blockquote>
+<div><strong>path</strong> A list of paths to be added to Python path. Typically this will be <tt class="docutils literal"><span class="pre">./py</span></tt>. This is only required if the project references code that isn&#8217;t already on the Python path.</div></blockquote>
+<p>[samplers]</p>
+<p>If the Project writes any sample data, then this section must be present.</p>
+<ul class="simple">
+<li><strong>path</strong> A location to store the sample data between syncs, typically <cite>/tmp/samplers</cite>.</li>
+</ul>
+<p>When a device records samples, it writes the sample data to a file under <cite>path</cite>. When the device syncs successfully with the server the sample data on the device is cleared &#8211; so only enough storage to store samples between syncs is required.</p>
+</div>
+</div>
+<div class="section" id="samplers">
+<h2>Samplers<a class="headerlink" href="#samplers" title="Permalink to this headline">¶</a></h2>
+<p>A sampler is a stream of timestamped numeric data which can be graphed on the web interface. Samplers are introduced with a [sampler:] section and unique name. For example the sinewave example contains the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>[sampler:wave1]
+[sampler:wave2]
+</pre></div>
+</div>
+<p>This creates two samplers; <tt class="docutils literal"><span class="pre">wave1</span></tt> and <tt class="docutils literal"><span class="pre">wave2</span></tt>. These names are used to refer to the samples in the user interface.</p>
+</div>
+<div class="section" id="tasks">
+<h2>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h2>
+<p>In Dataplicity, a Task, is essentially a thread that performs a specific operation at regular intervals. Typically tasks will sample data from various sources, but may perform other operations.</p>
+<p>A task is created in dataplicity.conf with a [task:] section. The following is an example of a task that will sample system load every 60 seconds:</p>
+<div class="highlight-python"><div class="highlight"><pre># Create a sampler to store the system load
+[sampler:load]
+
+[task:load]
+run = dataplicity.tasks.LoadSampler
+poll = 60
+data-sampler = load
+</pre></div>
+</div>
+<p>A task section requires the following values:</p>
+<ul class="simple">
+<li><strong>run</strong> A Python import that references a class derived from <cite>Task</cite>. In the above example, <tt class="docutils literal"><span class="pre">dataplicity.tasks.LoadSampler</span></tt> is one of the tasks built in to dataplicity, but could also reference a custom Task class.</li>
+<li><strong>poll</strong> A numeric value that indicates the number of seconds between calls to the <tt class="docutils literal"><span class="pre">poll</span></tt> method of the task.</li>
+</ul>
+<p>Some samplers require additional configuration which can be added to a task section by prefixing a key with <tt class="docutils literal"><span class="pre">data-</span></tt>. In the above example the value <tt class="docutils literal"><span class="pre">data-sampler</span></tt> is passed to the Task and lets it know which sampler to record the system load to.</p>
+</div>
+<div class="section" id="settings">
+<h2>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h2>
+<p>Dataplicity settings are INI files that can be synchronized with the Dataplicity server and modified via the web interface. This allows devices to be remotely administered even if the device is currently offline.</p>
+<p>To introduce a new settings file, use a [settings:] section with a name for the settings container. The sinewave example contains the following settings section:</p>
+<div class="highlight-python"><div class="highlight"><pre>[settings:waves]
+defaults = ./waves.ini
+</pre></div>
+</div>
+<p>This introduces a settings container called <tt class="docutils literal"><span class="pre">waves</span></tt>. A settings section may contain the following values:</p>
+<ul class="simple">
+<li><strong>defaults</strong> A path to an INI file containing initial defaults to be used before a sync.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dataplicity Configuration</a><ul>
+<li><a class="reference internal" href="#extending-dataplicity-conf">Extending Dataplicity Conf</a></li>
+<li><a class="reference internal" href="#required-sections">Required Sections</a><ul>
+<li><a class="reference internal" href="#server">[server]</a></li>
+<li><a class="reference internal" href="#device">[device]</a></li>
+<li><a class="reference internal" href="#register">[register]</a></li>
+<li><a class="reference internal" href="#py">[py]</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#samplers">Samplers</a></li>
+<li><a class="reference internal" href="#tasks">Tasks</a></li>
+<li><a class="reference internal" href="#settings">Settings</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dataplicitycommand.html"
+                        title="previous chapter">Dataplicity Command</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="developing.html"
+                        title="next chapter">Developing Dataplicity Projects</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/dataplicityconf.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="developing.html" title="Developing Dataplicity Projects"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dataplicitycommand.html" title="Dataplicity Command"
+             >previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Dataplicity Ltd.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

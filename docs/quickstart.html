@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quickstart &mdash; Dataplicity 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Dataplicity 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="Dataplicity Command" href="dataplicitycommand.html" />
+    <link rel="prev" title="Installing" href="installing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dataplicitycommand.html" title="Dataplicity Command"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installing.html" title="Installing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>The Dataplicity Python module will allow you to create unattended software services to monitor many kinds of sequential data, coupled with a web service to remotely administer and graph the data from the service.</p>
+<p>Visit <a class="reference external" href="http://www.dataplicity.com">http://www.dataplicity.com</a> for more information</p>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>To write a Dataplicity service or run the examples you will need the following.</p>
+<blockquote>
+<div><ul class="simple">
+<li>The <cite>dataplicity</cite> module installed in your Python path</li>
+<li>A computer capable of running Linux</li>
+</ul>
+</div></blockquote>
+<p>If you installed Dataplicity through Pip, or other official channel, you should now have the <tt class="docutils literal"><span class="pre">dataplicity</span></tt> command available. Alternatively you can download the source and run <cite>python setup.py install</cite>. Run the following from the command line to confirm you have Dataplicity installed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dataplicity</span> <span class="o">--</span><span class="n">version</span>
+</pre></div>
+</div>
+<p>The <cite>dataplicity</cite> command is a versatile application that will assist you developing and deploying Dataplicity services.</p>
+</div>
+<div class="section" id="running-the-samples">
+<h2>Running the Samples<a class="headerlink" href="#running-the-samples" title="Permalink to this headline">¶</a></h2>
+<p>There are a number of example projects in the Dataplicity source package, which you will find the the <tt class="docutils literal"><span class="pre">examples</span></tt> directory.</p>
+<div class="section" id="step-1-sign-up">
+<h3>Step 1. Sign Up<a class="headerlink" href="#step-1-sign-up" title="Permalink to this headline">¶</a></h3>
+<p>To run the samples and develop Dataplicity projects, you will need a Dataplicity account. If you haven&#8217;t signed up yet, visit <a class="reference external" href="https://vendor.dataplicity.com">https://vendor.dataplicity.com</a> to create an account.</p>
+</div>
+<div class="section" id="step-2-initialize-the-device">
+<h3>Step 2. Initialize the device<a class="headerlink" href="#step-2-initialize-the-device" title="Permalink to this headline">¶</a></h3>
+<p>On a fresh machine you will need to create some default files and authorize with the server. Run the following command to do that (replacing USERNAME and PASSWORD with your Dataplicity login details):</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity init -u USERNAME -p PASSWORD
+</pre></div>
+</div>
+<p>You may need to prepend the above command with <tt class="docutils literal"><span class="pre">sudo</span></tt> on some systems.</p>
+</div>
+<div class="section" id="step-3-register-the-device">
+<h3>Step 3. Register the device<a class="headerlink" href="#step-3-register-the-device" title="Permalink to this headline">¶</a></h3>
+<p>To run an example project,navigate to your chosen project (it should contain a <tt class="docutils literal"><span class="pre">dataplicity.conf</span></tt> file) and run the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity register
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-4-run-the-project">
+<h3>Step 4. Run the project<a class="headerlink" href="#step-4-run-the-project" title="Permalink to this headline">¶</a></h3>
+<p>You should now have an item in your Dataplicity device tree. Enter the following command to run the project:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity run
+</pre></div>
+</div>
+<p>If you visit your Dataplicity device tree now, you should see a custom UI generated on the fly.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#running-the-samples">Running the Samples</a><ul>
+<li><a class="reference internal" href="#step-1-sign-up">Step 1. Sign Up</a></li>
+<li><a class="reference internal" href="#step-2-initialize-the-device">Step 2. Initialize the device</a></li>
+<li><a class="reference internal" href="#step-3-register-the-device">Step 3. Register the device</a></li>
+<li><a class="reference internal" href="#step-4-run-the-project">Step 4. Run the project</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installing.html"
+                        title="previous chapter">Installing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dataplicitycommand.html"
+                        title="next chapter">Dataplicity Command</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/quickstart.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dataplicitycommand.html" title="Dataplicity Command"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installing.html" title="Installing"
+             >previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Dataplicity Ltd.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

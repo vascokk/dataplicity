@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dataplicity Command &mdash; Dataplicity 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Dataplicity 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="Dataplicity Configuration" href="dataplicityconf.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dataplicityconf.html" title="Dataplicity Configuration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="quickstart.html" title="Quickstart"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="dataplicity-command">
+<h1>Dataplicity Command<a class="headerlink" href="#dataplicity-command" title="Permalink to this headline">¶</a></h1>
+<p>After installing the dataplicity Python module, you should now be able to run a command line app called <cite>dataplicity</cite>.</p>
+<p>The dataplicity command line app can be used to <em>build</em>, <em>publish</em> and <em>run</em> Dataplicity projects, via a number of <em>subcommands</em>. Run the following to list the available subcommands:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dataplicity</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+</div>
+<div class="section" id="subcommands">
+<h2>Subcommands<a class="headerlink" href="#subcommands" title="Permalink to this headline">¶</a></h2>
+<p>To run a subcommand (see below for a list), supply the subcommand name as the first argument to <tt class="docutils literal"><span class="pre">dataplicity</span></tt>. A subcommand may have its own set of switches and options that should appear after the subcommand name on the command line. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity manage --geturl
+</pre></div>
+</div>
+<p>If there is an error running one of the subcommands (and the error message is not helpful) you can get a full Python traceback with the <tt class="docutils literal"><span class="pre">--debug</span></tt> switch, which should appear before the name of the subcommand. For example, if the <tt class="docutils literal"><span class="pre">dataplicity</span> <span class="pre">manage</span></tt> command produced an error, you would re-run the command with something like the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity --debug manage --geturl
+</pre></div>
+</div>
+<p>To get a description of a subcommand and list all available command line switches, run the command with the <tt class="docutils literal"><span class="pre">-h</span></tt> switch. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity manage -h
+</pre></div>
+</div>
+<div class="section" id="auth">
+<h3>AUTH<a class="headerlink" href="#auth" title="Permalink to this headline">¶</a></h3>
+<p>This command retrieves an authorization token for the current device. An authorization token is required when syncing with the server. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity auth -u USERNAME -p PASSWORD
+</pre></div>
+</div>
+<p>This command is rarely required because <tt class="docutils literal"><span class="pre">dataplicity</span> <span class="pre">init</span></tt> acquires an authorization token and stores it in <tt class="docutils literal"><span class="pre">/etc/datapicity/dataplicity.conf</span></tt></p>
+</div>
+<div class="section" id="build">
+<h3>BUILD<a class="headerlink" href="#build" title="Permalink to this headline">¶</a></h3>
+<p>The build command creates <em>firmware</em> for a dataplicity project, and should be run from a dataplicity project directory:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity build
+</pre></div>
+</div>
+<p>The firmware is stored in a directory named <tt class="docutils literal"><span class="pre">__firmware__</span></tt>. The version number is taken from <tt class="docutils literal"><span class="pre">firmware.conf</span></tt>.</p>
+</div>
+<div class="section" id="d-daemon">
+<h3>D (daemon)<a class="headerlink" href="#d-daemon" title="Permalink to this headline">¶</a></h3>
+<p>Runs the installed dataplicity project as a daemon. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity d
+</pre></div>
+</div>
+<p>Dataplicity will first read <tt class="docutils literal"><span class="pre">/etc/dataplicity/dataplicity.conf</span></tt> and run the dataplicity project given in the [daemon] section. Logging will be written to /var/log/syslog</p>
+</div>
+<div class="section" id="deploy">
+<h3>DEPLOY<a class="headerlink" href="#deploy" title="Permalink to this headline">¶</a></h3>
+<p>Download and install firmware for a given device class. This requires that <tt class="docutils literal"><span class="pre">dataplicity</span> <span class="pre">init</span></tt> has been run. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity deploy &quot;examples.Sine Wave&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="event">
+<h3>EVENT<a class="headerlink" href="#event" title="Permalink to this headline">¶</a></h3>
+<p>Insert a event in to a timeline. The following example will create a simple text event:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity event mytimeline &quot;Some information about the event&quot; --title=&quot;Something happened!&quot;
+</pre></div>
+</div>
+<p>This example will post a photo event:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity event photos &quot;Say Cheese&quot; --title=&quot;Remote camera&quot; --image ~/Pictures/photo.jpg
+</pre></div>
+</div>
+</div>
+<div class="section" id="init">
+<h3>INIT<a class="headerlink" href="#init" title="Permalink to this headline">¶</a></h3>
+<p>Prepares a machine for running Dataplicity projects by creating the required directories and generating default conf files. This command takes a valid Dataplicity login details and will write an authorization token to <cite>/etc/dataplicity/dataplicity.conf</cite>. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity init -u USERNAME -p PASSWORD
+</pre></div>
+</div>
+</div>
+<div class="section" id="install">
+<h3>INSTALL<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h3>
+<p>Installs a firmware globally. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity install __firmware__/firmware6.zip
+</pre></div>
+</div>
+</div>
+<div class="section" id="manage">
+<h3>MANAGE<a class="headerlink" href="#manage" title="Permalink to this headline">¶</a></h3>
+<p>Launches a web browser to manage the current device. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity manage
+</pre></div>
+</div>
+</div>
+<div class="section" id="register">
+<h3>REGISTER<a class="headerlink" href="#register" title="Permalink to this headline">¶</a></h3>
+<p>Register the current Dataplicity project with the Dataplicity server. This command should be run from a project directory when developing:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity register
+</pre></div>
+</div>
+</div>
+<div class="section" id="run">
+<h3>RUN<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h3>
+<p>Runs the local Dataplicity project in the foreground. This command is mainly for development, logs will be written to stdout.</p>
+</div>
+<div class="section" id="updateui">
+<h3>UPDATEUI<a class="headerlink" href="#updateui" title="Permalink to this headline">¶</a></h3>
+<p>Upload the user interface XML associated with the firmware.</p>
+</div>
+<div class="section" id="sync">
+<h3>SYNC<a class="headerlink" href="#sync" title="Permalink to this headline">¶</a></h3>
+<p>Sync the running Dataplicity project with the server. This will cause the daemon to immediately sync with the server, outside of the regular sync schedule.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dataplicity Command</a><ul>
+<li><a class="reference internal" href="#subcommands">Subcommands</a><ul>
+<li><a class="reference internal" href="#auth">AUTH</a></li>
+<li><a class="reference internal" href="#build">BUILD</a></li>
+<li><a class="reference internal" href="#d-daemon">D (daemon)</a></li>
+<li><a class="reference internal" href="#deploy">DEPLOY</a></li>
+<li><a class="reference internal" href="#event">EVENT</a></li>
+<li><a class="reference internal" href="#init">INIT</a></li>
+<li><a class="reference internal" href="#install">INSTALL</a></li>
+<li><a class="reference internal" href="#manage">MANAGE</a></li>
+<li><a class="reference internal" href="#register">REGISTER</a></li>
+<li><a class="reference internal" href="#run">RUN</a></li>
+<li><a class="reference internal" href="#updateui">UPDATEUI</a></li>
+<li><a class="reference internal" href="#sync">SYNC</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="quickstart.html"
+                        title="previous chapter">Quickstart</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dataplicityconf.html"
+                        title="next chapter">Dataplicity Configuration</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/dataplicitycommand.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dataplicityconf.html" title="Dataplicity Configuration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="quickstart.html" title="Quickstart"
+             >previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Dataplicity Ltd.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

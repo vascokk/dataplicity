@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Deploying &mdash; Dataplicity 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Dataplicity 0.1.0 documentation" href="index.html" />
+    <link rel="prev" title="Developing Dataplicity Projects" href="developing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="developing.html" title="Developing Dataplicity Projects"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="deploying">
+<h1>Deploying<a class="headerlink" href="#deploying" title="Permalink to this headline">¶</a></h1>
+<p>Deploying firmware is the process of downloading firmware from the Dataplicity server and installing it on a <em>device</em> (typically a linux computer).</p>
+<p>To deploy a firmware first initialize the device with the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity init -u USERNAME -p PASSWORD
+</pre></div>
+</div>
+<p>The USERNAME and PASSWORD values should be replaced with your Dataplicity login details. You may need to prefix the init command with <tt class="docutils literal"><span class="pre">sudo</span></tt> on some systems.</p>
+<p>Once the device has been initialized, the following command will download and install the current firmware:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity deploy &quot;DEVICE CLASS&quot;
+</pre></div>
+</div>
+<p>Replacing DEVICE CLASS with the name of the device class (you can find this in the Developer section of the Dataplicity website).</p>
+<p>Once deployed, the firmware may be run as a daemon with the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity d
+</pre></div>
+</div>
+<div class="section" id="alternative-deploy-method">
+<h2>Alternative Deploy Method<a class="headerlink" href="#alternative-deploy-method" title="Permalink to this headline">¶</a></h2>
+<p>The above method requires a username and password to authorize the device. This may not be ideal if you plan to deploy a large number of devices, as it would require a manual step to be ran on each device or login details to be stored on the device.</p>
+<p>Dataplicity supports an alternative method to deploy devices that doesn&#8217;t require a manual process or login details. Fresh devices register themselves with the server and must be granted permission. They will then download and install the firmware automatically.</p>
+<p>To enable the <em>zero configration</em> deploy, a dataplicity.conf should be generated with the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity init --auto &quot;TEXT TO IDENTIFY DEVICE&quot; --class &quot;DEVICE CLASS&quot; --subdomain SUBDOMAIN
+</pre></div>
+</div>
+<p>The text for the &#8211;auto switch should be a memorable string (to identify the device online). Your subdomain should also be specified with the &#8211;subdomain switch, and should be your company <em>subdomain</em>.</p>
+<p>You can now run the daemon with the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>dataplicity d
+</pre></div>
+</div>
+<p>Without firmware, the daemon will regiser itself with the server. You can grant permission to the device to connect from the Developer menu (&#8216;pending devices&#8217; tab). Once permission is granted the device will download the firmware and install the next time it syncs with the server.</p>
+<p>Note that the contents for <cite>dataplicity.conf</cite> as generate by <cite>dataplicity init</cite> doesn&#8217;t vary for devices in the same device class. To deploy a large number of devices, you can copy /etc/dataplicity/dataplicity.conf to each device. If you want to generate an appropriate <cite>dataplicity.conf</cite> without installing it you can use the &#8211;dry switch and pipe the output to a file.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Deploying</a><ul>
+<li><a class="reference internal" href="#alternative-deploy-method">Alternative Deploy Method</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="developing.html"
+                        title="previous chapter">Developing Dataplicity Projects</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/deploying.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="developing.html" title="Developing Dataplicity Projects"
+             >previous</a> |</li>
+        <li><a href="index.html">Dataplicity 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Dataplicity Ltd.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
