@@ -132,8 +132,17 @@ class Client(object):
             raise
 
     def connect_wait(self, closing_event, sync_func):
+        def do_wait():
+            for _ in xrange(CONNECT_WAIT):
+                if closing_event.is_set():
+                    return True
+                sleep(1)
+            return False
         try:
             while not closing_event.is_set():
+                if not self.serial or not self._auth_token or not self.push_url:
+                    do_wait()
+                    continue
                 push_url = "{}?serial={}&auth={}".format(self.push_url,
                                                          self.serial,
                                                          self._auth_token)
@@ -153,10 +162,7 @@ class Client(object):
                     self.log.debug('push wait received: "{}"'.format(response))
                     # Some error occurred, or invalid response
                     # Wait for a moment, so as not to hammer the server
-                    for _ in xrange(CONNECT_WAIT):
-                        if closing_event.is_set():
-                            return
-                        sleep(1)
+                    do_wait()
 
         finally:
             self.log.debug('connect_wait thread exiting')

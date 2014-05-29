@@ -5,7 +5,6 @@ from dataplicity import errors
 import ConfigParser
 from ConfigParser import SafeConfigParser
 from os.path import abspath, normpath, exists, expanduser, join, dirname, basename
-from StringIO import StringIO
 
 
 class ConfigSection(object):
