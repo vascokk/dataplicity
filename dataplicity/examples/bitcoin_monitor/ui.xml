@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui>
+    <interface id="dataplicity">
+        <mastertabcontainer title="Bitcoin Ticker" id="dataplicity-tabs">
+            <tab title="Bitstamp">
+                <graph title="Bitcoin"
+                    sampler="bitstamp"
+                    min="0"
+                    max="1000"
+                    xunit="Time" yunit="${device.settings.live.bitstamp.ticker_value_name}"/>
+                <form button="Update" title="Sample value">
+                    <select title="Value to sample" value="${device.settings.live.bitstamp.ticker_value_name}"
+                        destination="device.settings.live.bitstamp.ticker_value_name">
+                        <option value="high">High Price</option>
+                        <option value="low">Low Price</option>
+                        <option value="last">Last Price</option>
+                    </select>
+                </form>
+            </tab>
+
+        </mastertabcontainer>
+    </interface>
+</ui>
