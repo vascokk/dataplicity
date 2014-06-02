@@ -8,6 +8,7 @@ from dataplicity import constants
 from dataplicity.client import settings
 
 from daemon import DaemonContext
+from daemon.pidfile import TimeoutPIDLockFile
 
 import sys
 import os
@@ -39,7 +40,6 @@ class Daemon(object):
 
         self.poll_rate_seconds = conf.get_float("daemon", "poll", 60.0)
         self.last_check_time = None
-        self.pid_path = abspath(conf.get('daemon', 'pidfile', '/var/run/dataplicity.pid'))
 
         self.server_closing_event = Event()
 
@@ -71,13 +71,6 @@ class Daemon(object):
         self._server.serve_forever()
         self.log.debug("Stopped daemon at 8888")
 
-    def get_pid(self):
-        try:
-            with open(self.pid_path, 'r') as fpid:
-                return fpid.read()
-        except IOError:
-            return None
-
     def _push_wait(self, client, event, sync_func):
         client.connect_wait(event, sync_func)
 
@@ -98,15 +91,6 @@ class Daemon(object):
                                         self.sync_now))
         sync_push_thread.daemon = True
         try:
-            if not self.foreground:
-                pid = str(os.getpid())
-                try:
-                    with open(self.pid_path, 'wb') as pid_file:
-                        pid_file.write(pid)
-                except Exception as e:
-                    self.log.exception("Unable to write pid file (%s)", e)
-                    raise
-
             sync_push_thread.start()
             try:
                 self._server_thread = Thread( target=self._server_loop)
@@ -298,12 +282,18 @@ class D(SubCommand):
                 sys.stdout.write(msg + '\n')
             return 0
 
+        #\TODO Get pid from config file....
+        PIDFILE='/var/run/DP-d.pid'
+        if os.path.exists(PID):
+            sys.exit("pid file (%s) already exists" % PIDFILE)
+
         try:
             if args.foreground:
                 dataplicity_daemon = self.make_daemon()
                 dataplicity_daemon.start()
             else:
-                daemon_context = DaemonContext()
+                #daemon_context = DaemonContext(pidfile=TimeoutPIDLockFile(PIDFILE, 1),stderr=sys.stderr) #logs forced to console.
+                daemon_context = DaemonContext(pidfile=TimeoutPIDLockFile(PIDFILE, 1))
                 with daemon_context:
                     dataplicity_daemon = self.make_daemon()
                     dataplicity_daemon.start()
