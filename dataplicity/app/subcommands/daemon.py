@@ -165,8 +165,8 @@ class Daemon(object):
                 command = client.recv(128).rstrip('\n')
                 if command:
                     reply = self.on_client_command(command)
-                if reply is not None:
-                    client.sendall(reply.rstrip('\n') + '\n')
+                    if reply is not None:
+                        client.sendall(reply.rstrip('\n') + '\n')
             except socket.error:
                 pass
 
