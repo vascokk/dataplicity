@@ -347,7 +347,7 @@ class Client(object):
                 self.log.info("installing firmware v{}".format(version))
                 install_path = firmware.install_encoded(device_class, version, firmware_b64)
 
-                self.log('firmware installed in "{}"'.format(install_path))
+                self.log.info('firmware installed in "{}"'.format(install_path))
                 comms.Comms().restart()
 
     def deploy(self):
