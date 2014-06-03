@@ -14,7 +14,6 @@ import sys
 import os
 import time
 import socket
-import SocketServer
 from threading import Event, Thread
 from os.path import abspath
 import logging
@@ -46,30 +45,6 @@ class Daemon(object):
         # Command to execute with the daemon exits
         self.exit_command = None
         self.exit_event = Event()
-        self._server = None
-        self._server_thread = None
-
-    def _server_loop(self):
-        class daemonTCPHandler(SocketServer.BaseRequestHandler):
-            def handle(self):
-                self.log = logging.getLogger('dataplicity')
-                self.log.debug("Process Daemon command request")
-                try:
-                    command = self.request.recv(128).rstrip('\n')
-                    if command:
-                        self.log.debug("Invoke command (%s)" % command)
-                        reply = self.server.DP_daemon.on_client_command(command)
-                        self.log.debug("Got response (%s)" % reply)
-                        if reply is not None:
-                            self.request.sendall(reply.rstrip('\n') + '\n')
-                except socket.error:
-                    pass
-
-        self._server = SocketServer.TCPServer(('127.0.0.1', 8888), daemonTCPHandler)
-        self._server.DP_daemon = self
-        self.log.debug("Start daemon at 8888")
-        self._server.serve_forever()
-        self.log.debug("Stopped daemon at 8888")
 
     def _push_wait(self, client, event, sync_func):
         client.connect_wait(event, sync_func)
@@ -83,6 +58,8 @@ class Daemon(object):
 
         self.log.debug('starting dataplicity service with conf {}'.format(self.conf_path))
 
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         self.client.tasks.start()
         self.log.debug('ready')
         sync_push_thread = Thread(target=self._push_wait,
@@ -93,9 +70,10 @@ class Daemon(object):
         try:
             sync_push_thread.start()
             try:
-                self._server_thread = Thread( target=self._server_loop)
-                self._server_thread.start()
-
+                server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                server_socket.bind(('127.0.0.1', 8888))
+                server_socket.settimeout(self.poll_rate_seconds)
+                server_socket.listen(5)
             except:
                 self.log.exception('unable to start dataplicity daemon')
                 return -1
@@ -108,20 +86,25 @@ class Daemon(object):
                         raise
                     except Exception as e:
                         self.log.exception('error in poll')
-                    time.sleep(1)
+
+                    try:
+                        client, _address = server_socket.accept()
+                    except socket.timeout:
+                        pass
+                    else:
+                        self.handle_client_command(client)
+                        continue
 
             except SystemExit:
                 self.log.debug("exit requested")
+                return
 
             except KeyboardInterrupt:
                 self.log.debug("user Exit")
-
-            self._stop_threads()
-            return
+                return
 
         except ForceRestart:
             self.log.info('restarting...')
-            self._stop_threads()
             self.exit(' '.join(sys.argv))
 
         except Exception as e:
@@ -129,7 +112,9 @@ class Daemon(object):
 
         finally:
             try:
-                self._stop_threads()
+                #server_socket.shutdown(socket.SHUT_RDWR)
+                server_socket.close()
+                del server_socket
             except Exception as e:
                 self.log.exception(e)
 
@@ -143,19 +128,8 @@ class Daemon(object):
                 self.log.debug("Executing %s" % self.exit_command)
                 os.system(self.exit_command)
 
-    def _stop_threads(self):
-        if self._server:
-            self._server.shutdown()
-            self._server = None
-        if self._server_thread:
-            self._server_thread.join()
-            self._server_thread = None
-
-
     def poll(self, t):
-        if (not self.last_check_time) or (self.poll_rate_seconds < t-self.last_check_time):
-          self.sync_now(t)
-          self.last_check_time = t #VP:maybe time.time() is better, include sync time?
+        self.sync_now(t)
 
     def sync_now(self, t=None):
         if t is None:
