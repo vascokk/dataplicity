@@ -19,6 +19,9 @@ from os.path import abspath
 import logging
 
 
+log = logging.getLogger('dataplicity')
+
+
 class Daemon(object):
     """Dataplicity device management process"""
 
@@ -201,6 +204,12 @@ class D(SubCommand):
         parser.add_argument('-y', '--sync', dest="sync", action="store_true", default=False,
                             help="sync now")
 
+    def get_conf(self):
+        conf_path = self.args.conf or constants.CONF_PATH
+        conf_path = abspath(conf_path)
+        conf = settings.read(conf_path)
+        return conf
+
     def make_daemon(self, debug=None):
         conf_path = self.args.conf or constants.CONF_PATH
         conf_path = abspath(conf_path)
@@ -209,6 +218,7 @@ class D(SubCommand):
         firmware_conf_path = conf.get('daemon', 'conf', conf_path)
         # It may not exist if there is no installed firmware
         if os.path.exists(firmware_conf_path):
+            log.error("daemon firmware conf '{}' does not exist".format(firmware_conf_path))
             conf_path = firmware_conf_path
 
         if debug is None:
@@ -249,10 +259,12 @@ class D(SubCommand):
                 dataplicity_daemon = self.make_daemon()
                 dataplicity_daemon.start()
             else:
-                if os.path.exists(self.pid_path):
-                    sys.exit("pid file '{}' already exists".format(self.pid_path))
+                conf = self.get_conf()
+                pid_path = conf.get('daemon', 'pid_path', constants.PID_PATH)
+                #if os.path.exists(self.pid_path):
+                #    sys.exit("pid file '{}' already exists".format(self.pid_path))
                 #daemon_context = DaemonContext(pidfile=TimeoutPIDLockFile(PIDFILE, 1),stderr=sys.stderr) #logs forced to console.
-                daemon_context = DaemonContext(pidfile=TimeoutPIDLockFile(self.pid_file, 1))
+                daemon_context = DaemonContext(pidfile=TimeoutPIDLockFile(pid_path, 1))
                 with daemon_context:
                     dataplicity_daemon = self.make_daemon()
                     dataplicity_daemon.start()
