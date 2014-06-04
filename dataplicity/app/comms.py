@@ -12,7 +12,7 @@ class Comms(object):
 
     def __call__(self, command):
         try:
-            pipe = os.open(self.pipe_path, os.O_WRONLY)
+            pipe = os.open(self.pipe_path, os.O_WRONLY | os.O_NONBLOCK)
         except:
             raise CommsError("Unable to connect to server via named pipe '{}'".format(self.pipe_path))
         try:
@@ -33,6 +33,6 @@ class Comms(object):
         try:
             self('STATUS')
         except:
-            raise False
+            return False
         else:
             return True
