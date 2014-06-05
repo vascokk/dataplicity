@@ -261,13 +261,14 @@ class D(SubCommand):
             else:
                 conf = self.get_conf()
                 pid_path = conf.get('daemon', 'pid_path', constants.PID_PATH)
-                if not os.access(pid_path, os.R_OK):
-                    sys.stderr.write('no permission to access pid file "{}"\n'.format(pid_path))
+                if os.path.exists(pid_path):
+                    sys.stderr.write('pid file "{}" exists. Is the Dataplicity daemon already running?\n'.format(pid_path))
                     return -1
-                daemon_context = DaemonContext(pidfile=TimeoutPIDLockFile(pid_path, 1), stderr=sys.stderr)
+                daemon_context = DaemonContext(pidfile=TimeoutPIDLockFile(pid_path, 1))
                 with daemon_context:
                     dataplicity_daemon = self.make_daemon()
                     dataplicity_daemon.start()
+
 
         except Exception, e:
             from traceback import print_exc
