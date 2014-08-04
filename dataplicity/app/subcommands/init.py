@@ -57,7 +57,7 @@ rpi_conf_template = """
 conf = /etc/dataplicity/dataplicity.conf
 
 [device]
-class = Raspberry Pi
+class = Master RPI
 serial = {SERIAL}
 
 [samplers]
