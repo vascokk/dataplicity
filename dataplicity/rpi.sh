@@ -21,7 +21,16 @@ install() {
             echo "Installing Dataplicity client...";
             mkdir -p /etc/dataplicity/
             mkdir -p /opt/dataplicity/
-            pip install dataplicity
+
+            if [ "$2" = "--dev" ]; then
+                mkdir /opt/dataplicity/src/
+                cd /opt/dataplicity/src/
+                git clone git@github.com:wildfoundry/dataplicity.git
+                cd /opt/dataplicity/src/dataplicity/
+                python setup.py install
+            else
+                pip install dataplicity
+            fi
 
             echo "Registering your device";
             dataplicity init --server https://api.dev.dataplicity.com --rpi --force --usercode $1
@@ -40,6 +49,6 @@ install() {
     fi
 }
 
-install $1
+install $1 $2
 
 
