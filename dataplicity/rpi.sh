@@ -42,8 +42,8 @@ install_commands() {
 }
 
 install() {
-    check_dep easy_install
-    check_dep curl
+    apt-get install python-setuptools
+    apt-get install python-dev
 
     if has_pip; then
         install_commands $1 $2
