@@ -23,7 +23,7 @@ install_commands() {
     if [ "$2" = "--dev" ]; then
         mkdir /opt/dataplicity/src/
         cd /opt/dataplicity/src/
-        git clone git@github.com:wildfoundry/dataplicity.git
+        git clone https://github.com/wildfoundry/dataplicity.git
         cd /opt/dataplicity/src/dataplicity/
         python setup.py install
     else
@@ -54,6 +54,6 @@ install() {
     fi
 }
 
-install $1 $2
+install $0 $1
 
 
