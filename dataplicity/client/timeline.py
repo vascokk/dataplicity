@@ -65,6 +65,8 @@ class Event(object):
         self.title = title
         self.text = text
         self.text_format = text_format
+        self.hide = kwargs.get('hide', False)
+        self.overwrite = kwargs.get('overwrite', False)
 
     def to_data(self):
         """Get a JSON serializable structyre for this event"""
@@ -74,7 +76,9 @@ class Event(object):
                 "text": self.text,
                 "text_format": self.text_format,
                 "data": self.data.copy(),
-                "attachments": self.attachments}
+                "attachments": self.attachments,
+                "hide": self.hide,
+                "overwrite": self.overwrite}
 
     def __repr__(self):
         return "<event {}>".format(self.event_id)
@@ -217,7 +221,7 @@ class Timeline(object):
 
         # Make an event id that we can be confident it's unique
         token = str(randint(0, 2 ** 31))
-        event_id = "{}_{}_{}".format(event_type, timestamp, token)
+        event_id = kwargs.pop('event_id', None) or "{}_{}_{}".format(event_type, timestamp, token)
         event = event_cls(self, event_id, timestamp, *args, **kwargs)
         log.debug('new event {!r}'.format(event))
         return event

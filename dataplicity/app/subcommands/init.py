@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-
+import base64
 
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.client.serial import get_default_serial
@@ -52,6 +52,62 @@ path = {FIRMWARE_PATH}
 
 """
 
+rpi_conf_template = """
+[extend]
+conf = /etc/dataplicity/dataplicity.conf
+
+[device]
+class = Raspberry Pi
+serial = {SERIAL}
+
+[samplers]
+path = /tmp/samplers/
+
+[task:proc]
+run = dataplicity.tasks.system.ProcessList
+poll = 5
+data-timeline = process_list
+
+[task:cpu_percent]
+run = dataplicity.tasks.system.CPUPercentSampler
+poll = 5
+data-timeline = cpu_percent
+
+[task:memory_available]
+run = dataplicity.tasks.system.AvailableMemorySampler
+poll = 5
+data-sampler = memory_available
+
+[task:memory_total]
+run = dataplicity.tasks.system.TotalMemorySampler
+poll = 5
+data-sampler = memory_total
+
+[task:disk_available]
+run = dataplicity.tasks.system.AvailableDisk
+poll = 5
+data-sampler = disk_available
+
+[task:disk_total]
+run = dataplicity.tasks.system.TotalDisk
+poll = 5
+data-sampler = disk_total
+
+[task:network]
+run = dataplicity.tasks.system.NetworkSampler
+poll = 5
+data-timeline = network
+
+[timeline:process_list]
+[timeline:cpu_percent]
+[timeline:network]
+
+[sampler:memory_available]
+[sampler:memory_total]
+[sampler:disk_available]
+[sampler:disk_total]
+"""
+
 
 class Init(SubCommand):
     """Initialize this device for first use.
@@ -88,17 +144,19 @@ class Init(SubCommand):
                             help="auto-register online")
         parser.add_argument('--subdomain', dest="subdomain", required=False, default='', metavar="SUBDOMAIN",
                             help="Your company subdomain, if using --auto")
+        parser.add_argument('--rpi', dest='rpi', action='store_true', help="init rpi device")
+        parser.add_argument('--usercode', dest='usercode', action='store', help="base64 encoded usercode")
 
     def run(self):
         args = self.args
         auto = args.auto
 
         user = args.user
-        if user is None and not auto:
+        if user is None and not auto and not args.rpi:
             user = raw_input('username: ')
 
         password = args.password
-        if password is None and not auto:
+        if password is None and not auto and not args.rpi:
             import getpass
             password = getpass.getpass('password: ')
 
@@ -112,8 +170,10 @@ class Init(SubCommand):
 
         output_dir = args.output
         device_conf_path = os.path.join(output_dir, 'dataplicity.conf')
-
+        if args.rpi:
+            rpi_device_conf_path = '/opt/dataplicity/dataplicity.conf'
         serial = args.serial
+
         name = args.name
         if serial is None:
             serial = get_default_serial()
@@ -140,10 +200,15 @@ class Init(SubCommand):
                     sys.stderr.write("do you need to run this command with 'sudo'?\n")
                     return -1
         else:
-            auth_token = remote.call('device.auth',
-                                     serial=serial,
-                                     username=user,
-                                     password=password)
+            if args.rpi:
+                print 'authenticating raspberry pi'
+                auth_token, serial = remote.call('device.auth_rpi',
+                                                 usercode=args.usercode)
+            else:
+                auth_token = remote.call('device.auth',
+                                         serial=serial,
+                                         username=user,
+                                         password=password)
             sys.stdout.write('device authenticated\n')
 
         FIRMWARE_CONF_PATH = os.path.join(constants.FIRMWARE_PATH, 'current/dataplicity.conf')
@@ -158,6 +223,8 @@ class Init(SubCommand):
                          "FIRMWARE_PATH": constants.FIRMWARE_PATH,
                          "FIRMWARE_CONF_PATH": FIRMWARE_CONF_PATH}
         conf_contents = conf_template.format(**template_data)
+        if args.rpi:
+            rpi_conf_contents = rpi_conf_template.format(SERIAL=serial)
 
         if os.path.exists(device_conf_path) and not (args.force or args.dry):
             sys.stderr.write("a file called \"{}\" exists. Use --force to overwrite\n".format(device_conf_path))
@@ -190,6 +257,8 @@ class Init(SubCommand):
             sys.stdout.write("wrote {}\n".format(path))
 
         write_conf(device_conf_path, conf_contents)
+        if args.rpi:
+            write_conf(rpi_device_conf_path, rpi_conf_contents)
 
         for path in (constants.SETTINGS_PATH, constants.FIRMWARE_PATH):
             if not os.path.exists(path):

@@ -91,10 +91,13 @@ class App(object):
             else:
                 logging.config.dictConfig(DEFAULT_LOGGING)
 
-    def make_client(self, log):
+    def make_client(self, log, conf=None):
         if self.args.conf:
             path = self.args.conf
-        path = tools.find_conf()
+        elif conf:
+            path = conf
+        else:
+            path = tools.find_conf()
         if path is None:
             raise ProjectNotFoundError('unable to locate dataplicity.conf for project')
         client = Client(path, log=log)

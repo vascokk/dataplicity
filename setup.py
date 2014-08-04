@@ -29,5 +29,6 @@ setup(name='dataplicity',
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['python-daemon',
                         'fs>=0.5.0',
-                        'setuptools']
+                        'setuptools',
+                        'psutil']
       )
