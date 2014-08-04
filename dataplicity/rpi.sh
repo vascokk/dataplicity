@@ -42,8 +42,8 @@ install_commands() {
 }
 
 install() {
-    apt-get install python-setuptools
-    apt-get install python-dev
+    apt-get install -y python-setuptools
+    apt-get install -y python-dev
 
     if has_pip; then
         install_commands $1 $2
