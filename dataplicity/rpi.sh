@@ -7,9 +7,10 @@ has_pip() {
     return 0
 }
 
-has_easy() {
-    command -v easy_install >/dev/null 2>&1 || {
-        return 1
+check_dep() {
+    command -v $1 >/dev/null 2>&1 || {
+        echo >&2 "$1 is required. Please install and try again. Aborting"
+        exit 1
     }
     return 0
 }
@@ -41,17 +42,16 @@ install_commands() {
 }
 
 install() {
-    if has_easy; then
-        if has_pip; then
-            install_commands $1 $2
-        else
-            easy_install pip
-            install_commands $1 $2
-        fi
+    check_dep easy_install
+    check_dep curl
+
+    if has_pip; then
+        install_commands $1 $2
     else
-        echo >&2 "easy_install is required. Please install Python setup tools and try again. Aborting";
-        exit 1
+        easy_install pip
+        install_commands $1 $2
     fi
+
 }
 
 install $0 $1
