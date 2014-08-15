@@ -65,37 +65,37 @@ path = /tmp/samplers/
 
 [task:proc]
 run = dataplicity.tasks.system.ProcessList
-poll = 5
+poll = 30
 data-timeline = process_list
 
 [task:cpu_percent]
 run = dataplicity.tasks.system.CPUPercentSampler
-poll = 5
+poll = 30
 data-sampler = cpu_percent
 
 [task:memory_available]
 run = dataplicity.tasks.system.AvailableMemorySampler
-poll = 5
+poll = 30
 data-sampler = memory_available
 
 [task:memory_total]
 run = dataplicity.tasks.system.TotalMemorySampler
-poll = 5
+poll = 30
 data-sampler = memory_total
 
 [task:disk_available]
 run = dataplicity.tasks.system.AvailableDisk
-poll = 5
+poll = 30
 data-sampler = disk_available
 
 [task:disk_total]
 run = dataplicity.tasks.system.TotalDisk
-poll = 5
+poll = 30
 data-sampler = disk_total
 
 [task:network]
 run = dataplicity.tasks.system.NetworkSampler
-poll = 5
+poll = 30
 data-timeline = network
 
 [task:ifconfig]
