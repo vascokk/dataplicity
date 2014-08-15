@@ -71,7 +71,7 @@ data-timeline = process_list
 [task:cpu_percent]
 run = dataplicity.tasks.system.CPUPercentSampler
 poll = 5
-data-timeline = cpu_percent
+data-sampler = cpu_percent
 
 [task:memory_available]
 run = dataplicity.tasks.system.AvailableMemorySampler
@@ -98,14 +98,21 @@ run = dataplicity.tasks.system.NetworkSampler
 poll = 5
 data-timeline = network
 
+[task:ifconfig]
+run = dataplicity.tasks.system.IfconfigData
+poll = 30
+data-timeline = ifconfig
+
 [timeline:process_list]
 [timeline:cpu_percent]
 [timeline:network]
+[timeline:ifconfig]
 
 [sampler:memory_available]
 [sampler:memory_total]
 [sampler:disk_available]
 [sampler:disk_total]
+[sampler:cpu_percent]
 """
 
 
