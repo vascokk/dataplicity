@@ -46,11 +46,11 @@ e undone. [yes|No] "
     rm -f "$PIDFILE"
     echo "Notice: log file is not be removed: '$LOGFILE'" >&2
     update-rc.d -f dataplicity remove
-    rm -fv "$0"
+    rm -fv "\$0"
   fi
 }
 
-case "$1" in
+case "\$1" in
   start)
     start
     ;;
@@ -65,7 +65,7 @@ case "$1" in
     start
     ;;
   *)
-    echo "Usage: $0 {start|stop|restart|uninstall}"
+    echo "Usage: \$0 {start|stop|restart|uninstall}"
 esac
 EOL
 
