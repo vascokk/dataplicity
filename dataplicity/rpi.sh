@@ -1,5 +1,77 @@
 #!/bin/bash
 
+write_init() {
+    cat >/etc/init.d/dataplicity <<EOL
+    #!/bin/sh
+    ### BEGIN INIT INFO
+    # Provides:          dataplicity
+    # Required-Start:    $local_fs $network $named $time $syslog
+    # Required-Stop:     $local_fs $network $named $time $syslog
+    # Default-Start:     2 3 4 5
+    # Default-Stop:      0 1 6
+    # Description:       dataplicity run script
+    ### END INIT INFO
+
+    SCRIPT="dataplicity -c /opt/dataplicity/dataplicity.conf run"
+    RUNAS=root
+
+    PIDFILE=/var/run/dataplicity.pid
+    LOGFILE=/var/log/dataplicity.log
+
+    start() {
+      if [ -f /var/run/$PIDNAME ] && kill -0 $(cat /var/run/$PIDNAME); then
+        echo 'Service already running' >&2
+        return 1
+      fi
+          echo 'Service started' >&2
+    }
+
+    stop() {
+      if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+        echo 'Service not running' >&2
+        return 1
+      fi
+      echo 'Stopping service?~@?' >&2
+      kill -15 $(cat "$PIDFILE") && rm -f "$PIDFILE"
+      echo 'Service stopped' >&2
+    }
+
+    uninstall() {
+      echo -n "Are you really sure you want to uninstall this service? That cannot bb
+    e undone. [yes|No] "
+      local SURE
+      read SURE
+      if [ "$SURE" = "yes" ]; then
+        stop
+        rm -f "$PIDFILE"
+        echo "Notice: log file is not be removed: '$LOGFILE'" >&2
+        update-rc.d -f dataplicity remove
+        rm -fv "$0"
+      fi
+    }
+
+    case "$1" in
+      start)
+        start
+        ;;
+      stop)
+        stop
+        ;;
+      uninstall)
+        uninstall
+        ;;
+      restart)
+        stop
+        start
+        ;;
+      *)
+        echo "Usage: $0 {start|stop|restart|uninstall}"
+    esac
+    EOL
+
+    chmod +x /etc/init.d/dataplicity
+}
+
 has_pip() {
     command -v pip >/dev/null 2>&1 || {
         return 1
@@ -37,8 +109,11 @@ install_commands() {
     cd /opt/dataplicity/
     dataplicity registersamplers
 
+    write_init
+    update-rc.d dataplicity defaults
+
     echo "Running samplers and syncing..."
-    dataplicity run
+    service dataplicity start
 }
 
 install() {
