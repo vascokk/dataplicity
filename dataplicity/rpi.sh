@@ -19,32 +19,34 @@ PIDFILE=/var/run/dataplicity.pid
 LOGFILE=/var/log/dataplicity.log
 
 start() {
-  if [ -f /var/run/$PIDNAME ] && kill -0 $(cat /var/run/$PIDNAME); then
+  if [ -f /var/run/\$PIDNAME ] && kill -0 \$(cat /var/run/\$PIDNAME); then
     echo 'Service already running' >&2
     return 1
   fi
-      echo 'Service started' >&2
+    echo 'Starting service...' >&2
+    local CMD="$SCRIPT &> \"$LOGFILE\" & echo \$!"
+    su -c "$CMD" $RUNAS > "$PIDFILE"
+    echo 'Service started' >&2
 }
 
 stop() {
-  if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+  if [ ! -f "\$PIDFILE" ] || ! kill -0 $(cat "\$PIDFILE"); then
     echo 'Service not running' >&2
     return 1
   fi
-  echo 'Stopping service?~@?' >&2
-  kill -15 $(cat "$PIDFILE") && rm -f "$PIDFILE"
+  echo 'Stopping service...' >&2
+  kill -15 $(cat "\$PIDFILE") && rm -f "\$PIDFILE"
   echo 'Service stopped' >&2
 }
 
 uninstall() {
-  echo -n "Are you really sure you want to uninstall this service? That cannot bb
-e undone. [yes|No] "
+  echo -n "Are you really sure you want to uninstall this service? That cannot be undone. [yes|No] "
   local SURE
   read SURE
   if [ "$SURE" = "yes" ]; then
     stop
-    rm -f "$PIDFILE"
-    echo "Notice: log file is not be removed: '$LOGFILE'" >&2
+    rm -f "\$PIDFILE"
+    echo "Notice: log file is not be removed: '\$LOGFILE'" >&2
     update-rc.d -f dataplicity remove
     rm -fv "\$0"
   fi
