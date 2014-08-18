@@ -1,12 +1,12 @@
 #!/bin/bash
 
 write_init() {
-    cat >/etc/init.d/dataplicity <<EOL
+    cat >/etc/init.d/dataplicity-start <<EOL
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          dataplicity
-# Required-Start:    $local_fs $network $named $time $syslog
-# Required-Stop:     $local_fs $network $named $time $syslog
+# Required-Start:    \$local_fs \$network \$named \$time \$syslog
+# Required-Stop:     \$local_fs \$network \$named \$time \$syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Description:       dataplicity run script
@@ -19,7 +19,7 @@ PIDFILE=/var/run/dataplicity.pid
 LOGFILE=/var/log/dataplicity.log
 
 start() {
-  if [ -f /var/run/\$PIDNAME ] && kill -0 \$(cat /var/run/\$PIDNAME); then
+  if [ -e "\$PIDFILE" ]; then
     echo 'Service already running' >&2
     return 1
   fi
@@ -30,12 +30,13 @@ start() {
 }
 
 stop() {
-  if [ ! -f "\$PIDFILE" ] || ! kill -0 $(cat "\$PIDFILE"); then
+  if [ ! -e "\$PIDFILE" ]; then
     echo 'Service not running' >&2
     return 1
   fi
   echo 'Stopping service...' >&2
-  kill -15 $(cat "\$PIDFILE") && rm -f "\$PIDFILE"
+  killall dataplicity
+  rm "\$PIDFILE"
   echo 'Service stopped' >&2
 }
 
@@ -43,17 +44,18 @@ uninstall() {
   echo -n "Are you really sure you want to uninstall this service? That cannot be undone. [yes|No] "
   local SURE
   read SURE
-  if [ "$SURE" = "yes" ]; then
+  if [ "\$SURE" = "yes" ]; then
     stop
     rm -f "\$PIDFILE"
     echo "Notice: log file is not be removed: '\$LOGFILE'" >&2
-    update-rc.d -f dataplicity remove
+    update-rc.d -f dataplicity-start remove
     rm -fv "\$0"
   fi
 }
 
 case "\$1" in
   start)
+    stop
     start
     ;;
   stop)
@@ -71,7 +73,7 @@ case "\$1" in
 esac
 EOL
 
-    chmod +x /etc/init.d/dataplicity
+    chmod +x /etc/init.d/dataplicity-start
 }
 
 has_pip() {
@@ -112,10 +114,10 @@ install_commands() {
     dataplicity registersamplers
 
     write_init
-    update-rc.d dataplicity defaults
+    update-rc.d dataplicity-start defaults
 
     echo "Running samplers and syncing..."
-    service dataplicity start
+    service dataplicity-start start
 }
 
 install() {
