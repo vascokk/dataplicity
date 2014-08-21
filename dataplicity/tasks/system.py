@@ -1,4 +1,5 @@
 import json
+import platform
 from random import randint
 import subprocess
 from time import time
@@ -154,6 +155,30 @@ class IfconfigData(Task):
         event = timeline.new_event(event_type='TEXT',
                                    title='Ifconfig output',
                                    text=json.dumps(output),
+                                   overwrite=True,
+                                   hide=True,
+                                   event_id=self.event_id)
+
+        event.write()
+
+
+class SystemInfo(Task):
+    def init(self):
+        self.timeline_name = self.conf.get('timeline', 'sysinfo')
+        timestamp = int(time() * 1000.0)
+        token = str(randint(0, 2 ** 31))
+        self.event_id = '{0}_{1}'.format(timestamp, token)
+
+    def poll(self):
+        # Get the timeline
+        timeline = self.client.get_timeline(self.timeline_name)
+        hostname = platform.node()
+        kernel = platform.release()
+        system = platform.system()
+
+        event = timeline.new_event(event_type='TEXT',
+                                   title='System info',
+                                   text=json.dumps(dict(hostname=hostname, kernel=kernel, system=system)),
                                    overwrite=True,
                                    hide=True,
                                    event_id=self.event_id)

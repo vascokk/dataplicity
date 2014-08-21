@@ -103,10 +103,16 @@ run = dataplicity.tasks.system.IfconfigData
 poll = 30
 data-timeline = ifconfig
 
+[task:sysinfo]
+run = dataplicity.tasks.system.SystemInfo
+poll = 60
+data-timeline = sysinfo
+
 [timeline:process_list]
 [timeline:cpu_percent]
 [timeline:network]
 [timeline:ifconfig]
+[timeline:sysinfo]
 
 [sampler:memory_available]
 [sampler:memory_total]
