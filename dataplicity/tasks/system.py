@@ -1,5 +1,7 @@
 import json
+import platform
 from random import randint
+import subprocess
 from time import time
 from dataplicity.client.task import Task
 import psutil
@@ -27,24 +29,12 @@ class CPUPercentSampler(Task):
     """Monitor CPU usage percentage"""
 
     def init(self):
-        self.timeline_name = self.conf.get('timeline', 'system.cpu_percent')
-        timestamp = int(time() * 1000.0)
-        token = str(randint(0, 2 ** 31))
-        self.event_id = '{0}_{1}'.format(timestamp, token)
+        self.sampler = self.conf.get('sampler', 'cpu_percent')
 
     def poll(self):
         # Get the timeline
-        timeline = self.client.get_timeline(self.timeline_name)
-        cpu_percent = psutil.cpu_percent(percpu=True)
-
-        event = timeline.new_event(event_type='TEXT',
-                                   title='CPU Percent',
-                                   text=json.dumps(cpu_percent),
-                                   overwrite=True,
-                                   hide=True,
-                                   event_id=self.event_id)
-
-        event.write()
+        cpu_percent = psutil.cpu_percent()
+        self.client.sample_now(self.sampler, cpu_percent)
 
 
 class TotalMemorySampler(Task):
@@ -143,6 +133,52 @@ class NetworkSampler(Task):
         event = timeline.new_event(event_type='TEXT',
                                    title='Network stats',
                                    text=json.dumps(network),
+                                   overwrite=True,
+                                   hide=True,
+                                   event_id=self.event_id)
+
+        event.write()
+
+
+class IfconfigData(Task):
+    def init(self):
+        self.timeline_name = self.conf.get('timeline', 'ifconfig')
+        timestamp = int(time() * 1000.0)
+        token = str(randint(0, 2 ** 31))
+        self.event_id = '{0}_{1}'.format(timestamp, token)
+
+    def poll(self):
+        # Get the timeline
+        timeline = self.client.get_timeline(self.timeline_name)
+        output = subprocess.Popen("ifconfig", stdout=subprocess.PIPE).communicate()[0]
+
+        event = timeline.new_event(event_type='TEXT',
+                                   title='Ifconfig output',
+                                   text=json.dumps(output),
+                                   overwrite=True,
+                                   hide=True,
+                                   event_id=self.event_id)
+
+        event.write()
+
+
+class SystemInfo(Task):
+    def init(self):
+        self.timeline_name = self.conf.get('timeline', 'sysinfo')
+        timestamp = int(time() * 1000.0)
+        token = str(randint(0, 2 ** 31))
+        self.event_id = '{0}_{1}'.format(timestamp, token)
+
+    def poll(self):
+        # Get the timeline
+        timeline = self.client.get_timeline(self.timeline_name)
+        hostname = platform.node()
+        kernel = platform.release()
+        system = platform.system()
+
+        event = timeline.new_event(event_type='TEXT',
+                                   title='System info',
+                                   text=json.dumps(dict(hostname=hostname, kernel=kernel, system=system)),
                                    overwrite=True,
                                    hide=True,
                                    event_id=self.event_id)
