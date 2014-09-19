@@ -108,11 +108,17 @@ run = dataplicity.tasks.system.SystemInfo
 poll = 60
 data-timeline = sysinfo
 
+[task:installedpackages]
+run = dataplicity.tasks.system.InstalledPackages
+poll = 300
+data-timeline = installed_packages
+
 [timeline:process_list]
 [timeline:cpu_percent]
 [timeline:network]
 [timeline:ifconfig]
 [timeline:sysinfo]
+[timeline:installed_packages]
 
 [sampler:memory_available]
 [sampler:memory_total]

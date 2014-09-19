@@ -1,7 +1,8 @@
 import json
 import platform
 from random import randint
-import subprocess
+import re
+from subprocess import Popen, PIPE
 from time import time
 from dataplicity.client.task import Task
 import psutil
@@ -150,7 +151,7 @@ class IfconfigData(Task):
     def poll(self):
         # Get the timeline
         timeline = self.client.get_timeline(self.timeline_name)
-        output = subprocess.Popen("ifconfig", stdout=subprocess.PIPE).communicate()[0]
+        output = Popen("ifconfig", stdout=PIPE).communicate()[0]
 
         event = timeline.new_event(event_type='TEXT',
                                    title='Ifconfig output',
@@ -184,3 +185,26 @@ class SystemInfo(Task):
                                    event_id=self.event_id)
 
         event.write()
+
+
+class InstalledPackages(Task):
+    def init(self):
+        self.timeline_name = self.conf.get('timeline', 'installed_packages')
+        timestamp = int(time() * 1000.0)
+        token = str(randint(0, 2 ** 31))
+        self.event_id = '{0}_{1}'.format(timestamp, token)
+
+    def poll(self):
+        timeline = self.client.get_timeline(self.timeline_name)
+        output = Popen(['dpkg', '--get-selections'], stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[0]
+        package_list = re.split('[\t]+install\n', output)
+
+        event = timeline.new_event(event_type='TEXT',
+                                   title='Installed packages',
+                                   text=json.dumps(package_list),
+                                   overwrite=True,
+                                   hide=True,
+                                   event_id=self.event_id)
+
+        event.write()
+
