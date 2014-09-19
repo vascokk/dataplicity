@@ -196,7 +196,11 @@ class InstalledPackages(Task):
 
     def poll(self):
         timeline = self.client.get_timeline(self.timeline_name)
-        output = Popen(['dpkg', '--get-selections'], stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[0]
+        try:
+            output = Popen(['dpkg', '--get-selections'], stdout=PIPE).communicate()[0]
+        except OSError:
+            return
+
         package_list = re.split('[\t]+install\n', output)
 
         event = timeline.new_event(event_type='TEXT',
