@@ -4,7 +4,6 @@ from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.client.timeline import TimelineManager
 from dataplicity.client.exceptions import ForceRestart
-from dataplicity.app import comms
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import constants
 from dataplicity import firmware
@@ -186,6 +185,10 @@ class Client(object):
     def get_settings(self, name):
         self.livesettings.get(name, reload=True)
 
+    def get_comms(self):
+        from dataplicity.app import comms
+        return comms.Comms()
+
     def sync(self):
         # Serialize syncing
         with self._sync_lock:
@@ -348,7 +351,7 @@ class Client(object):
                 install_path = firmware.install_encoded(device_class, version, firmware_b64)
 
                 self.log.info('firmware installed in "{}"'.format(install_path))
-                comms.Comms().restart()
+                self.get_comms().restart()
 
     def deploy(self):
         """Deploy latest firmware"""
