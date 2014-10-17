@@ -137,14 +137,14 @@ defaults = ./gpio.ini
 
 gpio_ini_template = """
 [pins]
-pin22 = off
-pin18 = off
-pin16 = off
-pin15 = off
-pin13 = off
-pin12 = off
-pin11 = off
-pin7 = off
+pin22 = ignore
+pin18 = ignore
+pin16 = ignore
+pin15 = ignore
+pin13 = ignore
+pin12 = ignore
+pin11 = ignore
+pin7 = ignore
 """
 
 
