@@ -56,6 +56,9 @@ rpi_conf_template = """
 [extend]
 conf = /etc/dataplicity/dataplicity.conf
 
+[server]
+push_url = http://sync.dataplicity.com/pushwait
+
 [device]
 class = Master RPI
 serial = {SERIAL}
