@@ -113,6 +113,13 @@ run = dataplicity.tasks.system.InstalledPackages
 poll = 300
 data-timeline = installed_packages
 
+[task:setgpio]
+run = dataplicity.tasks.rpi.SetGPIO
+poll = 30
+
+[settings:gpio]
+defaults = ./gpio.ini
+
 [timeline:process_list]
 [timeline:cpu_percent]
 [timeline:network]
@@ -126,6 +133,20 @@ data-timeline = installed_packages
 [sampler:disk_total]
 [sampler:cpu_percent]
 """
+
+
+gpio_ini_template = """
+[pins]
+pin22 = off
+pin18 = off
+pin16 = off
+pin15 = off
+pin13 = off
+pin12 = off
+pin11 = off
+pin7 = off
+"""
+
 
 
 class Init(SubCommand):
@@ -278,6 +299,7 @@ class Init(SubCommand):
         write_conf(device_conf_path, conf_contents)
         if args.rpi:
             write_conf(rpi_device_conf_path, rpi_conf_contents)
+            write_conf(rpi_device_conf_path, gpio_ini_template)
 
         for path in (constants.SETTINGS_PATH, constants.FIRMWARE_PATH):
             if not os.path.exists(path):
