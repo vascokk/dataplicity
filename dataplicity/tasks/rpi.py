@@ -1,4 +1,4 @@
-from dataplicity.client.task import Task
+from dataplicity.client.task import Task, onsignal
 
 from io import BytesIO
 
@@ -9,6 +9,14 @@ except:
     # Attempt a friendly error message
     sys.stderr.write("Python module 'picamera' is required for this example\n")
     sys.stderr.write("Try 'sudo pip install picamera'")
+    raise
+
+try:
+    import RPi.GPIO as GPIO
+except:
+    import sys
+    sys.stderr.write("Python module 'RPi.GPIO' is required for this example\n")
+    sys.stderr.write("Try 'sudo pip install RPi.GPIO'")
     raise
 
 
@@ -49,3 +57,20 @@ class TakePhoto(Task):
         event.write()
         # Keep track of the frame number
         self.frame_no += 1
+
+
+class SetGPIO(Task):
+    def on_startup(self):
+        GPIO.setmode(GPIO.BOARD)
+        self.pin_list = [7, 11, 12, 13, 15, 16, 18, 22]
+        for pin in self.pin_list:
+            GPIO.setup(pin, GPIO.OUT)
+
+    @onsignal('settings_update', 'gpio')
+    def on_settings_update(self, name, settings):
+        for pin in self.pin_list:
+            pin_setting = settings.get('pins', 'pin{}'.format(pin))
+            if pin_setting == 'on':
+                GPIO.output(pin, 1)
+            elif pin_setting == 'off':
+                GPIO.output(pin, 0)
