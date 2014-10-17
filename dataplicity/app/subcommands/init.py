@@ -212,6 +212,7 @@ class Init(SubCommand):
         device_conf_path = os.path.join(output_dir, 'dataplicity.conf')
         if args.rpi:
             rpi_device_conf_path = '/opt/dataplicity/dataplicity.conf'
+            gpio_conf_path = '/opt/dataplicity/gpio.ini'
         serial = args.serial
 
         name = args.name
@@ -299,7 +300,7 @@ class Init(SubCommand):
         write_conf(device_conf_path, conf_contents)
         if args.rpi:
             write_conf(rpi_device_conf_path, rpi_conf_contents)
-            write_conf(rpi_device_conf_path, gpio_ini_template)
+            write_conf(gpio_conf_path, gpio_ini_template)
 
         for path in (constants.SETTINGS_PATH, constants.FIRMWARE_PATH):
             if not os.path.exists(path):
