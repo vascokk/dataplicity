@@ -97,8 +97,10 @@ install_commands() {
     mkdir -p /etc/dataplicity/
     mkdir -p /opt/dataplicity/
 
+    pip install picamera
+
     if [ "$2" = "--dev" ]; then
-        mkdir /opt/dataplicity/src/
+        mkdir -p /opt/dataplicity/src/
         cd /opt/dataplicity/src/
         git clone https://github.com/wildfoundry/dataplicity.git
         cd /opt/dataplicity/src/dataplicity/
