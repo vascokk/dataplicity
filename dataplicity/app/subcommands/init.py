@@ -123,12 +123,21 @@ poll = 30
 [settings:gpio]
 defaults = ./gpio.ini
 
+[task:dashbaord_camera]
+run = dataplicity.tasks.rpi.DashControlledCamera
+poll = 30
+data-timeline = camera
+
+[settings:rpi_camera]
+defaults = ./rpi_camera.ini
+
 [timeline:process_list]
 [timeline:cpu_percent]
 [timeline:network]
 [timeline:ifconfig]
 [timeline:sysinfo]
 [timeline:installed_packages]
+[timeline:camera]
 
 [sampler:memory_available]
 [sampler:memory_total]
@@ -150,6 +159,12 @@ pin11 = ignore
 pin7 = ignore
 """
 
+
+rpi_camera_template = """
+[camera]
+frequency = never
+last_pic = never
+"""
 
 
 class Init(SubCommand):
@@ -216,6 +231,7 @@ class Init(SubCommand):
         if args.rpi:
             rpi_device_conf_path = '/opt/dataplicity/dataplicity.conf'
             gpio_conf_path = '/opt/dataplicity/gpio.ini'
+            camera_conf_path = '/opt/dataplicity/rpi_camera.ini'
         serial = args.serial
 
         name = args.name
@@ -304,6 +320,7 @@ class Init(SubCommand):
         if args.rpi:
             write_conf(rpi_device_conf_path, rpi_conf_contents)
             write_conf(gpio_conf_path, gpio_ini_template)
+            write_conf(camera_conf_path, rpi_camera_template)
 
         for path in (constants.SETTINGS_PATH, constants.FIRMWARE_PATH):
             if not os.path.exists(path):
