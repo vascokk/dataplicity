@@ -8,8 +8,8 @@ def import_object(name):
 
     try:
         module = __import__(module_name)
-    except ImportError:
-        raise errors.StartupError("Unable to import '{}'".format(name))
+    except ImportError as e:
+        raise errors.StartupError("Unable to import '{}' ({})".format(name, e))
 
     for path in module_name.split('.')[1:]:
         module = getattr(module, path, None)
