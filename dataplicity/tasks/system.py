@@ -103,6 +103,11 @@ class ProcessList(Task):
             except psutil.AccessDenied:
                 data['memory_percent'] = 0
 
+            try:
+                data['cpu_percent'] = p.cpu_percent()
+            except psutil.AccessDenied:
+                data['cpu_percent'] = 0
+
             process_list.append(data)
 
         process_list = sorted(process_list, key=lambda k: k['memory_percent'], reverse=True)
