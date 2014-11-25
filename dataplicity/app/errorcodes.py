@@ -1,5 +1,6 @@
 """JSONRPC error codes. Mirrors ErrorCodes from dataplicityapi/api"""
 
+
 class ErrorCodes(object):
     """JSONRPC error codes"""
     # In functional groups of 100

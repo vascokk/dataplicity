@@ -3,6 +3,7 @@ from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.client.timeline import TimelineManager
+from dataplicity.client.m2m import M2MManager
 from dataplicity.client.exceptions import ForceRestart
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import constants
@@ -122,6 +123,8 @@ class Client(object):
             self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
             self.timelines = TimelineManager.init_from_conf(self, conf)
 
+            self.m2m = M2MManager.init_from_conf(self, conf)
+
             self.sample_now = self.samplers.sample_now
             self.sample = self.samplers.sample
 
@@ -129,6 +132,12 @@ class Client(object):
         except:
             self.log.exception('unable to start')
             raise
+
+    def close(self):
+        try:
+            self.m2m.close()
+        except Exception as e:
+            self.log.exception('error closing m2m')
 
     def connect_wait(self, closing_event, sync_func):
         def do_wait():
