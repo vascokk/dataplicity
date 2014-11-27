@@ -3,8 +3,8 @@ Packet management
 
 """
 
-from dataplicity.m2m import bencode
-from dataplicity.compat import int_types
+from m2md import bencode
+from m2md.compat import int_types
 
 
 class PacketError(Exception):
@@ -23,21 +23,23 @@ class UnknownPacketError(PacketError):
 
 class PacketMeta(type):
     """Maintains a registry of packet classes"""
-    registry = {}
 
     def __new__(mcs, name, bases, attrs):
         packet_cls = super(PacketMeta, mcs).__new__(mcs, name, bases, attrs)
         if bases[0] is not object:
-            assert packet_cls.type not in mcs.registry, "this packet type has already been registered"
-            mcs.registry[packet_cls.type] = packet_cls
+            if packet_cls.type >= 0:
+                assert packet_cls.type not in packet_cls.registry, "this packet type has already been registered"
+                packet_cls.registry[packet_cls.type] = packet_cls
         return packet_cls
 
 
-class Packet(object):
+class PacketBase(object):
     __metaclass__ = PacketMeta
 
+    registry = {}
+
     # Packet type
-    type = 0
+    type = -1  # Indicates it is a base packet class
 
     # Named attributes, if using default init_data
     attributes = []
@@ -57,10 +59,13 @@ class Packet(object):
         params = ', '.join("{}={!r}".format(k, v) for k, v in data.items())
         return "{}({})".format(self.__class__.__name__, params)
 
+    def process_packet_type(self, packet_type):
+        return packet_type
+
     @classmethod
     def create(cls, packet_type, *args, **kwargs):
         """Dynamically create a packet from its type and parameters"""
-        packet_cls = PacketMeta.registry.get(int(packet_type))
+        packet_cls = cls.registry.get(cls.process_packet_type(packet_type))
         return packet_cls(*args, **kwargs)
 
     @classmethod
@@ -78,7 +83,7 @@ class Packet(object):
             raise PacketFormatError('first value must be an integer')
         packet_body = packet_data[1:]
         try:
-            packet_cls = PacketMeta.registry[packet_type]
+            packet_cls = cls.registry[packet_type]
         except:
             raise UnknownPacketError("unknown packet type '{}'".format(packet_type))
         return packet_cls.from_body(packet_body)
@@ -93,7 +98,8 @@ class Packet(object):
 
     @property
     def kwargs(self):
-        return {attrib_name: getattr(self, attrib_name) for attrib_name, attrib_type in self.attributes}
+        return {attrib_name: getattr(self, attrib_name)
+                for attrib_name, attrib_type in self.attributes}
 
     def get_method_args(self, arg_count):
         args = []
@@ -117,7 +123,7 @@ class Packet(object):
                 raise PacketFormatError("missing attribute '{}', in {!r}".format(attrib_name, self))
             value = params[attrib_name]
             if attrib_type is not None and not isinstance(value, attrib_type):
-                raise PacketFormatError("parameter '{}' should be a {!r}, in {!r}".format(attrib_name, attrib_type, self))
+                raise PacketFormatError("parameter '{}' should be a {!r}, in {!r} (not {!r})".format(attrib_name, attrib_type, self, type(value)))
             setattr(self, attrib_name, params[attrib_name])
 
     def validate(self):
@@ -135,12 +141,6 @@ class Packet(object):
 
     def encode(self):
         """Encode the packet (including type header)"""
-        body = self.encode_body()
-        return [int(self.type)] + body
-
-    def encode_body(self):
-        """Encode the packet body (not including type header)"""
-        data = []
-        for attrib_name, attrib_type in self.attributes:
-            data.append(getattr(self, attrib_name))
+        data = ([int(self.type)] +
+                [getattr(self, attrib_name) for attrib_name, attrib_type in self.attributes])
         return data

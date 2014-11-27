@@ -8,7 +8,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from enum import IntEnum, unique
-from dataplicity.m2m.packetbase import Packet
+from m2md.packetbase import PacketBase
+from m2md.compat import text_type
 
 
 @unique
@@ -70,98 +71,113 @@ class PacketType(IntEnum):
 
     command_add_route = 100
 
+
+class M2MPacket(PacketBase):
+    """Base class, not a real packet"""
+    type = -1
+
+    registry = {}
+
+    @classmethod
+    def process_packet_type(cls, packet_type):
+        """enables the use of strings to identify packets"""
+        if isinstance(packet_type, (bytes, text_type)):
+            packet_type = PacketType[packet_type].value
+        return int(packet_type)
+
+
 # ------------------------------------------------------------
 # Packet classes
 # ------------------------------------------------------------
 
 
-class NullPacket(Packet):
+class NullPacket(M2MPacket):
     """Probably never sent, this may be used as a sentinel at some point"""
     type = PacketType.null
 
 
-class RequestJoinPacket(Packet):
+class RequestJoinPacket(M2MPacket):
     """Client requests joining the server"""
     type = PacketType.request_join
 
 
-class RequestIdentifyPacket(Packet):
+class RequestIdentifyPacket(M2MPacket):
     """Client requests joining the server with a particular identity"""
     type = PacketType.request_identify
     attributes = [('uuid', bytes)]
 
 
-class WelcomePacket(Packet):
+class WelcomePacket(M2MPacket):
     """Send to the client when an identity has been recorded"""
     type = PacketType.welcome
 
 
-class LogPacket(Packet):
+class LogPacket(M2MPacket):
     """Log information, client may ignore"""
     type = PacketType.log
 
 
-class RequestSendPacket(Packet):
+class RequestSendPacket(M2MPacket):
     """Request to send data to a connection"""
     type = PacketType.request_send
     attributes = [('channel', int),
                   ('data', bytes)]
 
 
-class RoutePacket(Packet):
+class RoutePacket(M2MPacket):
     """Route data"""
     type = PacketType.route
     attributes = [('channel', int),
                   ('data', bytes)]
 
 
-class PingPacket(Packet):
+class PingPacket(M2MPacket):
     """Ping packet to check connection"""
     type = PacketType.ping
     attributes = [('data', bytes)]
 
 
-class PongPacket(Packet):
+class PongPacket(M2MPacket):
     """Response to Ping packet"""
     type = PacketType.pong
     attributes = [('data', bytes)]
 
 
-class SetIdentityPacket(Packet):
+class SetIdentityPacket(M2MPacket):
     type = PacketType.set_identity
     attributes = [('uuid', bytes)]
 
 
-class NotifyOpenPacket(Packet):
+class NotifyOpenPacket(M2MPacket):
     """Let the client know a channel was opened"""
     type = PacketType.notify_open
     attributes = [('channel', int)]
 
 
-class RequestLoginPacket(Packet):
+class RequestLoginPacket(M2MPacket):
     """Login for extra privileges"""
     type = PacketType.request_login
     attributes = [('username', bytes),
                   ('password', bytes)]
 
 
-class NotifyLoginSuccessPacket(Packet):
+class NotifyLoginSuccessPacket(M2MPacket):
     """Login success"""
     type = PacketType.notify_login_success
     attributes = [('user', bytes)]
 
 
-class NotifyLoginFailPacket(Packet):
+class NotifyLoginFailPacket(M2MPacket):
     """Login failed"""
     type = PacketType.notify_login_fail
     attributes = [('msg', bytes)]
 
 
-class RequestClosePacket(Packet):
+class RequestClosePacket(M2MPacket):
     type = PacketType.request_close
 
 
-class CommandAddRoutePacket(Packet):
+class CommandAddRoutePacket(M2MPacket):
     type = PacketType.command_add_route
     attributes = [('uuid1', bytes),
                   ('port1', int),
@@ -173,4 +189,4 @@ if __name__ == "__main__":
     print(ping_packet)
     print(ping_packet.as_bytes)
     print(PingPacket.from_bytes(ping_packet.as_bytes))
-    print(Packet.create(PacketType.ping, data=b"test2"))
+    print(M2MPacket.create('ping', data=b"test2"))
