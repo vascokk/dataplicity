@@ -69,7 +69,9 @@ class PacketType(IntEnum):
 
     request_close = 18
 
-    command_add_route = 100
+    command_response = 100
+
+    command_add_route = 101
 
 
 class M2MPacket(PacketBase):
@@ -177,9 +179,16 @@ class RequestClosePacket(M2MPacket):
     type = PacketType.request_close
 
 
+class CommandResponsePacket(M2MPacket):
+    type = PacketType.command_response
+    attributes = [('command_id', int),
+                  ('result', dict)]
+
+
 class CommandAddRoutePacket(M2MPacket):
     type = PacketType.command_add_route
-    attributes = [('uuid1', bytes),
+    attributes = [('command_id', int),
+                  ('uuid1', bytes),
                   ('port1', int),
                   ('uuid2', bytes),
                   ('port2', int)]

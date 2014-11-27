@@ -10,7 +10,7 @@ from dataplicity.m2m.packets import PacketType
 from dataplicity.m2m.packets import M2MPacket as Packet
 from dataplicity.m2m.compat import text_type
 
-from collections import deque
+from collections import deque, defaultdict
 import sys
 import socket
 import threading
@@ -131,8 +131,11 @@ class WSClient(ThreadedDispatcher):
         self.identity = uuid
         self.channels = {}
 
+        self.lock = threading.RLock()
         self.ready_event = threading.Event()
         self.close_event = threading.Event()
+        self.callbacks = defaultdict(list)
+        self.hooks = defaultdict(list)
 
         super(WSClient, self).__init__(log=log)
         self.daemon = True
@@ -156,6 +159,29 @@ class WSClient(ThreadedDispatcher):
         self.start()
         return self.wait_ready()
 
+    def add_callback(self, command_id, callback):
+        self.callbacks[command_id].append(callback)
+
+    def callback(self, command_id, result):
+        with self.lock:
+            if command_id in self.callbacks:
+                for callback in self.callbacks[command_id]:
+                    try:
+                        callback(result)
+                    except:
+                        self.exception('error in command callback')
+                del self.callbacks[command_id]
+
+    def clear_callbacks(self):
+        """Clear all callbacks, because they may be blocking"""
+        with self.lock:
+            for command_id, callbacks in self.callbacks.items():
+                for callback in callbacks:
+                    try:
+                        callback(None)
+                    except:
+                        self.exception('error clearing callback')
+
     def get_channel(self, channel_no):
         # TODO: Create channels in response to packets
         if channel_no not in self.channels:
@@ -172,6 +198,7 @@ class WSClient(ThreadedDispatcher):
         if not self.close_event.is_set():
             self.send(PacketType.request_close)
             self.close_event.wait(timeout)
+            self.clear_callbacks()
         self._started = False
 
     def wait_ready(self):
@@ -242,6 +269,10 @@ class WSClient(ThreadedDispatcher):
         self.identity = identity
         self.log.debug('setting identity to %r', self.identity)
 
+    @expose(PacketType.ping)
+    def handle_ping(self, packet_type, data):
+        self.send('pong', data=data[:1024])
+
     @expose(PacketType.welcome)
     def handle_welcome(self, packet_type):
         self.ready_event.set()
@@ -259,6 +290,10 @@ class WSClient(ThreadedDispatcher):
     def on_login_success(self, packet_type, user):
         self.user = user
         log.debug('logged in as %s', user)
+
+    @expose(PacketType.command_response)
+    def on_command_response(self, packet_type, command_id, result):
+        self.callback(command_id, result)
 
 
 if __name__ == "__main__":
