@@ -8,8 +8,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from enum import IntEnum, unique
-from m2md.packetbase import PacketBase
-from m2md.compat import text_type
+from dataplicity.m2m.packetbase import PacketBase
+from dataplicity.compat import text_type
 
 
 @unique
@@ -63,15 +63,23 @@ class PacketType(IntEnum):
     # Request login for privileged accounts
     request_login = 15
 
-    notify_login_success = 16
+    forward = 16
 
-    notify_login_fail = 17
+    notify_login_success = 17
 
-    request_close = 18
+    notify_login_fail = 18
 
-    command_response = 100
+    request_close = 19
+
+    response = 100
 
     command_add_route = 101
+
+    command_forward = 102
+
+    command_log = 103
+
+    command_broadcast_log = 104
 
 
 class M2MPacket(PacketBase):
@@ -117,6 +125,7 @@ class WelcomePacket(M2MPacket):
 class LogPacket(M2MPacket):
     """Log information, client may ignore"""
     type = PacketType.log
+    attributes = [('text', bytes)]
 
 
 class RequestSendPacket(M2MPacket):
@@ -179,8 +188,14 @@ class RequestClosePacket(M2MPacket):
     type = PacketType.request_close
 
 
+class ForwardPacket(M2MPacket):
+    type = PacketType.forward
+    attrubutes = [('sender', bytes),
+                  ('data', dict)]
+
+
 class CommandResponsePacket(M2MPacket):
-    type = PacketType.command_response
+    type = PacketType.response
     attributes = [('command_id', int),
                   ('result', dict)]
 
@@ -192,6 +207,20 @@ class CommandAddRoutePacket(M2MPacket):
                   ('port1', int),
                   ('uuid2', bytes),
                   ('port2', int)]
+
+
+class CommandForwardPacket(M2MPacket):
+    type = PacketType.command_forward
+    attributes = [('command_id', int),
+                  ('node', bytes),
+                  ('data', dict)]
+
+
+class CommandBroadcastLogPacket(M2MPacket):
+    type = PacketType.command_broadcast_log
+    attributes = [('command_id', int),
+                  ('text', bytes)]
+
 
 if __name__ == "__main__":
     ping_packet = PingPacket(data=b'test')

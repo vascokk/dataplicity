@@ -28,7 +28,7 @@ class PacketMeta(type):
         packet_cls = super(PacketMeta, mcs).__new__(mcs, name, bases, attrs)
         if bases[0] is not object:
             if packet_cls.type >= 0:
-                assert packet_cls.type not in packet_cls.registry, "this packet type has already been registered"
+                assert packet_cls.type not in packet_cls.registry, "packet type {!r} has already been registered".format(packet_cls, type)
                 packet_cls.registry[packet_cls.type] = packet_cls
         return packet_cls
 

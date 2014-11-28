@@ -18,6 +18,7 @@ import ssl
 
 import logging
 log = logging.getLogger('m2m.client')
+server_log = logging.getLogger('m2m.log')
 
 
 class ClientError(Exception):
@@ -260,6 +261,9 @@ class WSClient(ThreadedDispatcher):
     def channel_write(self, channel, data):
         self.send(PacketType.request_send, channel=channel, data=data)
 
+    def on_forward(self, sender, data):
+        self.log.debug('forward from {{{%s}}} %r', sender, data)
+
     # --------------------------------------------------------
     # Packet handlers
     # -------------------------------------------------------
@@ -277,6 +281,10 @@ class WSClient(ThreadedDispatcher):
     def handle_welcome(self, packet_type):
         self.ready_event.set()
 
+    @expose(PacketType.log)
+    def handle_log(self, packet_type, msg):
+        server_log.info(msg)
+
     @expose(PacketType.route)
     def handle_route(self, packet_type, channel, data):
         channel = self.get_channel(channel)
@@ -291,9 +299,13 @@ class WSClient(ThreadedDispatcher):
         self.user = user
         log.debug('logged in as %s', user)
 
-    @expose(PacketType.command_response)
-    def on_command_response(self, packet_type, command_id, result):
+    @expose(PacketType.response)
+    def on_response(self, packet_type, command_id, result):
         self.callback(command_id, result)
+
+    @expose(PacketType.forward)
+    def on_forward_packet(self, packet_type, sender, data):
+        self.on_forward(sender, data)
 
 
 if __name__ == "__main__":
