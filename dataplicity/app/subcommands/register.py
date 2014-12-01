@@ -20,6 +20,10 @@ class Register(SubCommand):
         args = self.args
 
         client = self.app.make_client(log)
+
+        if client.auth_token is None:
+            sys.stderr.write("no auth token found (have you run 'dataplicity init')?\n")
+
         remote = client.remote
         conf = client.conf
 
@@ -28,7 +32,6 @@ class Register(SubCommand):
         device_class_name = conf.get('device', 'class')
         serial = conf.get('device', 'serial')
         name = conf.get('device', 'name', 'serial')
-        auth_token = conf.get('device', 'auth', args.auth)
 
         path = conf.get('device', 'path', None)
         if path is None:
@@ -51,7 +54,7 @@ class Register(SubCommand):
 
         print "Registering device..."
         result = remote.call("device.register",
-                             auth_token=auth_token,
+                             auth_token=client.auth_token,
                              name=name,
                              serial=serial,
                              device_class_name=device_class_name,

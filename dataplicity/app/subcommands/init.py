@@ -244,7 +244,6 @@ class Init(SubCommand):
         from dataplicity import jsonrpc
         remote = jsonrpc.JSONRPC(args.server)
 
-        sys.stdout.write('authenticating with server...\n')
         auto_device_subdomain = None
         if auto:
             auth_token = "file:/var/dataplicity/authtoken"
@@ -265,6 +264,7 @@ class Init(SubCommand):
                 auth_token, serial = remote.call('device.auth_rpi',
                                                  usercode=args.usercode)
             else:
+                sys.stdout.write('authenticating with server...\n')
                 auth_token = remote.call('device.auth',
                                          serial=serial,
                                          username=user,
