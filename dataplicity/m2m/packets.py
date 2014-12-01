@@ -63,7 +63,7 @@ class PacketType(IntEnum):
     # Request login for privileged accounts
     request_login = 15
 
-    forward = 16
+    instruction = 16
 
     notify_login_success = 17
 
@@ -75,7 +75,7 @@ class PacketType(IntEnum):
 
     command_add_route = 101
 
-    command_forward = 102
+    command_send_instruction = 102
 
     command_log = 103
 
@@ -181,15 +181,15 @@ class NotifyLoginSuccessPacket(M2MPacket):
 class NotifyLoginFailPacket(M2MPacket):
     """Login failed"""
     type = PacketType.notify_login_fail
-    attributes = [('msg', bytes)]
+    attributes = [('message', bytes)]
 
 
 class RequestClosePacket(M2MPacket):
     type = PacketType.request_close
 
 
-class ForwardPacket(M2MPacket):
-    type = PacketType.forward
+class InstructionPacket(M2MPacket):
+    type = PacketType.instruction
     attrubutes = [('sender', bytes),
                   ('data', dict)]
 
@@ -209,8 +209,8 @@ class CommandAddRoutePacket(M2MPacket):
                   ('port2', int)]
 
 
-class CommandForwardPacket(M2MPacket):
-    type = PacketType.command_forward
+class CommandInstructionPacket(M2MPacket):
+    type = PacketType.command_send_instruction
     attributes = [('command_id', int),
                   ('node', bytes),
                   ('data', dict)]

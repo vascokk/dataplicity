@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui>
+    <interface id="dataplicity">
+        <mastertabcontainer title="${device.name} M2M Test" id="top-tabs">
+            <tab title="Shell">
+                <terminal name="shell" />
+            </tab>
+            <tab title="HTop">
+                <terminal name="htop" input="no"/>
+            </tab>
+        </mastertabcontainer>
+    </interface>
+</ui>

@@ -20,16 +20,36 @@ class RemoteProcess(object):
         self.command = command
 
 
+class M2MClient(WSClient):
+
+    def set_manager(self, manager):
+        self._manager = manager
+
+    @property
+    def manager(self):
+        return getattr(self, '_manager', None)
+
+    def on_instruction(self, sender, data):
+        self.manager.on_instruction(sender, data)
+
+
 class M2MManager(object):
 
     def __init__(self, client, url):
         self.client = client
         self.url = url
         self.remote = {}
-        self.m2m_client = WSClient(url, log=log)
-        log.debug('connecting to m2m server %s', url)
-        self.identity = self.m2m_client.connect()
-        log.info('m2m identity {%s}'.format(self.identity))
+        client = self.m2m_client = M2MClient(url, log=log)
+        client.set_manager(self)
+        client.connect(wait=False)
+
+    # def connect(self):
+    #     log.debug('connecting to m2m server %s', self.url)
+    #     self.identity = self.m2m_client.connect(3)
+    #     if self.identity is None:
+    #         log.error('connect failed')
+    #     else:
+    #         log.info('m2m identity {%s}'.format(self.identity))
 
     @classmethod
     def init_from_conf(cls, client, conf):
@@ -40,7 +60,7 @@ class M2MManager(object):
 
         manager = cls(client, url)
 
-        for section, name in conf.qualified_sections('remote'):
+        for section, name in conf.qualified_sections('terminal'):
             cmd = conf.get(section, 'command', os.environ.get('SHELL', None))
             remote_process = RemoteProcess(name, cmd)
             manager.add_remote_process(name, remote_process)
@@ -51,3 +71,6 @@ class M2MManager(object):
 
     def add_remote_process(self, name, remote_process):
         self.remote[name] = remote_process
+
+    def on_instruction(self, sender, data):
+        log('instruction: %s %r', sender, data)

@@ -108,7 +108,7 @@ class Client(object):
                 self.serial = serial.get_default_serial()
                 self.log.info('auto generated device serial, %r', self.serial)
             self.name = conf.get('device', 'name', self.serial)
-            self.log.info('device name "{}", "serial" {}'.format(self.name, self.serial))
+            self.log.info('device name "%s", "serial" %s', self.name, self.serial)
             self.device_class = conf.get('device', 'class')
             self.subdomain = conf.get('device', 'subdomain', None)
             if not self.subdomain:

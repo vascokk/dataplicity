@@ -156,9 +156,11 @@ class WSClient(ThreadedDispatcher):
             self.send(PacketType.request_close)
             self.close_event.wait(3)
 
-    def connect(self):
+    def connect(self, wait=True, timeout=None):
         self.start()
-        return self.wait_ready()
+        if wait:
+            return self.wait_ready(timeout=timeout)
+        return None
 
     def add_callback(self, command_id, callback):
         self.callbacks[command_id].append(callback)
@@ -200,13 +202,21 @@ class WSClient(ThreadedDispatcher):
             self.send(PacketType.request_close)
             self.close_event.wait(timeout)
             self.clear_callbacks()
+        self.ready_event.set()
         self._started = False
 
-    def wait_ready(self):
+    def wait_ready(self, timeout=None):
         """Wait until the server is ready, and return identity"""
-        while 1:
-            if self.ready_event.wait(1):
-                break
+        if timeout is None:
+            while 1:
+                if self.ready_event.wait(1):
+                    break
+        else:
+            wait_time = float(timeout)
+            while wait_time >= 0:
+                if self.ready_event.wait(.25):
+                    wait_time -= .25
+                    break
         return self.identity
 
     def wait_close(self):
@@ -261,8 +271,8 @@ class WSClient(ThreadedDispatcher):
     def channel_write(self, channel, data):
         self.send(PacketType.request_send, channel=channel, data=data)
 
-    def on_forward(self, sender, data):
-        self.log.debug('forward from {{{%s}}} %r', sender, data)
+    def on_instruction(self, sender, data):
+        self.log.debug('instruction from {{{%s}}} %r', sender, data)
 
     # --------------------------------------------------------
     # Packet handlers
@@ -303,9 +313,9 @@ class WSClient(ThreadedDispatcher):
     def on_response(self, packet_type, command_id, result):
         self.callback(command_id, result)
 
-    @expose(PacketType.forward)
+    @expose(PacketType.instruction)
     def on_forward_packet(self, packet_type, sender, data):
-        self.on_forward(sender, data)
+        self.on_instruction(sender, data)
 
 
 if __name__ == "__main__":
