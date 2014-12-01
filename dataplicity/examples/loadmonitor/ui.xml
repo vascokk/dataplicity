@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui>
 	<interface id="dataplicity">
-		<mastertabcontainer title="${device.name}" id="top-tabs">
+		<mastertabcontainer title="${device.name}" id="dataplicity-tabs">
 			<tab title="Graphs">
 				<graph title="System Load"
 					sampler="system.load"
