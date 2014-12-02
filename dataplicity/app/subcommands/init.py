@@ -204,6 +204,7 @@ class Init(SubCommand):
                             help="Your company subdomain, if using --auto")
         parser.add_argument('--rpi', dest='rpi', action='store_true', help="init rpi device")
         parser.add_argument('--usercode', dest='usercode', action='store', help="base64 encoded usercode")
+        parser.add_argument('--company', dest="company", help="your company id")
 
     def run(self):
         args = self.args
@@ -265,10 +266,23 @@ class Init(SubCommand):
                                                  usercode=args.usercode)
             else:
                 sys.stdout.write('authenticating with server...\n')
-                auth_token = remote.call('device.auth',
-                                         serial=serial,
-                                         username=user,
-                                         password=password)
+                try:
+                    auth_token = remote.call('device.auth',
+                                             serial=serial,
+                                             username=user,
+                                             password=password,
+                                             company_uid=args.company)
+                except jsonrpc.JSONRPCError as e:
+                    if e.code == 5:  # COMPANY_REQUIRED
+                        companies = remote.call('user.get_companies',
+                                                username=user,
+                                                password=password)['companies']
+                        sys.stderr.write('Please specify a company:\n')
+                        for company_uid, company_name in companies:
+                            sys.stdout.write('    --company {}\n'.format(company_uid))
+                        sys.exit(-1)
+                    raise
+
             sys.stdout.write('device authenticated\n')
 
         FIRMWARE_CONF_PATH = os.path.join(constants.FIRMWARE_PATH, 'current/dataplicity.conf')
