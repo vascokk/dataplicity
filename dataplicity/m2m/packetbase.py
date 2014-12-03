@@ -4,7 +4,7 @@ Packet management
 """
 
 from m2md import bencode
-from m2md.compat import int_types
+from m2md.compat import int_types, text_type
 
 
 class PacketError(Exception):
@@ -112,11 +112,17 @@ class PacketBase(object):
         """Initialize from parameters"""
         # Default implementation copies named attributes
 
-        params = kwargs.copy()
+        params = {}
 
         for arg, (attribute_name, attrib_type) in zip(args, self.attributes):
+            if isinstance(arg, text_type):
+                arg = arg.encode('utf-8')
             params[attribute_name] = arg
-        params.update(kwargs)
+        for k, v in kwargs.items():
+            if isinstance(v, text_type):
+                v = v.encode('utf-8')
+            params[k] = v
+        #params.update(kwargs)
 
         for attrib_name, attrib_type in self.attributes:
             if attrib_name not in params:

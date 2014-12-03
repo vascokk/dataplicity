@@ -39,9 +39,10 @@ class M2MManager(object):
         self.client = client
         self.url = url
         self.remote = {}
+        self.identity = ''
         client = self.m2m_client = M2MClient(url, log=log)
         client.set_manager(self)
-        client.connect(wait=False)
+        client.connect(wait=3)
 
     # def connect(self):
     #     log.debug('connecting to m2m server %s', self.url)
@@ -65,12 +66,28 @@ class M2MManager(object):
             remote_process = RemoteProcess(name, cmd)
             manager.add_remote_process(name, remote_process)
 
+        return manager
+
+    def on_sync(self, batch):
+        """Called by sync, so it can inject commands in to the batch request"""
+        try:
+            identity = self.m2m_client.wait_ready(3)
+            if identity != self.identity:
+                log.debug('notifying server of m2m identity {%s}', identity)
+                batch.notify('m2m.associate',
+                             identity=identity)
+                self.identity = identity
+        except Exception:
+            # We can't risk breaking the sync
+            log.exception('error in M2MManager.on_sync')
+
     def close(self):
         if self.m2m_client is not None:
             self.m2m_client.close()
+        self.identity = ''
 
     def add_remote_process(self, name, remote_process):
         self.remote[name] = remote_process
 
     def on_instruction(self, sender, data):
-        log('instruction: %s %r', sender, data)
+        log.debug('instruction: %s %r', sender, data)

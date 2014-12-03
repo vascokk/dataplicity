@@ -118,12 +118,14 @@ class Client(object):
             self._auth_token = conf.get('device', 'auth')
             self.auto_register_info = conf.get('device', 'auto_device_text', None)
 
+            # Run this first, so it can work asynchronously
+            self.m2m = M2MManager.init_from_conf(self, conf)
+
             self.tasks = TaskManager.init_from_conf(self, conf)
             self.samplers = SamplerManager.init_from_conf(self, conf)
             self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
             self.timelines = TimelineManager.init_from_conf(self, conf)
 
-            self.m2m = M2MManager.init_from_conf(self, conf)
 
             self.sample_now = self.samplers.sample_now
             self.sample = self.samplers.sample
@@ -136,7 +138,7 @@ class Client(object):
     def close(self):
         try:
             self.m2m.close()
-        except Exception as e:
+        except Exception:
             self.log.exception('error closing m2m')
 
     def connect_wait(self, closing_event, sync_func):
@@ -304,6 +306,8 @@ class Client(object):
                                        'device.add_events',
                                        name=timeline.name,
                                        events=timeline.get_events())
+
+            self.m2m.on_sync(batch)
 
         # get_result will throw exceptions with (hopefully) helpful error messages if they fail
         batch.get_result('authenticate_result')

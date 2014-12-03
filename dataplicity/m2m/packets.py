@@ -6,6 +6,7 @@ Manage packet types / encoding
 
 from __future__ import print_function
 from __future__ import unicode_literals
+from __future__ import absolute_import
 
 from enum import IntEnum, unique
 from dataplicity.m2m.packetbase import PacketBase
@@ -190,7 +191,7 @@ class RequestClosePacket(M2MPacket):
 
 class InstructionPacket(M2MPacket):
     type = PacketType.instruction
-    attrubutes = [('sender', bytes),
+    attributes = [('sender', bytes),
                   ('data', dict)]
 
 

@@ -272,7 +272,7 @@ class WSClient(ThreadedDispatcher):
         self.send(PacketType.request_send, channel=channel, data=data)
 
     def on_instruction(self, sender, data):
-        self.log.debug('instruction from {{{%s}}} %r', sender, data)
+        self.log.debug('instruction from {%s} %r', sender, data)
 
     # --------------------------------------------------------
     # Packet handlers
@@ -314,7 +314,8 @@ class WSClient(ThreadedDispatcher):
         self.callback(command_id, result)
 
     @expose(PacketType.instruction)
-    def on_forward_packet(self, packet_type, sender, data):
+    def on_instruction_packet(self, packet_type, sender, data):
+        print('instruction')
         self.on_instruction(sender, data)
 
 
