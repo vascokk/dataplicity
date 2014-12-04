@@ -54,6 +54,9 @@ class Channel(object):
     def __repr__(self):
         return "<channel {}>".format(self.number)
 
+    def close(self):
+        pass
+
     def on_data(self, data):
         """On incoming data"""
         with self._lock:
@@ -85,7 +88,7 @@ class Channel(object):
                 return b''
 
         with self._lock:
-            # Data may be spread accross multiple / partial messages
+            # Data may be spread across multiple / partial messages
             while self.deque and bytes_remaining:
                 head = self.deque[0]
                 read_bytes = min(bytes_remaining, len(head))
@@ -230,7 +233,8 @@ class WSClient(ThreadedDispatcher):
             packet = PacketType[packet].value
         if isinstance(packet, (PacketType, int)):
             packet = Packet.create(packet, *args, **kwargs)
-        log.debug("sending %r", packet)
+        if not getattr(packet, 'no_log', False):
+            log.debug("sending %r", packet)
 
         packet_bytes = packet.encode_binary()
         self.send_bytes(packet_bytes)

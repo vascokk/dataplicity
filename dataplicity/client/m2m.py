@@ -8,16 +8,40 @@ from __future__ import unicode_literals
 
 
 from dataplicity.m2m import WSClient
+from dataplicity.m2m.remoteprocess import RemoteProcess
 
 import os
+import threading
+
 import logging
 log = logging.getLogger('dataplicity.m2m')
 
 
-class RemoteProcess(object):
+class Terminal(object):
     def __init__(self, name, command):
         self.name = name
         self.command = command
+        self.processes = []
+
+    def __repr__(self):
+        return "<terminal '{}' command='{}'>".format(self.name, self.command)
+
+    def launch(self, channel):
+        remote_process = None
+        try:
+            remote_process = RemoteProcess(self.command, channel)
+        except:
+            log.exception("error launching terminal process '%s'", self.command)
+            if remote_process is not None:
+                try:
+                    remote_process.close()
+                except:
+                    pass
+        else:
+            self.processes.append(remote_process)
+            process_thread = threading.Thread(target=remote_process.run)
+            process_thread.start()
+            log.info("launched remote process %r over %r", self, channel)
 
 
 class M2MClient(WSClient):
@@ -38,19 +62,11 @@ class M2MManager(object):
     def __init__(self, client, url):
         self.client = client
         self.url = url
-        self.remote = {}
+        self.terminals = {}
         self.identity = ''
         client = self.m2m_client = M2MClient(url, log=log)
         client.set_manager(self)
         client.connect(wait=3)
-
-    # def connect(self):
-    #     log.debug('connecting to m2m server %s', self.url)
-    #     self.identity = self.m2m_client.connect(3)
-    #     if self.identity is None:
-    #         log.error('connect failed')
-    #     else:
-    #         log.info('m2m identity {%s}'.format(self.identity))
 
     @classmethod
     def init_from_conf(cls, client, conf):
@@ -63,8 +79,9 @@ class M2MManager(object):
 
         for section, name in conf.qualified_sections('terminal'):
             cmd = conf.get(section, 'command', os.environ.get('SHELL', None))
-            remote_process = RemoteProcess(name, cmd)
-            manager.add_remote_process(name, remote_process)
+            if cmd is None:
+                cmd = "sh"
+            manager.add_terminal(name, cmd)
 
         return manager
 
@@ -86,8 +103,22 @@ class M2MManager(object):
             self.m2m_client.close()
         self.identity = ''
 
-    def add_remote_process(self, name, remote_process):
-        self.remote[name] = remote_process
+    def add_terminal(self, name, remote_process):
+        self.terminals[name] = Terminal(name, remote_process)
+
+    def get_terminal(self, name):
+        return self.terminals.get(name, None)
 
     def on_instruction(self, sender, data):
-        log.debug('instruction: %s %r', sender, data)
+        action = data['action']
+        if action == 'open-terminal':
+            port = data['port']
+            terminal_name = data['name']
+            self.open_terminal(terminal_name, port)
+
+    def open_terminal(self, name, port):
+        terminal = self.get_terminal(name)
+        if terminal is None:
+            log.warning("no terminal called '%s'", name)
+            return
+        terminal.launch(self.m2m_client.get_channel(port))

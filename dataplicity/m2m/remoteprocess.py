@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import sys
 
-from m2md.client import proxy
+from dataplicity.m2m import proxy
 
 
 class RemoteProcess(proxy.Interceptor):
@@ -21,10 +21,13 @@ class RemoteProcess(proxy.Interceptor):
         super(RemoteProcess, self).__init__()
 
     def run(self):
-        self.spawn(self.command)
+        self.spawn([self.command])
 
     def on_data(self, data):
-        self.stdin_read(data)
+        try:
+            self.stdin_read(data)
+        except:
+            self.channel.close()
 
     def master_read(self, data):
         self.channel.write(data)

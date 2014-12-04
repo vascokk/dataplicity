@@ -68,12 +68,13 @@ class Interceptor(object):
         self.master_fd = master_fd
         if pid == pty.CHILD:
             os.execlp(argv[0], *argv)
+            return
 
-        old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
+        #old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
         try:
-            mode = tty.tcgetattr(pty.STDIN_FILENO)
-            tty.setraw(pty.STDIN_FILENO)
-            restore = 1
+            #mode = tty.tcgetattr(pty.STDIN_FILENO)
+            #tty.setraw(pty.STDIN_FILENO)
+            restore = 0
         except tty.error:    # This is the same as termios.error
             restore = 0
         self._init_fd()
@@ -85,7 +86,7 @@ class Interceptor(object):
 
         os.close(master_fd)
         self.master_fd = None
-        signal.signal(signal.SIGWINCH, old_handler)
+        #signal.signal(signal.SIGWINCH, old_handler)
 
     def _init_fd(self):
         '''
@@ -106,8 +107,8 @@ class Interceptor(object):
         assert self.master_fd is not None
 
         # Get the terminal size of the real terminal, set it on the pseudoterminal.
-        buf = array.array('h', [0, 0, 0, 0])
-        fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
+        buf = array.array('h', [0, 0, 80, 24])
+        #fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
         fcntl.ioctl(self.master_fd, termios.TIOCSWINSZ, buf)
 
     def _copy(self):
@@ -134,7 +135,8 @@ class Interceptor(object):
         '''
         Writes to stdout as if the child process had written the data.
         '''
-        os.write(pty.STDOUT_FILENO, data)
+
+        #os.write(pty.STDOUT_FILENO, data)
 
     def write_master(self, data):
         '''
@@ -150,7 +152,7 @@ class Interceptor(object):
         '''
         Called when there is data to be sent from the child process back to the user.
         '''
-        flag = findlast(data, ALTERNATE_MODE_FLAGS)
+        #flag = findlast(data, ALTERNATE_MODE_FLAGS)
         # if flag is not None:
         #     if flag in START_ALTERNATE_MODE:
         #         # This code is executed when the child process switches the terminal into alternate mode. The line below assumes that the user has opened vim, and writes a message.
@@ -158,6 +160,7 @@ class Interceptor(object):
         #     elif flag in END_ALTERNATE_MODE:
         #         # This code is executed when the child process switches the terminal back out of alternate mode. The line below assumes that the user has returned to the command prompt.
         #         self.write_master('echo "Leaving special mode."\r')
+
         self.write_stdout(data)
 
     def stdin_read(self, data):
