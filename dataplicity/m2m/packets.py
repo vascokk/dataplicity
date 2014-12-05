@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 from enum import IntEnum, unique
 from dataplicity.m2m.packetbase import PacketBase
-from dataplicity.compat import text_type
+from dataplicity.compat import text_type, int_types
 
 
 @unique
@@ -133,7 +133,7 @@ class RequestSendPacket(M2MPacket):
     """Request to send data to a connection"""
     no_log = True
     type = PacketType.request_send
-    attributes = [('channel', int),
+    attributes = [('channel', int_types),
                   ('data', bytes)]
 
 
@@ -141,7 +141,7 @@ class RoutePacket(M2MPacket):
     """Route data"""
     no_log = True
     type = PacketType.route
-    attributes = [('channel', int),
+    attributes = [('channel', int_types),
                   ('data', bytes)]
 
 
@@ -165,7 +165,7 @@ class SetIdentityPacket(M2MPacket):
 class NotifyOpenPacket(M2MPacket):
     """Let the client know a channel was opened"""
     type = PacketType.notify_open
-    attributes = [('channel', int)]
+    attributes = [('channel', int_types)]
 
 
 class RequestLoginPacket(M2MPacket):
@@ -199,29 +199,29 @@ class InstructionPacket(M2MPacket):
 
 class CommandResponsePacket(M2MPacket):
     type = PacketType.response
-    attributes = [('command_id', int),
+    attributes = [('command_id', int_types),
                   ('result', dict)]
 
 
 class CommandAddRoutePacket(M2MPacket):
     type = PacketType.command_add_route
-    attributes = [('command_id', int),
+    attributes = [('command_id', int_types),
                   ('uuid1', bytes),
-                  ('port1', int),
+                  ('port1', int_types),
                   ('uuid2', bytes),
-                  ('port2', int)]
+                  ('port2', int_types)]
 
 
 class CommandInstructionPacket(M2MPacket):
     type = PacketType.command_send_instruction
-    attributes = [('command_id', int),
+    attributes = [('command_id', int_types),
                   ('node', bytes),
                   ('data', dict)]
 
 
 class CommandBroadcastLogPacket(M2MPacket):
     type = PacketType.command_broadcast_log
-    attributes = [('command_id', int),
+    attributes = [('command_id', int_types),
                   ('text', bytes)]
 
 

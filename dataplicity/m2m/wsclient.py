@@ -319,7 +319,6 @@ class WSClient(ThreadedDispatcher):
 
     @expose(PacketType.instruction)
     def on_instruction_packet(self, packet_type, sender, data):
-        print('instruction')
         self.on_instruction(sender, data)
 
 

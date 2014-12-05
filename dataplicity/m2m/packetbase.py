@@ -122,7 +122,6 @@ class PacketBase(object):
             if isinstance(v, text_type):
                 v = v.encode('utf-8')
             params[k] = v
-        #params.update(kwargs)
 
         for attrib_name, attrib_type in self.attributes:
             if attrib_name not in params:
