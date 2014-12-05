@@ -5,10 +5,10 @@ import websocket
 
 from dataplicity.m2m import bencode
 from dataplicity.m2m import packets
+from dataplicity.compat import text_type
 from dataplicity.m2m.dispatcher import Dispatcher, expose
 from dataplicity.m2m.packets import PacketType
 from dataplicity.m2m.packets import M2MPacket as Packet
-from dataplicity.m2m.compat import text_type
 
 from collections import deque, defaultdict
 import sys
