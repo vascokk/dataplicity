@@ -66,6 +66,7 @@ class M2MManager(object):
         self.identity = ''
         client = self.m2m_client = M2MClient(url, log=log)
         client.set_manager(self)
+        log.debug('connecting to %s', url)
         client.connect(wait=3)
 
     @classmethod
