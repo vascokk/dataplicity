@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import sys
+import os
+import signal
 
 from dataplicity.m2m import proxy
 
@@ -38,6 +40,7 @@ class RemoteProcess(proxy.Interceptor):
 
     def close(self):
         if not self._closed:
+            os.kill(self.pid, signal.SIGKILL)
             self._closed = True
 
     def __enter__(self):

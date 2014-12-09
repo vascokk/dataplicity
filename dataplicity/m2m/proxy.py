@@ -66,6 +66,7 @@ class Interceptor(object):
 
         pid, master_fd = pty.fork()
         self.master_fd = master_fd
+        self.pid = pid
         if pid == pty.CHILD:
             os.execlp(argv[0], *argv)
             return

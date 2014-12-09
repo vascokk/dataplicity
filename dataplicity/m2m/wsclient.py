@@ -132,6 +132,7 @@ class WSClient(ThreadedDispatcher):
 
         self._started = False
         self._closed = False
+        self._active = False
         self.identity = uuid
         self.channels = {}
 
@@ -158,6 +159,10 @@ class WSClient(ThreadedDispatcher):
         if not self.close_event.is_set():
             self.send(PacketType.request_close)
             self.close_event.wait(3)
+
+    @property
+    def is_closed(self):
+        return self._closed
 
     def connect(self, wait=True, timeout=None):
         self.start()
@@ -207,6 +212,7 @@ class WSClient(ThreadedDispatcher):
             self.clear_callbacks()
         self.ready_event.set()
         self._started = False
+        self._closed = True
 
     def wait_ready(self, timeout=None):
         """Wait until the server is ready, and return identity"""
@@ -259,13 +265,15 @@ class WSClient(ThreadedDispatcher):
     def on_error(self, app, error):
         """Called on WS error"""
         self.ready_event.set()
-        self.log.error(text_type(error))
+        if error:
+            self.log.error(text_type(error))
 
     def on_close(self, app):
         self.log.debug('connection closed by peer')
         self.close_event.set()
         self.ready_event.set()
-        self.closed = True
+        self._closed = True
+        self.identity = None
 
     def on_packet(self, packet):
         packet_type = packets.PacketType(packet[0])

@@ -5,8 +5,8 @@
             <tab title="Shell">
                 <terminal name="shell" />
             </tab>
-            <tab title="HTop">
-                <terminal name="htop" input="no"/>
+            <tab title="Top">
+                <terminal name="top" input="no"/>
             </tab>
         </mastertabcontainer>
     </interface>
