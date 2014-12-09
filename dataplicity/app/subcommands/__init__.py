@@ -13,4 +13,5 @@ __all__ = ["motd",
            "sync",
            "updateui",
            "handoff",
-           "register_samplers"]
+           "register_samplers",
+           "alert"]
