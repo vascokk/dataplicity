@@ -126,7 +126,6 @@ class Client(object):
             self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
             self.timelines = TimelineManager.init_from_conf(self, conf)
 
-
             self.sample_now = self.samplers.sample_now
             self.sample = self.samplers.sample
 
@@ -136,10 +135,11 @@ class Client(object):
             raise
 
     def close(self):
-        try:
-            self.m2m.close()
-        except Exception:
-            self.log.exception('error closing m2m')
+        if self.m2m is not None:
+            try:
+                self.m2m.close()
+            except Exception:
+                self.log.exception('error closing m2m')
 
     def connect_wait(self, closing_event, sync_func):
         def do_wait():
@@ -258,7 +258,6 @@ class Client(object):
         random.seed()
         sync_id = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in xrange(12))
         with self.remote.batch() as batch:
-
             # Authenticate
             batch.call_with_id('authenticate_result',
                                'device.check_auth',
@@ -307,7 +306,8 @@ class Client(object):
                                        name=timeline.name,
                                        events=timeline.get_events())
 
-            self.m2m.on_sync(batch)
+            if self.m2m is not None:
+                self.m2m.on_sync(batch)
 
         # get_result will throw exceptions with (hopefully) helpful error messages if they fail
         batch.get_result('authenticate_result')

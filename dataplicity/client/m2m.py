@@ -6,7 +6,7 @@ Manages M2M connections
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
+from dataplicity import constants
 from dataplicity.m2m import WSClient
 from dataplicity.m2m.remoteprocess import RemoteProcess
 
@@ -79,15 +79,23 @@ class M2MManager(object):
         self.identity = ''
         client = self.m2m_client = M2MClient(url, log=log)
         client.set_manager(self)
-        log.debug('connecting to %s', url)
-        client.connect(timeout=3)
+
+    def connect(self):
+        log.debug('connecting to %s', self.url)
+        self.m2m_client.connect(timeout=3)
 
     @classmethod
     def init_from_conf(cls, client, conf):
-        url = conf.get('m2m', 'url', None)
+        enabled = conf.get('m2m', 'enabled', 'no') == 'yes'
+        if not enabled:
+            log.debug('m2m is not enabled')
+            return None
+
+        url = conf.get('m2m', 'url', constants.M2M_URL)
         if url is None:
             log.debug('m2m not used')
             return None
+        log.debug('m2m url is %s', url)
 
         manager = cls(client, url)
 
@@ -96,6 +104,7 @@ class M2MManager(object):
             if cmd is None:
                 cmd = "sh"
             manager.add_terminal(name, cmd)
+        manager.connect()
 
         return manager
 
@@ -138,6 +147,7 @@ class M2MManager(object):
         self.identity = ''
 
     def add_terminal(self, name, remote_process):
+        log.debug("adding terminal '%s' %s", name, remote_process)
         self.terminals[name] = Terminal(name, remote_process)
 
     def get_terminal(self, name):

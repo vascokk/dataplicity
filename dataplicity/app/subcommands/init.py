@@ -144,6 +144,12 @@ defaults = ./rpi_camera.ini
 [sampler:disk_available]
 [sampler:disk_total]
 [sampler:cpu_percent]
+
+[m2m]
+enabled = yes
+
+[terminal:shell]
+
 """
 
 

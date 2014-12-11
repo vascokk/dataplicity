@@ -30,5 +30,7 @@ setup(name='dataplicity',
       install_requires=['python-daemon',
                         'fs>=0.5.0',
                         'setuptools',
-                        'psutil']
+                        'psutil',
+                        'enum34',
+                        'websocket-client']
       )
