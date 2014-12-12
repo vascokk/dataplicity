@@ -3,8 +3,8 @@ Packet management
 
 """
 
-from m2md import bencode
-from m2md.compat import int_types, text_type
+from dataplicity.m2m import bencode
+from dataplicity.compat import int_types, text_type
 
 
 class PacketError(Exception):

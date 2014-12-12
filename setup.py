@@ -23,7 +23,8 @@ setup(name='dataplicity',
                 'dataplicity.app',
                 'dataplicity.app.subcommands',
                 'dataplicity.client',
-                'dataplicity.tasks'
+                'dataplicity.tasks',
+                'dataplicity.m2m'
                 ],
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],

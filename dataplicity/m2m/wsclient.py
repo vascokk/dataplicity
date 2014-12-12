@@ -201,7 +201,8 @@ class WSClient(ThreadedDispatcher):
 
     def run(self):
         self._started = True
-        self.app.run_forever(sockopt=((socket.SOL_SOCKET, socket.SO_REUSEPORT, 1),
+        SO_REUSEPORT = 15  # Not present on rpi ?
+        self.app.run_forever(sockopt=((socket.SOL_SOCKET, SO_REUSEPORT, 1),
                                       (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)),
                              sslopt={"cert_reqs": ssl.CERT_NONE})
 
