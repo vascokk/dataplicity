@@ -112,7 +112,7 @@ class DashControlledCamera(Task):
                     self.next_pic = now
 
                 while self.next_pic <= now:
-                    self.next_pic += timedelta(seconds=frequency)
+                    self.next_pic += timedelta(seconds=int(frequency) * 60)
 
                 # Write a frame to memory
                 self.log.debug('Say CHEESE!')
