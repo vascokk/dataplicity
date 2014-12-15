@@ -70,7 +70,8 @@ class PacketType(IntEnum):
 
     notify_login_fail = 18
 
-    request_close = 19
+    # Notify the client that a channel has closed
+    notify_close = 19
 
     response = 100
 
@@ -185,6 +186,12 @@ class NotifyLoginFailPacket(M2MPacket):
     """Login failed"""
     type = PacketType.notify_login_fail
     attributes = [('message', bytes)]
+
+
+class NotifyClosePacket(M2MPacket):
+    """channel was closed"""
+    type = PacketType.notify_close
+    attributes = [('port', int)]
 
 
 class RequestClosePacket(M2MPacket):
