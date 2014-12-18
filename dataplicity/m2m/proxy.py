@@ -23,10 +23,8 @@ import fcntl
 import os
 import pty
 import select
-import signal
 import sys
 import termios
-import tty
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
@@ -34,18 +32,6 @@ START_ALTERNATE_MODE = set('\x1b[?{0}h'.format(i) for i in ('1049', '47', '1047'
 END_ALTERNATE_MODE = set('\x1b[?{0}l'.format(i) for i in ('1049', '47', '1047'))
 ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
 
-def findlast(s, substrs):
-    '''
-    Finds whichever of the given substrings occurs last in the given string and returns that substring, or returns None if no such strings occur.
-    '''
-    i = -1
-    result = None
-    for substr in substrs:
-        pos = s.rfind(substr)
-        if pos > i:
-            i = pos
-            result = substr
-    return result
 
 class Interceptor(object):
     '''
@@ -71,23 +57,14 @@ class Interceptor(object):
             os.execlp(argv[0], *argv)
             return
 
-        #old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
-        try:
-            #mode = tty.tcgetattr(pty.STDIN_FILENO)
-            #tty.setraw(pty.STDIN_FILENO)
-            restore = 0
-        except tty.error:    # This is the same as termios.error
-            restore = 0
         self._init_fd()
         try:
             self._copy()
         except (IOError, OSError):
-            if restore:
-                tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
+            pass
 
         os.close(master_fd)
         self.master_fd = None
-        #signal.signal(signal.SIGWINCH, old_handler)
 
     def _init_fd(self):
         '''
@@ -119,11 +96,11 @@ class Interceptor(object):
         assert self.master_fd is not None
         master_fd = self.master_fd
         while 1:
-            try:
-                rfds, wfds, xfds = select.select([master_fd, pty.STDIN_FILENO], [], [])
-            except select.error, e:
-                if e[0] == 4:   # Interrupted system call.
-                    continue
+            #try:
+            rfds, wfds, xfds = select.select([master_fd, pty.STDIN_FILENO], [], [])
+            #except select.error, e:
+            #    if e[0] == 4:   # Interrupted system call.
+            #        continue
 
             if master_fd in rfds:
                 data = os.read(self.master_fd, 1024)
@@ -153,14 +130,6 @@ class Interceptor(object):
         '''
         Called when there is data to be sent from the child process back to the user.
         '''
-        #flag = findlast(data, ALTERNATE_MODE_FLAGS)
-        # if flag is not None:
-        #     if flag in START_ALTERNATE_MODE:
-        #         # This code is executed when the child process switches the terminal into alternate mode. The line below assumes that the user has opened vim, and writes a message.
-        #         self.write_master('IEntering special mode.\x1b')
-        #     elif flag in END_ALTERNATE_MODE:
-        #         # This code is executed when the child process switches the terminal back out of alternate mode. The line below assumes that the user has returned to the command prompt.
-        #         self.write_master('echo "Leaving special mode."\r')
 
         self.write_stdout(data)
 

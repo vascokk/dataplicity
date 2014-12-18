@@ -15,8 +15,10 @@ PY3 = sys.version_info[0] == 3
 
 if PY3:
     number_types = (int,)
+    text_type = str
 else:
     number_types = (long, int)
+    text_type = unicode
 
 
 class EncodingError(ValueError):
@@ -59,6 +61,9 @@ def encode(obj):
 
     def add_encode(obj):
         if isinstance(obj, bytes):
+            append(b"{}:{}".format(len(obj), obj))
+        elif isinstance(obj, text_type):
+            obj = obj.encode('utf-8')
             append(b"{}:{}".format(len(obj), obj))
         elif isinstance(obj, number_types):
             append(b"i{}e".format(obj))

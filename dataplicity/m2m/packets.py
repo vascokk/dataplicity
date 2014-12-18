@@ -73,6 +73,9 @@ class PacketType(IntEnum):
     # Notify the client that a channel has closed
     notify_close = 19
 
+    # Client wishes to disconnect
+    request_leave = 20
+
     response = 100
 
     command_add_route = 101
@@ -196,6 +199,10 @@ class NotifyClosePacket(M2MPacket):
 
 class RequestClosePacket(M2MPacket):
     type = PacketType.request_close
+
+
+class RequestLeavePacket(M2MPacket):
+    type = PacketType.request_leave
 
 
 class InstructionPacket(M2MPacket):

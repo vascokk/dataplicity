@@ -45,6 +45,7 @@ class Channel(object):
     def __init__(self, client, number):
         self.client = client
         self.number = number
+        self._closed = False
 
         self._data_callback = None
         self._lock = threading.RLock()
@@ -55,7 +56,19 @@ class Channel(object):
         return "<channel {}>".format(self.number)
 
     def close(self):
-        pass
+        if self._closed:
+            return True
+        self._closed = True
+        try:
+            if self._close_callback is not None:
+                self._close_callback()
+        except:
+            log.exception('error in channel.close')
+        log.debug('closed %r', self)
+
+    @property
+    def is_closed(self):
+        return self._closed
 
     def on_data(self, data):
         """On incoming data"""
@@ -65,8 +78,9 @@ class Channel(object):
         if self._data_callback is not None:
             self._data_callback(data)
 
-    def set_data_callback(self, callback):
-        self._data_callback = callback
+    def set_callbacks(self, on_data=None, on_close=None):
+        self._data_callback = on_data
+        self._close_callback = on_close
 
     @property
     def size(self):
@@ -157,7 +171,7 @@ class WSClient(ThreadedDispatcher):
 
     def __exit__(self, *args, **kwargs):
         if not self.close_event.is_set():
-            self.send(PacketType.request_close)
+            self.send(PacketType.request_leave)
             self.close_event.wait(3)
 
     @property
@@ -199,6 +213,9 @@ class WSClient(ThreadedDispatcher):
             self.channels[channel_no] = Channel(self, channel_no)
         return self.channels[channel_no]
 
+    def has_channel(self, channel_no):
+        return channel_no in self.channels
+
     def run(self):
         self._started = True
         SO_REUSEPORT = 15  # Not present on rpi ?
@@ -208,7 +225,7 @@ class WSClient(ThreadedDispatcher):
 
     def close(self, timeout=5):
         if not self.close_event.is_set():
-            self.send(PacketType.request_close)
+            self.send(PacketType.request_leave)
             self.close_event.wait(timeout)
             self.clear_callbacks()
         self.ready_event.set()
@@ -315,7 +332,14 @@ class WSClient(ThreadedDispatcher):
 
     @expose(PacketType.notify_open)
     def on_notify_open(self, packet_type, channel_no):
-        log.debug('channel {} opened'.format(channel_no))
+        log.debug('channel %s opened', channel_no)
+
+    @expose(PacketType.notify_close)
+    def on_notify_close(self, packet_type, channel_no):
+        log.debug('channel %s closed', channel_no)
+        if self.has_channel(channel_no):
+            channel = self.get_channel(channel_no)
+            channel.close()
 
     @expose(PacketType.notify_login_success)
     def on_login_success(self, packet_type, user):

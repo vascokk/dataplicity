@@ -9,6 +9,9 @@ import signal
 
 from dataplicity.m2m import proxy
 
+import logging
+log = logging.getLogger('dataplicity.m2m')
+
 
 class RemoteProcess(proxy.Interceptor):
 
@@ -18,9 +21,13 @@ class RemoteProcess(proxy.Interceptor):
 
         self._closed = False
 
-        self.channel.set_data_callback(self.on_data)
+        self.channel.set_callbacks(on_data=self.on_data,
+                                   on_close=self.on_close)
 
         super(RemoteProcess, self).__init__()
+
+    def __repr__(self):
+        return "RemoteProcess({!r}, {!r})".format(self.command, self.channel)
 
     def run(self):
         self.spawn([self.command])
@@ -31,6 +38,9 @@ class RemoteProcess(proxy.Interceptor):
         except:
             self.channel.close()
 
+    def on_close(self):
+        self.close()
+
     def master_read(self, data):
         self.channel.write(data)
         super(RemoteProcess, self).master_read(data)
@@ -40,7 +50,11 @@ class RemoteProcess(proxy.Interceptor):
 
     def close(self):
         if not self._closed:
+            log.debug('sending kill signal to %r', self)
+            # TODO: Implement a non-blocking kill
             os.kill(self.pid, signal.SIGKILL)
+            os.waitpid(self.pid, 0)
+            log.debug('killed %r', self)
             self._closed = True
 
     def __enter__(self):
