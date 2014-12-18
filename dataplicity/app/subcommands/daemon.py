@@ -58,6 +58,7 @@ class Daemon(object):
         """Exit daemon now, and run optional command"""
         self.exit_command = command
         self.exit_event.set()
+        self.client.close()
 
     def start(self):
 

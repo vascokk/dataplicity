@@ -86,44 +86,34 @@ class DashControlledCamera(Task):
         """Initialize the task"""
         self.timeline_name = self.conf.get('timeline', 'camera')
         self.frame_no = 1
+        self.next_pic = None  # Time to take next pic
 
     def poll(self):
-        try:
-            camera = picamera.PiCamera()
-            camera.resolution = (640, 480)
-            self.log.debug('Raspberry Pi camera started')
-        except picamera.PiCameraError:
+
+        now = datetime.datetime.utcnow()
+        if self.next_pic is None or now > self.next_pic:
             camera = None
-            self.log.debug("Camera is not enabled. Try running 'sudo raspi-config'")
+            try:
 
-        if camera:
-            settings = self.get_settings('rpi_camera')
-            last_pic = settings.get('camera', 'last_pic')
-            frequency = settings.get('camera', 'frequency')
-            now = datetime.datetime.now()
-
-            def write_conf(settings, dt):
-                # write new date in config
-                settings.set('camera', 'last_pic', dt.strftime('%Y-%m-%d %H:%M'))
-                with atomicwrite.open(settings.path, 'wb') as fp:
-                    settings.write(fp)
-
-            if last_pic == 'never':
-                # no picture taken yet, take one
-                take_pic = True
-                write_conf(settings, now)
-            else:
-                if frequency == 'never':
-                    take_pic = False
+                try:
+                    camera = picamera.PiCamera()
+                    camera.resolution = (640, 480)
+                except picamera.PiCameraError:
+                    self.log.warning("Camera is not enabled. Try running 'sudo raspi-config'")
+                    return
                 else:
-                    last_pic_dt = datetime.datetime.strptime(last_pic, '%Y-%m-%d %H:%M')
-                    if (last_pic_dt + timedelta(minutes=int(frequency))) <= now:
-                        take_pic = True
-                        write_conf(settings, now)
-                    else:
-                        take_pic = False
+                    self.log.debug('Raspberry Pi camera started')
 
-            if take_pic:
+                settings = self.get_settings('rpi_camera')
+                last_pic = settings.get('camera', 'last_pic')
+                frequency = settings.get('camera', 'frequency')
+
+                if self.next_pic is None:
+                    self.next_pic = now
+
+                while self.next_pic <= now:
+                    self.next_pic += timedelta(seconds=int(frequency) * 60)
+
                 # Write a frame to memory
                 self.log.debug('Say CHEESE!')
                 camera_file = BytesIO()
@@ -142,4 +132,9 @@ class DashControlledCamera(Task):
                 # Keep track of the frame number
                 self.frame_no += 1
 
-            camera.close()
+            finally:
+                if camera is not None:
+                    try:
+                        camera.close()
+                    except:
+                        self.log.exception('error closing camera')

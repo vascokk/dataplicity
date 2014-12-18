@@ -23,12 +23,15 @@ setup(name='dataplicity',
                 'dataplicity.app',
                 'dataplicity.app.subcommands',
                 'dataplicity.client',
-                'dataplicity.tasks'
+                'dataplicity.tasks',
+                'dataplicity.m2m'
                 ],
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['python-daemon',
                         'fs>=0.5.0',
                         'setuptools',
-                        'psutil']
+                        'psutil',
+                        'enum34',
+                        'websocket-client']
       )

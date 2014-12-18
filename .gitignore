@@ -4,3 +4,6 @@ __firmware__
 .buildinfo
 .doctrees
 .idea
+*.pyc
+*.egg-info
+dist/

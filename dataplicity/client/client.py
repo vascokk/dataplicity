@@ -3,6 +3,7 @@ from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.client.timeline import TimelineManager
+from dataplicity.client.m2m import M2MManager
 from dataplicity.client.exceptions import ForceRestart
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import constants
@@ -107,7 +108,7 @@ class Client(object):
                 self.serial = serial.get_default_serial()
                 self.log.info('auto generated device serial, %r', self.serial)
             self.name = conf.get('device', 'name', self.serial)
-            self.log.info('device name "{}", "serial" {}'.format(self.name, self.serial))
+            self.log.info('device name "%s", "serial" %s', self.name, self.serial)
             self.device_class = conf.get('device', 'class')
             self.subdomain = conf.get('device', 'subdomain', None)
             if not self.subdomain:
@@ -116,6 +117,9 @@ class Client(object):
 
             self._auth_token = conf.get('device', 'auth')
             self.auto_register_info = conf.get('device', 'auto_device_text', None)
+
+            # Run this first, so it can work asynchronously
+            self.m2m = M2MManager.init_from_conf(self, conf)
 
             self.tasks = TaskManager.init_from_conf(self, conf)
             self.samplers = SamplerManager.init_from_conf(self, conf)
@@ -129,6 +133,13 @@ class Client(object):
         except:
             self.log.exception('unable to start')
             raise
+
+    def close(self):
+        if self.m2m is not None:
+            try:
+                self.m2m.close()
+            except Exception:
+                self.log.exception('error closing m2m')
 
     def connect_wait(self, closing_event, sync_func):
         def do_wait():
@@ -247,7 +258,6 @@ class Client(object):
         random.seed()
         sync_id = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in xrange(12))
         with self.remote.batch() as batch:
-
             # Authenticate
             batch.call_with_id('authenticate_result',
                                'device.check_auth',
@@ -295,6 +305,9 @@ class Client(object):
                                        'device.add_events',
                                        name=timeline.name,
                                        events=timeline.get_events())
+
+            if self.m2m is not None:
+                self.m2m.on_sync(batch)
 
         # get_result will throw exceptions with (hopefully) helpful error messages if they fail
         batch.get_result('authenticate_result')
