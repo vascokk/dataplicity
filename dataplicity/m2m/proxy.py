@@ -25,12 +25,16 @@ import pty
 import select
 import sys
 import termios
+#import poll
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 START_ALTERNATE_MODE = set('\x1b[?{0}h'.format(i) for i in ('1049', '47', '1047'))
 END_ALTERNATE_MODE = set('\x1b[?{0}l'.format(i) for i in ('1049', '47', '1047'))
 ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
+
+import logging
+log = logging.getLogger('dataplicity.m2m')
 
 
 class Interceptor(object):
@@ -96,18 +100,10 @@ class Interceptor(object):
         assert self.master_fd is not None
         master_fd = self.master_fd
         while 1:
-            #try:
-            rfds, wfds, xfds = select.select([master_fd, pty.STDIN_FILENO], [], [])
-            #except select.error, e:
-            #    if e[0] == 4:   # Interrupted system call.
-            #        continue
-
+            rfds, wfds, xfds = select.select([master_fd], [], [])
             if master_fd in rfds:
                 data = os.read(self.master_fd, 1024)
                 self.master_read(data)
-            if pty.STDIN_FILENO in rfds:
-                data = os.read(pty.STDIN_FILENO, 1024)
-                self.stdin_read(data)
 
     def write_stdout(self, data):
         '''
