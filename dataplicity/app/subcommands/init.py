@@ -2,175 +2,14 @@ from __future__ import unicode_literals
 import base64
 
 from dataplicity.app.subcommand import SubCommand
+from dataplicity.app.conf_templates import (conf_template, rpi_conf_template,
+                                            gpio_ini_template, rpi_camera_template, linux_conf_template)
 from dataplicity.client.serial import get_default_serial
 from dataplicity import constants
 
 import sys
 import os
 import os.path
-
-
-conf_template = """
-#----------------------------------------------------------------#
-# Dataplicity Device Configuration                               #
-# This information is used by the server to identify the device  #
-#----------------------------------------------------------------#
-
-[server]
-# URL of the Dataplicity JSONRPC server
-# Visit this URL for api documentation
-url = {SERVER_URL}
-
-[device]
-# Name of the device to be displayed in the device tree
-name = {name}
-
-# The device class
-class = {class}
-
-# A unique serial number
-serial = {serial}
-
-# Auth token
-auth = {auth_token}
-
-# Text used to identify the device when using --auto
-auto_device_text = {auto_device_text}
-
-# Company subdomain or ID when using --auto
-subdomain =  {subdomain}
-
-# Directory where dataplicity will store 'live' settings which can be updated by the server
-settings = {SETTINGS_PATH}
-
-[daemon]
-port = 3366
-conf = {FIRMWARE_CONF_PATH}
-
-[firmware]
-path = {FIRMWARE_PATH}
-
-"""
-
-rpi_conf_template = """
-[extend]
-conf = /etc/dataplicity/dataplicity.conf
-
-[server]
-push_url = http://sync.dataplicity.com/pushwait
-
-[device]
-class = Master RPI
-serial = {SERIAL}
-
-[samplers]
-path = /tmp/samplers/
-
-[task:proc]
-run = dataplicity.tasks.system.ProcessList
-poll = 30
-data-timeline = process_list
-
-[task:cpu_percent]
-run = dataplicity.tasks.system.CPUPercentSampler
-poll = 30
-data-sampler = cpu_percent
-
-[task:memory_available]
-run = dataplicity.tasks.system.AvailableMemorySampler
-poll = 30
-data-sampler = memory_available
-
-[task:memory_total]
-run = dataplicity.tasks.system.TotalMemorySampler
-poll = 30
-data-sampler = memory_total
-
-[task:disk_available]
-run = dataplicity.tasks.system.AvailableDisk
-poll = 30
-data-sampler = disk_available
-
-[task:disk_total]
-run = dataplicity.tasks.system.TotalDisk
-poll = 30
-data-sampler = disk_total
-
-[task:network]
-run = dataplicity.tasks.system.NetworkSampler
-poll = 30
-data-timeline = network
-
-[task:ifconfig]
-run = dataplicity.tasks.system.IfconfigData
-poll = 30
-data-timeline = ifconfig
-
-[task:sysinfo]
-run = dataplicity.tasks.system.SystemInfo
-poll = 60
-data-timeline = sysinfo
-
-[task:installedpackages]
-run = dataplicity.tasks.system.InstalledPackages
-poll = 300
-data-timeline = installed_packages
-
-[task:setgpio]
-run = dataplicity.tasks.rpi.SetGPIO
-poll = 30
-
-[settings:gpio]
-defaults = ./gpio.ini
-
-[task:dashbaord_camera]
-run = dataplicity.tasks.rpi.DashControlledCamera
-poll = 30
-data-timeline = camera
-
-[settings:rpi_camera]
-defaults = ./rpi_camera.ini
-
-[timeline:process_list]
-[timeline:cpu_percent]
-[timeline:network]
-[timeline:ifconfig]
-[timeline:sysinfo]
-[timeline:installed_packages]
-[timeline:camera]
-
-[sampler:memory_available]
-[sampler:memory_total]
-[sampler:disk_available]
-[sampler:disk_total]
-[sampler:cpu_percent]
-
-[m2m]
-enabled = yes
-
-[terminal:shell]
-
-"""
-
-
-gpio_ini_template = """
-[pins]
-pin22 = ignore
-pin18 = ignore
-pin16 = ignore
-pin15 = ignore
-pin13 = ignore
-pin12 = ignore
-pin11 = ignore
-pin7 = ignore
-"""
-
-
-rpi_camera_template = """
-[camera]
-frequency = never
-last_pic = never
-"""
 
 
 class Init(SubCommand):
@@ -209,6 +48,8 @@ class Init(SubCommand):
         parser.add_argument('--subdomain', dest="subdomain", required=False, default='', metavar="SUBDOMAIN",
                             help="Your company subdomain, if using --auto")
         parser.add_argument('--rpi', dest='rpi', action='store_true', help="init rpi device")
+        parser.add_argument('--system', dest='system', required=False, action='store', choices=['rpi', 'linux'],
+                            help='for automatic install')
         parser.add_argument('--usercode', dest='usercode', action='store', help="base64 encoded usercode")
         parser.add_argument('--company', dest="company", help="your company id")
 
@@ -217,11 +58,11 @@ class Init(SubCommand):
         auto = args.auto
 
         user = args.user
-        if user is None and not auto and not args.rpi:
+        if user is None and not auto and not args.system:
             user = raw_input('username: ')
 
         password = args.password
-        if password is None and not auto and not args.rpi:
+        if password is None and not auto and not args.system:
             import getpass
             password = getpass.getpass('password: ')
 
@@ -235,10 +76,17 @@ class Init(SubCommand):
 
         output_dir = args.output
         device_conf_path = os.path.join(output_dir, 'dataplicity.conf')
-        if args.rpi:
+
+        system = args.system
+
+
+        if system == 'rpi':
             rpi_device_conf_path = '/opt/dataplicity/dataplicity.conf'
             gpio_conf_path = '/opt/dataplicity/gpio.ini'
             camera_conf_path = '/opt/dataplicity/rpi_camera.ini'
+        elif system == 'linux':
+            linux_device_conf_path = '/opt/dataplicity/dataplicity.conf'
+
         serial = args.serial
 
         name = args.name
@@ -266,8 +114,8 @@ class Init(SubCommand):
                     sys.stderr.write("do you need to run this command with 'sudo'?\n")
                     return -1
         else:
-            if args.rpi:
-                print 'authenticating raspberry pi'
+            if system in ['rpi', 'linux']:
+                print 'authenticating {}'.format(system)
                 auth_token, serial = remote.call('device.auth_rpi',
                                                  usercode=args.usercode)
             else:
@@ -303,8 +151,10 @@ class Init(SubCommand):
                          "FIRMWARE_PATH": constants.FIRMWARE_PATH,
                          "FIRMWARE_CONF_PATH": FIRMWARE_CONF_PATH}
         conf_contents = conf_template.format(**template_data)
-        if args.rpi:
+        if system == 'rpi':
             rpi_conf_contents = rpi_conf_template.format(SERIAL=serial)
+        elif system == 'linux':
+            linux_conf_contents = linux_conf_template.format(SERIAL=serial)
 
         if os.path.exists(device_conf_path) and not (args.force or args.dry):
             sys.stderr.write("a file called \"{}\" exists. Use --force to overwrite\n".format(device_conf_path))
@@ -337,10 +187,12 @@ class Init(SubCommand):
             sys.stdout.write("wrote {}\n".format(path))
 
         write_conf(device_conf_path, conf_contents)
-        if args.rpi:
+        if system == 'rpi':
             write_conf(rpi_device_conf_path, rpi_conf_contents)
             write_conf(gpio_conf_path, gpio_ini_template)
             write_conf(camera_conf_path, rpi_camera_template)
+        elif system == 'linux':
+            write_conf(linux_device_conf_path, linux_conf_contents)
 
         for path in (constants.SETTINGS_PATH, constants.FIRMWARE_PATH):
             if not os.path.exists(path):
