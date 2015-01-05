@@ -58,11 +58,11 @@ class Init(SubCommand):
         auto = args.auto
 
         user = args.user
-        if user is None and not auto and not args.system:
+        if user is None and not auto and not args.system and not args.rpi:
             user = raw_input('username: ')
 
         password = args.password
-        if password is None and not auto and not args.system:
+        if password is None and not auto and not args.system and not args.rpi:
             import getpass
             password = getpass.getpass('password: ')
 
