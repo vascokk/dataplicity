@@ -78,9 +78,10 @@ class Init(SubCommand):
         device_conf_path = os.path.join(output_dir, 'dataplicity.conf')
 
         system = args.system
+        if args.rpi:
+            system = 'rpi'
 
-
-        if system == 'rpi' or args.rpi:
+        if system == 'rpi':
             rpi_device_conf_path = '/opt/dataplicity/dataplicity.conf'
             gpio_conf_path = '/opt/dataplicity/gpio.ini'
             camera_conf_path = '/opt/dataplicity/rpi_camera.ini'
