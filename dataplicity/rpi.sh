@@ -119,7 +119,7 @@ install_commands() {
     fi
 
     echo "Registering your device";
-    dataplicity init --server https://api.dataplicity.com --rpi --force --usercode $1
+    dataplicity init --server https://api.dataplicity.com --system rpi --force --usercode $1
     dataplicity handoff --usercode $1
     cd /opt/dataplicity/
     dataplicity registersamplers
