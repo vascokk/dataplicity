@@ -21,32 +21,27 @@ test -x /usr/local/bin/dataplicity || exit 0
 umask 022
 . /lib/lsb/init-functions
 
-SCRIPT="/usr/local/bin/dataplicity -c /opt/dataplicity/dataplicity.conf run"
 RUNAS=root
 
 PIDFILE=/var/run/dataplicity.pid
 LOGFILE=/var/log/dataplicity.log
 
 start() {
-  if [ -e "\$PIDFILE" ]; then
-    echo 'Service already running' >&2
-    return 1
-  fi
   log_daemon_msg "Starting dataplicity..." "dataplicity" || true
-  local CMD="\$SCRIPT &> \"\$LOGFILE\" & echo \$!"
-  /bin/bash -c "\$CMD" \$RUNAS > "\$PIDFILE"
-  log_end_msg 0 || true
+  if start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --exec /usr/local/bin/dataplicity -- -c /opt/dataplicity/dataplicity.conf d; then
+    log_end_msg 0 || true
+  else
+    log_end_msg 1 || true
+  fi
 }
 
 stop() {
-  if [ ! -e "\$PIDFILE" ]; then
-    echo 'Service not running' >&2
-    return 1
-  fi
   log_daemon_msg "Stopping dataplicity..." "dataplicity" || true
-  killall dataplicity
-  rm "\$PIDFILE"
-  log_end_msg 0 || true
+  if start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE; then
+    log_end_msg 0 || true
+  else
+    log_end_msg 1 || true
+  fi
 }
 
 uninstall() {
@@ -62,9 +57,8 @@ uninstall() {
   fi
 }
 
-case "\$1" in
+case "$1" in
   start)
-    stop
     start
     ;;
   stop)
