@@ -102,6 +102,12 @@ install_commands() {
 
     pip install picamera
 
+    if $(raspistill -o cam.jpg 2>null); then
+        rm ./cam.jpg
+    else
+        echo 'Warning: Your Pi Camera is not installed.'
+    fi
+
     if [ "$2" = "--dev" ]; then
         mkdir -p /opt/dataplicity/src/
         cd /opt/dataplicity/src/
