@@ -105,7 +105,9 @@ install_commands() {
     if $(raspistill -o cam.jpg 2>null); then
         rm ./cam.jpg
     else
-        echo 'Warning: Your Pi Camera is not installed.'
+        echo "Warning: Your Pi Camera is disabled."
+        echo "You can continue without camera functionality and enable it"
+        echo "at any time by typing \"raspi-config\" at the shell prompt."
     fi
 
     if [ "$2" = "--dev" ]; then
