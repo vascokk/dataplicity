@@ -86,6 +86,8 @@ class PacketType(IntEnum):
 
     command_broadcast_log = 104
 
+    command_forward = 105
+
 
 class M2MPacket(PacketBase):
     """Base class, not a real packet"""
@@ -237,6 +239,13 @@ class CommandBroadcastLogPacket(M2MPacket):
     type = PacketType.command_broadcast_log
     attributes = [('command_id', int_types),
                   ('text', bytes)]
+
+
+class CommandForwardPacket(M2MPacket):
+    type = PacketType.command_forward
+    attributes = [('sender', bytes),
+                  ('recipient', bytes),
+                  ('packet', bytes)]
 
 
 if __name__ == "__main__":
