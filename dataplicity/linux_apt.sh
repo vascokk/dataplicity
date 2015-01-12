@@ -100,6 +100,8 @@ install_commands() {
     mkdir -p /etc/dataplicity/
     mkdir -p /opt/dataplicity/
 
+    pip install docutils
+
     if [ "$2" = "--dev" ]; then
         mkdir -p /opt/dataplicity/src/
         cd /opt/dataplicity/src/

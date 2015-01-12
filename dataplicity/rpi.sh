@@ -101,6 +101,7 @@ install_commands() {
     mkdir -p /opt/dataplicity/
 
     pip install picamera
+    pip install docutils
 
     if $(raspistill -o cam.jpg 2>null); then
         rm ./cam.jpg
