@@ -107,7 +107,7 @@ install_commands() {
         cd /opt/dataplicity/src/dataplicity/
         python setup.py install
     else
-        pip install dataplicity
+        pip install -U dataplicity
     fi
 
     echo "Registering your device";
