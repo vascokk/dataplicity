@@ -28,7 +28,7 @@ LOGFILE=/var/log/dataplicity.log
 
 start() {
   log_daemon_msg "Starting dataplicity..." "dataplicity" || true
-  if start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --exec /usr/local/bin/dataplicity -- -c /opt/dataplicity/dataplicity.conf d; then
+  if start-stop-daemon --start --quiet --oknodo --pidfile \$PIDFILE --exec /usr/local/bin/dataplicity -- -c /opt/dataplicity/dataplicity.conf d; then
     log_end_msg 0 || true
   else
     log_end_msg 1 || true
@@ -37,7 +37,7 @@ start() {
 
 stop() {
   log_daemon_msg "Stopping dataplicity..." "dataplicity" || true
-  if start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE; then
+  if start-stop-daemon --stop --quiet --oknodo --pidfile \$PIDFILE; then
     log_end_msg 0 || true
   else
     log_end_msg 1 || true
@@ -57,7 +57,7 @@ uninstall() {
   fi
 }
 
-case "$1" in
+case "\$1" in
   start)
     start
     ;;
