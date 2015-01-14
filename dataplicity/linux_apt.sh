@@ -13,10 +13,10 @@ write_init() {
 # Description:       dataplicity run script
 ### END INIT INFO
 
-PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin
-LINES=24
-COLUMNS=80
-SHELL=/bin/bash
+export PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin
+export LINES=24
+export COLUMNS=80
+export SHELL=/bin/bash
 test -x /usr/local/bin/dataplicity || exit 0
 umask 022
 . /lib/lsb/init-functions
