@@ -102,6 +102,7 @@ install_commands() {
 
     pip install picamera
     pip install docutils
+    pip install psutil==2.1.3
 
     if $(raspistill -o cam.jpg 2>null); then
         rm ./cam.jpg

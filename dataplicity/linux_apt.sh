@@ -101,6 +101,7 @@ install_commands() {
     mkdir -p /opt/dataplicity/
 
     pip install docutils
+    pip install psutil==2.1.3
 
     if [ "$2" = "--dev" ]; then
         mkdir -p /opt/dataplicity/src/
