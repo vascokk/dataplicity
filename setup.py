@@ -33,6 +33,5 @@ setup(name='dataplicity',
                         'setuptools',
                         'psutil',
                         'enum34',
-                        'websocket-client'
-                        ]
+                        'websocket-client']
       )
