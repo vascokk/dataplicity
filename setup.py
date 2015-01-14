@@ -28,10 +28,10 @@ setup(name='dataplicity',
                 ],
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
-      install_requires=['python-daemon',
+      install_requires=['websocket-client',
+                        'python-daemon',
                         'fs>=0.5.0',
                         'setuptools',
                         'psutil',
-                        'enum34',
-                        'websocket-client']
+                        'enum34']
       )
