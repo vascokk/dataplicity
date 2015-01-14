@@ -29,8 +29,9 @@ setup(name='dataplicity',
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['websocket-client',
-                        'python-daemon==1.5.7',
+                        'python-daemon==2.0.1',
                         'fs>=0.5.0',
                         'setuptools',
-                        'enum34']
+                        'enum34',
+                        'docutils']
       )
