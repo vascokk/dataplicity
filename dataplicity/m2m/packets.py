@@ -143,6 +143,12 @@ class RequestSendPacket(M2MPacket):
                   ('data', bytes)]
 
 
+class KeepAlivePacket(M2MPacket):
+    """Keep alive packet"""
+    no_log = True
+    type = PacketType.keep_alive
+
+
 class RoutePacket(M2MPacket):
     """Route data"""
     no_log = True

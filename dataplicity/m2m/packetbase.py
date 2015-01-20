@@ -56,7 +56,7 @@ class PacketBase(object):
             except AttributeError:
                 continue
 
-        params = ', '.join("{}={!r}".format(k, v) for k, v in data.items())
+        params = ', '.join("{}={!r}".format(k, v if k != 'password' else '********') for k, v in data.items())
         return "{}({})".format(self.__class__.__name__, params)
 
     def process_packet_type(self, packet_type):
@@ -66,6 +66,8 @@ class PacketBase(object):
     def create(cls, packet_type, *args, **kwargs):
         """Dynamically create a packet from its type and parameters"""
         packet_cls = cls.registry.get(cls.process_packet_type(packet_type))
+        if packet_cls is None:
+            raise ValueError('no packet type {}'.format(packet_type))
         return packet_cls(*args, **kwargs)
 
     @classmethod
