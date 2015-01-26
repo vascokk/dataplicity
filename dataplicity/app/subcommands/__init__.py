@@ -15,4 +15,5 @@ __all__ = ["motd",
            "handoff",
            "register_samplers",
            "alert",
-           "sample"]
+           "sample",
+           "gps"]
