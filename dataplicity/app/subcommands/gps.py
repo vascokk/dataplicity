@@ -9,8 +9,8 @@ class GPS(SubCommand):
     help = __doc__
 
     def add_arguments(self, parser):
-        parser.add_argument(dest="lat", help="latitude. type: float", )
-        parser.add_argument(dest="lng", help="longitude. type: float")
+        parser.add_argument('--lat', dest="lat", help="latitude. type: float", )
+        parser.add_argument('--lng', dest="lng", help="longitude. type: float")
 
     def run(self):
         args = self.args
