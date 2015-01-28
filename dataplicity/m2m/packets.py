@@ -88,6 +88,8 @@ class PacketType(IntEnum):
 
     command_forward = 105
 
+    peer_add_route = 200
+
 
 class M2MPacket(PacketBase):
     """Base class, not a real packet"""
@@ -231,7 +233,8 @@ class CommandAddRoutePacket(M2MPacket):
                   ('uuid1', bytes),
                   ('port1', int_types),
                   ('uuid2', bytes),
-                  ('port2', int_types)]
+                  ('port2', int_types),
+                  ('requester', bytes)]
 
 
 class CommandInstructionPacket(M2MPacket):
@@ -239,6 +242,13 @@ class CommandInstructionPacket(M2MPacket):
     attributes = [('command_id', int_types),
                   ('node', bytes),
                   ('data', dict)]
+
+
+class CommandLogPacket(M2MPacket):
+    type = PacketType.command_log
+    attributes = [('command_id', int_types),
+                  ('node', bytes),
+                  ('text', bytes)]
 
 
 class CommandBroadcastLogPacket(M2MPacket):
@@ -249,10 +259,16 @@ class CommandBroadcastLogPacket(M2MPacket):
 
 class CommandForwardPacket(M2MPacket):
     type = PacketType.command_forward
-    attributes = [('sender', bytes),
-                  ('recipient', bytes),
+    attributes = [('recipient', bytes),
                   ('packet', bytes)]
 
+
+class PeerAddRoutePacket(M2MPacket):
+    type = PacketType.peer_add_route
+    attributes = [('uuid1', bytes),
+                  ('port1', int_types),
+                  ('uuid2', bytes),
+                  ('port2', int_types)]
 
 if __name__ == "__main__":
     ping_packet = PingPacket(data=b'test')
