@@ -311,7 +311,7 @@ class WSClient(ThreadedDispatcher):
     @expose(PacketType.set_identity)
     def handle_set_identity(self, packet_type, identity):
         self.identity = identity
-        self.log.debug('setting identity to %r', self.identity)
+        self.log.debug('setting identity to %s', self.identity)
 
     @expose(PacketType.ping)
     def handle_ping(self, packet_type, data):

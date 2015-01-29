@@ -90,6 +90,8 @@ class PacketType(IntEnum):
 
     peer_add_route = 200
 
+    peer_forward = 201
+
 
 class M2MPacket(PacketBase):
     """Base class, not a real packet"""
@@ -269,6 +271,12 @@ class PeerAddRoutePacket(M2MPacket):
                   ('port1', int_types),
                   ('uuid2', bytes),
                   ('port2', int_types)]
+
+
+class PeerForwardPacket(M2MPacket):
+    type = PacketType.peer_forward
+    attributes = [('recipient', bytes),
+                  ('packet', bytes)]
 
 if __name__ == "__main__":
     ping_packet = PingPacket(data=b'test')
