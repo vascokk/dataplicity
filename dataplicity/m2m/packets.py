@@ -86,7 +86,7 @@ class PacketType(IntEnum):
 
     command_broadcast_log = 104
 
-    command_forward = 105
+    #command_forward = 105
 
     peer_add_route = 200
 
@@ -141,7 +141,7 @@ class LogPacket(M2MPacket):
 
 class RequestSendPacket(M2MPacket):
     """Request to send data to a connection"""
-    no_log = True
+    #no_log = True
     type = PacketType.request_send
     attributes = [('channel', int_types),
                   ('data', bytes)]
@@ -259,15 +259,11 @@ class CommandBroadcastLogPacket(M2MPacket):
                   ('text', bytes)]
 
 
-class CommandForwardPacket(M2MPacket):
-    type = PacketType.command_forward
-    attributes = [('recipient', bytes),
-                  ('packet', bytes)]
-
-
 class PeerAddRoutePacket(M2MPacket):
     type = PacketType.peer_add_route
-    attributes = [('uuid1', bytes),
+    attributes = [('requester', bytes),
+                  ('command_id', int),
+                  ('uuid1', bytes),
                   ('port1', int_types),
                   ('uuid2', bytes),
                   ('port2', int_types)]
