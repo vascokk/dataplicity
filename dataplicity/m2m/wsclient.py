@@ -121,10 +121,8 @@ class Channel(object):
 
     def write(self, data):
         assert isinstance(data, bytes), "data must be bytes"
-        log.debug('writing %r to %r', data, self)
         with self._lock:
             self.client.channel_write(self.number, data)
-        log.debug('done writing')
 
     def get_file(self):
         return ChannelFile(self.client, self.number)
