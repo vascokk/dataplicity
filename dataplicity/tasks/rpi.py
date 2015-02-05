@@ -79,6 +79,24 @@ class SetGPIO(Task):
                 GPIO.output(pin, 0)
 
 
+class SampleGPIOInputs(Task):
+    def on_startup(self):
+        GPIO.setmode(GPIO.BOARD)
+        pin_list = [8, 10, 12, 13, 15, 16, 18, 22]
+        pin_list_b_plus = [29, 31, 32, 33, 35, 36, 37, 38, 40]
+        pin_list.extend(pin_list_b_plus)
+
+        for channel in pin_list:
+            try:
+                GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                GPIO.add_event_detect(channel, GPIO.BOTH, callback=self.sample_input)
+            except ValueError:
+                pass
+
+    def sample_input(self, channel):
+        pass
+
+
 class DashControlledCamera(Task):
     """Take a photo with the Raspberry Pi camera, controlled by the dashboard element"""
 

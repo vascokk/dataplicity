@@ -78,11 +78,26 @@ class Handoff(SubCommand):
 
         device_class_name = conf.get('device', 'class')
 
+        # determine if B+ model
+        b_plus = None
+        try:
+            import RPi.GPIO as GPIO
+            GPIO.setmode(GPIO.BOARD)
+            try:
+                GPIO.setup(29, GPIO.OUT)
+            except ValueError:
+                b_plus = False
+            else:
+                b_plus = True
+        except ImportError:
+            pass
+
         with remote.batch() as batch:
             batch.call_with_id('handoff',
                                'device.handoff',
                                usercode=usercode,
-                               auth_token=client.auth_token)
+                               auth_token=client.auth_token,
+                               rpi_b_plus=b_plus)
 
         handoff_result = batch.get_result('handoff')
 
