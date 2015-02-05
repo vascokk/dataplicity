@@ -92,6 +92,8 @@ class PacketType(IntEnum):
 
     peer_forward = 201
 
+    peer_notify_disconnect = 202
+
 
 class M2MPacket(PacketBase):
     """Base class, not a real packet"""
@@ -174,6 +176,13 @@ class PongPacket(M2MPacket):
 
 
 class SetIdentityPacket(M2MPacket):
+    """
+    Sets a client's identity
+
+    This was for debugging, clients are sent an identity normally.
+
+    """
+
     type = PacketType.set_identity
     attributes = [('uuid', bytes)]
 
@@ -214,22 +223,26 @@ class RequestClosePacket(M2MPacket):
 
 
 class RequestLeavePacket(M2MPacket):
+    """Polite way of disconnecting from the server"""
     type = PacketType.request_leave
 
 
 class InstructionPacket(M2MPacket):
+    """Send an 'instruction' which is an application define packet not send through a channel"""
     type = PacketType.instruction
     attributes = [('sender', bytes),
                   ('data', dict)]
 
 
 class CommandResponsePacket(M2MPacket):
+    """Sent in response to a command"""
     type = PacketType.response
     attributes = [('command_id', int_types),
                   ('result', dict)]
 
 
 class CommandAddRoutePacket(M2MPacket):
+    """Command the server to generate a route from uuid1 to uuid2"""
     type = PacketType.command_add_route
     attributes = [('command_id', int_types),
                   ('uuid1', bytes),
@@ -240,6 +253,7 @@ class CommandAddRoutePacket(M2MPacket):
 
 
 class CommandInstructionPacket(M2MPacket):
+    """Send an instruction to a client"""
     type = PacketType.command_send_instruction
     attributes = [('command_id', int_types),
                   ('node', bytes),
@@ -247,6 +261,7 @@ class CommandInstructionPacket(M2MPacket):
 
 
 class CommandLogPacket(M2MPacket):
+    """Send a message to be written to the logs"""
     type = PacketType.command_log
     attributes = [('command_id', int_types),
                   ('node', bytes),
@@ -254,12 +269,15 @@ class CommandLogPacket(M2MPacket):
 
 
 class CommandBroadcastLogPacket(M2MPacket):
+    """Send a message to all clients"""
+    # Probably just for debug. Not sure what would happen with 1000s of clients
     type = PacketType.command_broadcast_log
     attributes = [('command_id', int_types),
                   ('text', bytes)]
 
 
 class PeerAddRoutePacket(M2MPacket):
+    """Tell the peer cluster about a route"""
     type = PacketType.peer_add_route
     attributes = [('requester', bytes),
                   ('command_id', int),
@@ -270,10 +288,18 @@ class PeerAddRoutePacket(M2MPacket):
 
 
 class PeerForwardPacket(M2MPacket):
+    """Forward a packet to another node"""
     no_log = True
     type = PacketType.peer_forward
     attributes = [('recipient', bytes),
                   ('packet', bytes)]
+
+
+class PeerNotifyDisconnect(M2MPacket):
+    """Tell the peer cluster a client disconnected"""
+    type = PacketType.peer_notify_disconnect
+    attributes = [('node', bytes)]
+
 
 if __name__ == "__main__":
     ping_packet = PingPacket(data=b'test')

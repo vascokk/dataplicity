@@ -20,7 +20,7 @@ import logging
 import random
 from base64 import b64decode
 from cStringIO import StringIO
-from threading import Lock
+from threading import Lock, Event
 
 # Number of seconds to wait between failed connections
 CONNECT_WAIT = 5
@@ -84,6 +84,7 @@ class Client(object):
             conf_paths = [conf_paths]
         self.conf_paths = conf_paths
         self._sync_lock = Lock()
+        self.exit_event = Event()
         self._init()
 
     def _init(self):
@@ -135,6 +136,7 @@ class Client(object):
             raise
 
     def close(self):
+        self.exit_event.set()
         if self.m2m is not None:
             try:
                 self.m2m.close()
