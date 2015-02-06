@@ -75,29 +75,31 @@ class AutoConnectThread(threading.Thread):
             return self._m2m_client
 
     def close(self):
-        m2m_client = self.m2m_client
-        if m2m_client:
-            m2m_client.close()
+        """Close and end the auto-connect thread"""
         self.exit_event.set()
 
     def start_connect(self):
         with self.lock:
             log.debug('connecting to %s', self.url)
+            self._identity = None
             self._m2m_client = M2MClient(self.url, log=log)
             self._m2m_client.set_manager(self.manager)
             self._m2m_client.connect(wait=False)
 
     def run(self):
         self.start_connect()
-        while 1:
-            while not self.exit_event.wait(5.0):
-                identity = self.m2m_client.wait_ready(None)
-                with self.lock:
-                    if not identity and self.m2m_client.is_closed:
-                        self.start_connect()
-                        continue
-                    if identity != self._identity:
-                        self._identity = identity
+        while not self.exit_event.wait(5.0):
+            identity = self.m2m_client.wait_ready(0)
+            self.manager.set_identity(identity)
+            with self.lock:
+                if not identity and self.m2m_client.is_closed:
+                    self.start_connect()
+                    continue
+                if identity != self._identity:
+                    self._identity = identity
+        with self.lock:
+            if self.m2m_client is not None:
+                self.m2m_client.close()
 
 
 class M2MClient(WSClient):
@@ -123,14 +125,11 @@ class M2MManager(object):
         self.client = client
         self.url = url
         self.terminals = {}
+        self.identity = None
         self.notified_identity = None
         self.connecting_semaphore = threading.Semaphore()
         self.connect_thread = AutoConnectThread(self, url)
         self.connect_thread.start()
-
-    @property
-    def identity(self):
-        self.connect_thread.identity
 
     @property
     def m2m_client(self):
@@ -160,9 +159,9 @@ class M2MManager(object):
         return manager
 
     def on_client_close(self):
-        self.close()
         for terminal in self.terminals.values():
             terminal.close()
+        self.terminals.clear()
 
     # def check_connect(self):
     #     """Attempt re-connect if we are not connected"""
@@ -184,22 +183,32 @@ class M2MManager(object):
     #     finally:
     #         self.connecting_semaphore.release()
 
+    def set_identity(self, identity):
+        """Sets the m2m identity, and also notifies the dataplicity server if required"""
+        if identity != self.identity:
+            self.identity = identity
+        if identity != self.notified_identity:
+            self.notified_identity = self.client.set_m2m_identity(identity)
+
     def on_sync(self, batch):
         """Called by sync, so it can inject commands in to the batch request"""
-        log.debug('on_sync')
-        try:
-            identity = self.identity
-            if identity != self.notified_identity:
-                batch.notify('m2m.associate',
-                             identity=identity or '')
-                self.notified_identity = identity
-        except Exception:
-            log.exception('error in M2MManager.on_sync')
+        return
+        # depricated by auto-connect thread
+
+        # try:
+        #     identity = self.identity
+        #     if identity != self.notified_identity:
+        #         batch.notify('m2m.associate',
+        #                      identity=identity or '')
+        #         self.notified_identity = identity
+        # except Exception:
+        #     log.exception('error in M2MManager.on_sync')
 
     def close(self):
+        log.debug('m2m manager close')
+        self.connect_thread.close()
         if self.m2m_client is not None:
             self.m2m_client.close()
-        self.connect_thread.close()
 
     def add_terminal(self, name, remote_process):
         log.debug("adding terminal '%s' %s", name, remote_process)

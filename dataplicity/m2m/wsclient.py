@@ -244,7 +244,7 @@ class WSClient(ThreadedDispatcher):
             while 1:
                 if self.ready_event.wait(1):
                     break
-        else:
+        elif timeout > 0:
             wait_time = float(timeout)
             while wait_time >= 0:
                 if self.ready_event.wait(.25):
