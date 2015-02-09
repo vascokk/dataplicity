@@ -26,7 +26,12 @@ class Terminal(object):
     def __repr__(self):
         return "<terminal '{}' command='{}'>".format(self.name, self.command)
 
+    def _prune_closed(self):
+        """Remove closed processes"""
+        self.processes[:] = [process for process in self.processes if not process.is_closed]
+
     def launch(self, channel):
+        self._prune_closed()
         log.debug('opening terminal %s', self.name)
         remote_process = None
         try:
@@ -45,12 +50,16 @@ class Terminal(object):
             log.info("launched remote process %r over %r", self, channel)
 
     def close(self):
+        self._prune_closed()
         for process in self.processes:
             log.debug('closing %r', self)
             try:
-                process.close()
+                if not process.is_closed:
+                    log.debug('closing %r', self)
+                    process.close()
             except:
-                log.exception('error in process close')
+                log.exception('error closing %s', process)
+        del self.processes[:]
 
 
 class AutoConnectThread(threading.Thread):
@@ -161,27 +170,6 @@ class M2MManager(object):
     def on_client_close(self):
         for terminal in self.terminals.values():
             terminal.close()
-        self.terminals.clear()
-
-    # def check_connect(self):
-    #     """Attempt re-connect if we are not connected"""
-    #     log.debug('check connect')
-    #     self.connecting_semaphore.acquire()
-    #     try:
-    #         try:
-    #             if self.m2m_client.is_closed:
-    #                 log.debug('re-connecting to m2m server %s', self.url)
-    #                 client = M2MClient(self.url, log=log)
-    #                 client.set_manager(self)
-    #                 try:
-    #                     client.connect(wait=True)
-    #                     self.m2m_client = client
-    #                 except:
-    #                     log.exception('re-connect failed')
-    #         except:
-    #             log.exception('error in check_connect')
-    #     finally:
-    #         self.connecting_semaphore.release()
 
     def set_identity(self, identity):
         """Sets the m2m identity, and also notifies the dataplicity server if required"""
@@ -192,17 +180,9 @@ class M2MManager(object):
 
     def on_sync(self, batch):
         """Called by sync, so it can inject commands in to the batch request"""
+        # deprecated by auto-connect thread
+        # May find a use for this at some point
         return
-        # depricated by auto-connect thread
-
-        # try:
-        #     identity = self.identity
-        #     if identity != self.notified_identity:
-        #         batch.notify('m2m.associate',
-        #                      identity=identity or '')
-        #         self.notified_identity = identity
-        # except Exception:
-        #     log.exception('error in M2MManager.on_sync')
 
     def close(self):
         log.debug('m2m manager close')

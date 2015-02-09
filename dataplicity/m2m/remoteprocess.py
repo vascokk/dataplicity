@@ -26,6 +26,10 @@ class RemoteProcess(proxy.Interceptor):
 
         super(RemoteProcess, self).__init__()
 
+    @property
+    def is_closed(self):
+        return self._closed
+
     def __repr__(self):
         return "RemoteProcess({!r}, {!r})".format(self.command, self.channel)
 
