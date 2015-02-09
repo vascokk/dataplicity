@@ -143,7 +143,7 @@ class LogPacket(M2MPacket):
 
 class RequestSendPacket(M2MPacket):
     """Request to send data to a connection"""
-    no_log = False
+    no_log = True
     type = PacketType.request_send
     attributes = [('channel', int_types),
                   ('data', bytes)]
