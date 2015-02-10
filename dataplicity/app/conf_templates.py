@@ -107,6 +107,7 @@ data-timeline = installed_packages
 [task:setgpio]
 run = dataplicity.tasks.rpi.SetGPIO
 poll = 30
+data-sampler = gpio_sample
 
 [settings:gpio]
 defaults = ./gpio.ini
@@ -132,6 +133,7 @@ defaults = ./rpi_camera.ini
 [sampler:disk_available]
 [sampler:disk_total]
 [sampler:cpu_percent]
+[sampler:gpio_sample]
 
 [m2m]
 enabled = yes
