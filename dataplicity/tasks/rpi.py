@@ -65,18 +65,31 @@ class TakePhoto(Task):
 class SetGPIO(Task):
     def on_startup(self):
         GPIO.setmode(GPIO.BOARD)
-        self.pin_list = [7, 11, 12, 13, 15, 16, 18, 22]
-        for pin in self.pin_list:
-            GPIO.setup(pin, GPIO.OUT)
+        self.pin_list = [7, 11, 12, 13, 15, 16, 18, 22, 29, 31, 32, 33, 35, 36, 37, 38, 40]
+        self.set_pins()
 
-    @onsignal('settings_update', 'gpio')
-    def on_settings_update(self, name, settings):
+    def set_pins(self, settings=None):
+        if not settings:
+            settings = self.get_settings('gpio')
+
         for pin in self.pin_list:
             pin_setting = settings.get('pins', 'pin{}'.format(pin))
             if pin_setting == 'on':
+                GPIO.setup(pin, GPIO.OUT)
                 GPIO.output(pin, 1)
             elif pin_setting == 'off':
+                GPIO.setup(pin, GPIO.OUT)
                 GPIO.output(pin, 0)
+            elif pin_setting == 'input':
+                GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                GPIO.add_event_detect(pin, GPIO.BOTH, callback=self.sample_input, bouncetime=200)
+
+    @onsignal('settings_update', 'gpio')
+    def on_settings_update(self, name, settings):
+        self.set_pins(settings)
+
+    def sample_input(self, pin):
+        print 'pin {} pressed'.format(pin)
 
 
 class SampleGPIOInputs(Task):
