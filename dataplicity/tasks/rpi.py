@@ -99,7 +99,7 @@ class SetGPIO(Task):
         self.set_pins(settings)
 
     def sample_input(self, pin):
-        print 'pin {} pressed'.format(pin)
+        self.log.debug('pin {} pressed'.format(pin))
 
 
 class SampleGPIOInputs(Task):
