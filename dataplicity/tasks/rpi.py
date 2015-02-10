@@ -69,6 +69,7 @@ class SetGPIO(Task):
         GPIO.setmode(GPIO.BOARD)
         self.pin_list = [7, 11, 12, 13, 15, 16, 18, 22, 29, 31, 32, 33, 35, 36, 37, 38, 40]
         self.set_pins()
+        self.sampler = self.conf.get('sampler', 'gpio_sample')
 
     def set_pins(self, settings=None):
         if not settings:
@@ -107,24 +108,7 @@ class SetGPIO(Task):
 
     def sample_input(self, pin):
         self.log.debug('pin {} pressed'.format(pin))
-
-
-class SampleGPIOInputs(Task):
-    def on_startup(self):
-        GPIO.setmode(GPIO.BOARD)
-        pin_list = [8, 10, 12, 13, 15, 16, 18, 22]
-        pin_list_b_plus = [29, 31, 32, 33, 35, 36, 37, 38, 40]
-        pin_list.extend(pin_list_b_plus)
-
-        for channel in pin_list:
-            try:
-                GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                GPIO.add_event_detect(channel, GPIO.BOTH, callback=self.sample_input)
-            except ValueError:
-                pass
-
-    def sample_input(self, channel):
-        pass
+        self.client.sample_now(self.sampler, 1)
 
 
 class DashControlledCamera(Task):
