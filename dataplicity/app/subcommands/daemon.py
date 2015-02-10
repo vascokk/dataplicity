@@ -137,6 +137,7 @@ class Daemon(object):
             self.log.debug("closing")
             self.server_closing_event.set()
             self.client.tasks.stop()
+            self.client.close()
             self.log.debug("goodbye")
 
             if self.exit_event.is_set() and self.exit_command is not None:

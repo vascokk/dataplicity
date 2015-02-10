@@ -48,6 +48,7 @@ class Channel(object):
         self._closed = False
 
         self._data_callback = None
+        self._close_callback = None
         self._lock = threading.RLock()
         self.deque = deque()
         self._data_event = threading.Event()
@@ -136,8 +137,9 @@ class ThreadedDispatcher(threading.Thread, Dispatcher):
 
 class WSClient(ThreadedDispatcher):
 
-    def __init__(self, url, uuid=None, log=None, **kwargs):
+    def __init__(self, url, uuid=None, log=None, channel_callback=None, **kwargs):
         self.url = url
+        self.channel_callback = channel_callback
         kwargs['on_open'] = self.on_open
         kwargs['on_message'] = self.on_message
         kwargs['on_error'] = self.on_error
@@ -177,6 +179,10 @@ class WSClient(ThreadedDispatcher):
     @property
     def is_closed(self):
         return self._closed
+
+    @property
+    def open_channels(self):
+        return self.channels.keys()
 
     def connect(self, wait=True, timeout=None):
         self.start()
@@ -238,7 +244,7 @@ class WSClient(ThreadedDispatcher):
             while 1:
                 if self.ready_event.wait(1):
                     break
-        else:
+        elif timeout > 0:
             wait_time = float(timeout)
             while wait_time >= 0:
                 if self.ready_event.wait(.25):
@@ -311,7 +317,7 @@ class WSClient(ThreadedDispatcher):
     @expose(PacketType.set_identity)
     def handle_set_identity(self, packet_type, identity):
         self.identity = identity
-        self.log.debug('setting identity to %r', self.identity)
+        self.log.debug('setting identity to %s', self.identity)
 
     @expose(PacketType.ping)
     def handle_ping(self, packet_type, data):
@@ -328,15 +334,21 @@ class WSClient(ThreadedDispatcher):
     @expose(PacketType.route)
     def handle_route(self, packet_type, channel, data):
         channel = self.get_channel(channel)
+        if self.channel_callback is not None:
+            try:
+                self.channel_callback(channel, data)
+            except:
+                log.exception('error in channel callback')
         channel.on_data(data)
 
     @expose(PacketType.notify_open)
     def on_notify_open(self, packet_type, channel_no):
-        log.debug('channel %s opened', channel_no)
+        channel = self.get_channel(channel_no)
+        log.debug('%s opened', channel)
 
     @expose(PacketType.notify_close)
     def on_notify_close(self, packet_type, channel_no):
-        log.debug('channel %s closed', channel_no)
+        log.debug('%s closed', channel_no)
         if self.has_channel(channel_no):
             channel = self.get_channel(channel_no)
             channel.close()

@@ -20,7 +20,7 @@ import logging
 import random
 from base64 import b64decode
 from cStringIO import StringIO
-from threading import Lock
+from threading import Lock, Event
 
 # Number of seconds to wait between failed connections
 CONNECT_WAIT = 5
@@ -84,6 +84,7 @@ class Client(object):
             conf_paths = [conf_paths]
         self.conf_paths = conf_paths
         self._sync_lock = Lock()
+        self.exit_event = Event()
         self._init()
 
     def _init(self):
@@ -135,6 +136,7 @@ class Client(object):
             raise
 
     def close(self):
+        self.exit_event.set()
         if self.m2m is not None:
             try:
                 self.m2m.close()
@@ -204,6 +206,21 @@ class Client(object):
         # Serialize syncing
         with self._sync_lock:
             self._sync()
+
+    def set_m2m_identity(self, identity):
+        if self.auth_token is not None:
+            with self.remote.batch() as batch:
+                # Authenticate
+                batch.call_with_id('authenticate_result',
+                                   'device.check_auth',
+                                   device_class=self.device_class,
+                                   serial=self.serial,
+                                   auth_token=self.auth_token)
+                batch.notify('m2m.associate', identity = identity or '')
+            return identity
+        else:
+            self.log.debug("skipping m2m identiy notify because we don't have an auth token")
+            return None
 
     def _sync(self):
         start = time()
