@@ -1,9 +1,11 @@
 from dataplicity.client.task import Task, onsignal
 from dataplicity import atomicwrite
+from dataplicity.errors import ConfigError
 
 from io import BytesIO
 import datetime
 from datetime import timedelta
+
 
 try:
     import picamera
@@ -73,7 +75,11 @@ class SetGPIO(Task):
             settings = self.get_settings('gpio')
 
         for pin in self.pin_list:
-            pin_setting = settings.get('pins', 'pin{}'.format(pin))
+            try:
+                pin_setting = settings.get('pins', 'pin{}'.format(pin))
+            except ConfigError:
+                continue
+
             if pin_setting == 'on':
                 GPIO.setup(pin, GPIO.OUT)
                 GPIO.output(pin, 1)
