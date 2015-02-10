@@ -94,6 +94,13 @@ class SetGPIO(Task):
                     self.log.debug('input pin failed: {}'.format(pin))
                     raise
 
+            if not pin_setting == 'input':
+                # try and remove event detection
+                try:
+                    GPIO.remove_event_detect(pin)
+                except:
+                    pass
+
     @onsignal('settings_update', 'gpio')
     def on_settings_update(self, name, settings):
         self.set_pins(settings)
