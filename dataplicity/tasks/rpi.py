@@ -91,6 +91,7 @@ class SetGPIO(Task):
                 try:
                     GPIO.add_event_detect(pin, GPIO.BOTH, callback=self.sample_input, bouncetime=200)
                 except:
+                    import sys
                     sys.stderr.write('input pin failed: {}'.format(pin))
                     raise
 
