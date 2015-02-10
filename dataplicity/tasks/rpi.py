@@ -88,7 +88,11 @@ class SetGPIO(Task):
                 GPIO.output(pin, 0)
             elif pin_setting == 'input':
                 GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                GPIO.add_event_detect(pin, GPIO.BOTH, callback=self.sample_input, bouncetime=200)
+                try:
+                    GPIO.add_event_detect(pin, GPIO.BOTH, callback=self.sample_input, bouncetime=200)
+                except:
+                    print 'input pin failed: {}'.format(pin)
+                    raise
 
     @onsignal('settings_update', 'gpio')
     def on_settings_update(self, name, settings):
