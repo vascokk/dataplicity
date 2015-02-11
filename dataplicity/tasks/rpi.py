@@ -90,6 +90,8 @@ class SetGPIO(Task):
             elif pin_setting == 'input':
                 GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
                 try:
+                    # remove event detection before adding
+                    GPIO.remove_event_detect(pin)
                     GPIO.add_event_detect(pin, GPIO.BOTH, callback=self.sample_input, bouncetime=200)
                 except:
                     self.log.debug('input pin failed: {}'.format(pin))
