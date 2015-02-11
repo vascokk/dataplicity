@@ -110,7 +110,7 @@ class SetGPIO(Task):
 
     def sample_input(self, pin):
         self.log.debug('pin {} pressed'.format(pin))
-        self.client.sample_now(self.sampler, 1)
+        self.client.sample_now(self.sampler, pin)
 
 
 class DashControlledCamera(Task):
