@@ -97,7 +97,8 @@ class AutoConnectThread(threading.Thread):
 
     def run(self):
         self.start_connect()
-        while not self.exit_event.wait(5.0):
+        self.m2m_client.wait_ready(5)
+        while 1:
             identity = self.m2m_client.wait_ready(0)
             self.manager.set_identity(identity)
             with self.lock:
@@ -106,6 +107,9 @@ class AutoConnectThread(threading.Thread):
                     continue
                 if identity != self._identity:
                     self._identity = identity
+            if self.exit_event.wait(5.0):
+                break
+        self.manager.set_identity(None)
         with self.lock:
             if self.m2m_client is not None:
                 self.m2m_client.close()

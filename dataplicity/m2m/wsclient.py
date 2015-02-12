@@ -173,8 +173,9 @@ class WSClient(ThreadedDispatcher):
 
     def __exit__(self, *args, **kwargs):
         if not self.close_event.is_set():
-            self.send(PacketType.request_leave)
-            self.close_event.wait(3)
+            self.close()
+            #self.send(PacketType.request_leave)
+            #self.close_event.wait(3)
 
     @property
     def is_closed(self):

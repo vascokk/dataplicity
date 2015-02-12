@@ -209,15 +209,18 @@ class Client(object):
 
     def set_m2m_identity(self, identity):
         if self.auth_token is not None:
-            with self.remote.batch() as batch:
-                # Authenticate
-                batch.call_with_id('authenticate_result',
-                                   'device.check_auth',
-                                   device_class=self.device_class,
-                                   serial=self.serial,
-                                   auth_token=self.auth_token)
-                batch.notify('m2m.associate', identity = identity or '')
-            return identity
+            try:
+                with self.remote.batch() as batch:
+                    # Authenticate
+                    batch.call_with_id('authenticate_result',
+                                       'device.check_auth',
+                                       device_class=self.device_class,
+                                       serial=self.serial,
+                                       auth_token=self.auth_token)
+                    batch.notify('m2m.associate', identity = identity or '')
+                return identity
+            except:
+                self.log.exception('unable to set m2m identity')
         else:
             self.log.debug("skipping m2m identiy notify because we don't have an auth token")
             return None
