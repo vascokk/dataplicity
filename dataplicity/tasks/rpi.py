@@ -1,9 +1,11 @@
 from dataplicity.client.task import Task, onsignal
 from dataplicity import atomicwrite
+from dataplicity.errors import ConfigError
 
 from io import BytesIO
 import datetime
 from datetime import timedelta
+
 
 try:
     import picamera
@@ -65,36 +67,50 @@ class TakePhoto(Task):
 class SetGPIO(Task):
     def on_startup(self):
         GPIO.setmode(GPIO.BOARD)
-        self.pin_list = [7, 11, 12, 13, 15, 16, 18, 22]
+        self.pin_list = [7, 11, 12, 13, 15, 16, 18, 22, 29, 31, 32, 33, 35, 36, 37, 38, 40]
+        self.set_pins()
+        self.sampler = self.conf.get('sampler', 'gpio_sample')
+
+    def set_pins(self, settings=None):
+        if not settings:
+            settings = self.get_settings('gpio')
+
         for pin in self.pin_list:
-            GPIO.setup(pin, GPIO.OUT)
+            try:
+                pin_setting = settings.get('pins', 'pin{}'.format(pin))
+            except ConfigError:
+                continue
+
+            if pin_setting == 'on':
+                GPIO.setup(pin, GPIO.OUT)
+                GPIO.output(pin, 1)
+            elif pin_setting == 'off':
+                GPIO.setup(pin, GPIO.OUT)
+                GPIO.output(pin, 0)
+            elif pin_setting == 'input':
+                GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                try:
+                    # remove event detection before adding
+                    GPIO.remove_event_detect(pin)
+                    GPIO.add_event_detect(pin, GPIO.BOTH, callback=self.sample_input, bouncetime=200)
+                except:
+                    self.log.debug('input pin failed: {}'.format(pin))
+                    raise
+
+            if not pin_setting == 'input':
+                # try and remove event detection
+                try:
+                    GPIO.remove_event_detect(pin)
+                except:
+                    pass
 
     @onsignal('settings_update', 'gpio')
     def on_settings_update(self, name, settings):
-        for pin in self.pin_list:
-            pin_setting = settings.get('pins', 'pin{}'.format(pin))
-            if pin_setting == 'on':
-                GPIO.output(pin, 1)
-            elif pin_setting == 'off':
-                GPIO.output(pin, 0)
+        self.set_pins(settings)
 
-
-class SampleGPIOInputs(Task):
-    def on_startup(self):
-        GPIO.setmode(GPIO.BOARD)
-        pin_list = [8, 10, 12, 13, 15, 16, 18, 22]
-        pin_list_b_plus = [29, 31, 32, 33, 35, 36, 37, 38, 40]
-        pin_list.extend(pin_list_b_plus)
-
-        for channel in pin_list:
-            try:
-                GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                GPIO.add_event_detect(channel, GPIO.BOTH, callback=self.sample_input)
-            except ValueError:
-                pass
-
-    def sample_input(self, channel):
-        pass
+    def sample_input(self, pin):
+        self.log.debug('pin {} pressed'.format(pin))
+        self.client.sample_now(self.sampler, pin)
 
 
 class DashControlledCamera(Task):
