@@ -1,10 +1,12 @@
 import json
+from random import randint
 from dataplicity.client.task import Task, onsignal
 from dataplicity import atomicwrite
 from dataplicity.errors import ConfigError
 
 from io import BytesIO
 import datetime
+from time import time
 from datetime import timedelta
 
 
@@ -68,6 +70,9 @@ class TakePhoto(Task):
 class SetGPIO(Task):
     def init(self):
         self.timeline_name = self.conf.get('timeline', 'gpio_poll')
+        timestamp = int(time() * 1000.0)
+        token = str(randint(0, 2 ** 31))
+        self.event_id = '{0}_{1}'.format(timestamp, token)
 
     def on_startup(self):
         GPIO.setmode(GPIO.BOARD)
