@@ -66,7 +66,7 @@ class TakePhoto(Task):
 
 
 class SetGPIO(Task):
-    def __init__(self):
+    def init(self):
         self.timeline_name = self.conf.get('timeline', 'gpio_poll')
 
     def on_startup(self):
