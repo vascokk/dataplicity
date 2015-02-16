@@ -230,15 +230,6 @@ enabled = yes
 
 gpio_ini_template = """
 [pins]
-pin40 = ignore
-pin38 = ignore
-pin37 = ignore
-pin36 = ignore
-pin35 = ignore
-pin33 = ignore
-pin32 = ignore
-pin31 = ignore
-pin29 = ignore
 pin22 = ignore
 pin18 = ignore
 pin16 = ignore
