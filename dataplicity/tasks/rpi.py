@@ -136,7 +136,7 @@ class SetGPIO(Task):
 
         # Create a new event photo
         event = timeline.new_event(event_type='TEXT',
-                                   title='System info',
+                                   title='GPIO input poll',
                                    text=json.dumps(pin_data),
                                    overwrite=True,
                                    hide=True,
