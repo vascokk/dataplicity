@@ -1,3 +1,4 @@
+import json
 from dataplicity.client.task import Task, onsignal
 from dataplicity import atomicwrite
 from dataplicity.errors import ConfigError
@@ -65,6 +66,9 @@ class TakePhoto(Task):
 
 
 class SetGPIO(Task):
+    def __init__(self):
+        self.timeline_name = self.conf.get('timeline', 'gpio_poll')
+
     def on_startup(self):
         GPIO.setmode(GPIO.BOARD)
         self.pin_list = [7, 11, 12, 13, 15, 16, 18, 22, 29, 31, 32, 33, 35, 36, 37, 38, 40]
@@ -107,6 +111,33 @@ class SetGPIO(Task):
     @onsignal('settings_update', 'gpio')
     def on_settings_update(self, name, settings):
         self.set_pins(settings)
+
+    def poll(self):
+        # poll inputs
+        settings = self.get_settings('gpio')
+        pin_data = {}
+
+        for pin in self.pin_list:
+            try:
+                pin_setting = settings.get('pins', 'pin{}'.format(pin))
+            except ConfigError:
+                continue
+
+            if pin_setting == 'input':
+                pin_data[pin] = GPIO.input(pin)
+
+        # Get the timeline
+        timeline = self.client.get_timeline(self.timeline_name)
+
+        # Create a new event photo
+        event = timeline.new_event(event_type='TEXT',
+                                   title='System info',
+                                   text=json.dumps(pin_data),
+                                   overwrite=True,
+                                   hide=True,
+                                   event_id=self.event_id)
+        # Write the event
+        event.write()
 
     def sample_input(self, pin):
         self.log.debug('pin {} pressed'.format(pin))
