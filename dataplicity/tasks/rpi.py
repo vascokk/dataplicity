@@ -105,6 +105,8 @@ class SetGPIO(Task):
                 except:
                     self.log.debug('input pin failed: {}'.format(pin))
                     raise
+            elif pin_setting == 'ignore':
+                GPIO.cleanup(pin)
 
             if not pin_setting == 'input':
                 # try and remove event detection
