@@ -245,9 +245,9 @@ class CommandAddRoutePacket(M2MPacket):
     """Command the server to generate a route from uuid1 to uuid2"""
     type = PacketType.command_add_route
     attributes = [('command_id', int_types),
-                  ('uuid1', bytes),
+                  ('node1', bytes),
                   ('port1', int_types),
-                  ('uuid2', bytes),
+                  ('node2', bytes),
                   ('port2', int_types),
                   ('requester', bytes)]
 
@@ -281,9 +281,9 @@ class PeerAddRoutePacket(M2MPacket):
     type = PacketType.peer_add_route
     attributes = [('requester', bytes),
                   ('command_id', int),
-                  ('uuid1', bytes),
+                  ('node1', bytes),
                   ('port1', int_types),
-                  ('uuid2', bytes),
+                  ('node1', bytes),
                   ('port2', int_types)]
 
 
