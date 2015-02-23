@@ -283,7 +283,7 @@ class PeerAddRoutePacket(M2MPacket):
                   ('command_id', int),
                   ('node1', bytes),
                   ('port1', int_types),
-                  ('node1', bytes),
+                  ('node2', bytes),
                   ('port2', int_types)]
 
 
