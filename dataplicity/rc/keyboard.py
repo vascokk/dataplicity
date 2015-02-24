@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 from .device import Device
 
+import threading
+from collections import defaultdict
+
 import logging
 log = logging.getLogger('m2m.rc')
 
@@ -12,7 +15,7 @@ class Key(object):
         self.pressed = False
 
     def __repr__(self):
-        return "<key {} '{}'>".format(code, unichr(code))
+        return "<key {} '{}'>".format(self.code, unichr(self.code))
 
     def on_down(self):
         self.pressed = True
@@ -23,16 +26,30 @@ class Key(object):
         log.debug('%r UP')
 
 
+class KeyboardInstance(object):
+
+    def __init__(self, channel):
+        log.debug('keyboard over %r', channel)
+        channel.set_callbacks(on_data=self.on_data)
+
+    def on_data(self, data):
+        log.debug(repr(data))
+
+
 class Keyboard(Device):
     """The state of a remote keyboard"""
+
     def __init__(self, name):
-        super(Device, self).__init__(name)
+        super(Keyboard, self).__init__(name)
         self._keys = defaultdict(Key)
 
     def __repr__(self):
         return "<rckeyboard '{}'>".format(self.name)
 
-    def on_event(event):
+    def make_instance(self, channel):
+        return KeyboardInstance(channel)
+
+    def on_event(self, event):
         get = event.get
         if get('device', None) != 'keyboard':
             return

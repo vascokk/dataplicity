@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui>
+    <interface id="dataplicity">
+        <mastertabcontainer title="${device.name} Remote Keyboard Test" id="dataplicity-tabs">
+            <tab title="Keyboard1">
+                <keyboard name="keyboard1" />
+            </tab>
+        </mastertabcontainer>
+    </interface>
+</ui>

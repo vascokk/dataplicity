@@ -2,6 +2,9 @@ import weakref
 
 from .keyboard import Keyboard
 
+import logging
+log = logging.getLogger('m2m.rc')
+
 
 class NoKeyboardError(KeyError):
     pass
@@ -24,15 +27,23 @@ class RCManager(object):
 
     @classmethod
     def init_from_conf(cls, client, conf):
-        manager = cls()
+        manager = cls(client.m2m)
         log.debug('starting RC manager')
         for section, name in conf.qualified_sections('keyboard'):
             keyboard = manager.add_keyboard(name)
             log.debug("%r created", keyboard)
+        return manager
+
+    def open_keyboard(self, name, channel):
+        log.debug('opening keyboard')
+        keyboard = self.get_keyboard(name)
+        log.debug('%r', keyboard)
+        keyboard.make_instance(channel)
 
     def add_keyboard(self, name):
         """Add a named keyboard"""
-        self.keyboards[name] = Keyboard(name)
+        keyboard = self.keyboards[name] = Keyboard(name)
+        return keyboard
 
     def get_keyboard(self, name):
         """Get a named keyboard"""

@@ -4,6 +4,7 @@ from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.client.timeline import TimelineManager
 from dataplicity.client.m2m import M2MManager
+from dataplicity.rc.manager import RCManager
 from dataplicity.client.exceptions import ForceRestart
 from dataplicity.jsonrpc import JSONRPC
 from dataplicity import constants
@@ -126,6 +127,7 @@ class Client(object):
             else:
                 self.m2m = None
 
+            self.rc = RCManager.init_from_conf(self, conf)
             self.tasks = TaskManager.init_from_conf(self, conf)
             self.samplers = SamplerManager.init_from_conf(self, conf)
             self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
@@ -149,7 +151,7 @@ class Client(object):
 
     def connect_wait(self, closing_event, sync_func):
         def do_wait():
-            for _ in xrange(CONNECT_WAIT):
+            for _ in range(CONNECT_WAIT):
                 if closing_event.is_set():
                     return True
                 sleep(1)

@@ -73,11 +73,13 @@ class Channel(object):
 
     def on_data(self, data):
         """On incoming data"""
-        with self._lock:
-            self.deque.append(data)
-            self._data_event.set()
+
         if self._data_callback is not None:
             self._data_callback(data)
+        else:
+            with self._lock:
+                self.deque.append(data)
+                self._data_event.set()
 
     def set_callbacks(self, on_data=None, on_close=None):
         self._data_callback = on_data

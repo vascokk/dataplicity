@@ -210,7 +210,7 @@ class M2MManager(object):
         elif action == "open-keyboard":
             port = data['port']
             keyboard_name = data['name']
-            self.open_keyboard(self, name, port)
+            self.open_keyboard(keyboard_name, port)
 
     def open_terminal(self, name, port):
         terminal = self.get_terminal(name)
@@ -219,4 +219,6 @@ class M2MManager(object):
             return
         terminal.launch(self.m2m_client.get_channel(port))
 
-    def open_keyboard(name, port):
+    def open_keyboard(self, name, port):
+        log.debug('open_keyboard %r %r', name, port)
+        self.client.rc.open_keyboard(name, self.m2m_client.get_channel(port))
