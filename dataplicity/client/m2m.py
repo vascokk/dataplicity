@@ -207,6 +207,10 @@ class M2MManager(object):
             port = data['port']
             terminal_name = data['name']
             self.open_terminal(terminal_name, port)
+        elif action == "open-keyboard":
+            port = data['port']
+            keyboard_name = data['name']
+            self.open_keyboard(self, name, port)
 
     def open_terminal(self, name, port):
         terminal = self.get_terminal(name)
@@ -214,3 +218,5 @@ class M2MManager(object):
             log.warning("no terminal called '%s'", name)
             return
         terminal.launch(self.m2m_client.get_channel(port))
+
+    def open_keyboard(name, port):
