@@ -91,7 +91,7 @@ class App(object):
             else:
                 logging.config.dictConfig(DEFAULT_LOGGING)
 
-    def make_client(self, log, conf=None):
+    def make_client(self, log, conf=None, create_m2m=True):
         if self.args.conf:
             path = self.args.conf
         elif conf:
@@ -100,7 +100,7 @@ class App(object):
             path = tools.find_conf()
         if path is None:
             raise ProjectNotFoundError('unable to locate dataplicity.conf for project')
-        client = Client(path, log=log)
+        client = Client(path, log=log, create_m2m=create_m2m)
         return client
 
     @property

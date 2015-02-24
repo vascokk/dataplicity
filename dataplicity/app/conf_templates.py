@@ -108,6 +108,7 @@ data-timeline = installed_packages
 run = dataplicity.tasks.rpi.SetGPIO
 poll = 30
 data-sampler = gpio_sample
+data-timeline = gpio_poll
 
 [settings:gpio]
 defaults = ./gpio.ini
@@ -127,6 +128,7 @@ defaults = ./rpi_camera.ini
 [timeline:sysinfo]
 [timeline:installed_packages]
 [timeline:camera]
+[timeline:gpio_poll]
 
 [sampler:memory_available]
 [sampler:memory_total]
@@ -228,15 +230,6 @@ enabled = yes
 
 gpio_ini_template = """
 [pins]
-pin40 = ignore
-pin38 = ignore
-pin37 = ignore
-pin36 = ignore
-pin35 = ignore
-pin33 = ignore
-pin32 = ignore
-pin31 = ignore
-pin29 = ignore
 pin22 = ignore
 pin18 = ignore
 pin16 = ignore

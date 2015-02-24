@@ -72,7 +72,7 @@ class Handoff(SubCommand):
         args = self.args
         usercode = args.usercode
 
-        client = self.app.make_client(log, conf='/etc/dataplicity/dataplicity.conf')
+        client = self.app.make_client(log, conf='/etc/dataplicity/dataplicity.conf', create_m2m=False)
         remote = client.remote
         conf = client.conf
 

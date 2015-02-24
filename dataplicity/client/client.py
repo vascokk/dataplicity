@@ -74,7 +74,7 @@ def _wait_on_url(url, closing_event, log):
 class Client(object):
     """The main interface to the dataplicity server"""
 
-    def __init__(self, conf_paths, check_firmware=True, log=None):
+    def __init__(self, conf_paths, check_firmware=True, log=None, create_m2m=True):
         self.check_firmware = check_firmware
         if log is None:
             log = logging.getLogger('dataplicity.client')
@@ -83,6 +83,7 @@ class Client(object):
         if not isinstance(conf_paths, list):
             conf_paths = [conf_paths]
         self.conf_paths = conf_paths
+        self.create_m2m = create_m2m
         self._sync_lock = Lock()
         self.exit_event = Event()
         self._init()
@@ -120,7 +121,10 @@ class Client(object):
             self.auto_register_info = conf.get('device', 'auto_device_text', None)
 
             # Run this first, so it can work asynchronously
-            self.m2m = M2MManager.init_from_conf(self, conf)
+            if self.create_m2m:
+                self.m2m = M2MManager.init_from_conf(self, conf)
+            else:
+                self.m2m = None
 
             self.tasks = TaskManager.init_from_conf(self, conf)
             self.samplers = SamplerManager.init_from_conf(self, conf)

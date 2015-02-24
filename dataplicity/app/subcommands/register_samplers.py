@@ -18,7 +18,7 @@ class RegisterSamplers(SubCommand):
     def run(self):
         args = self.args
 
-        client = self.app.make_client(log)
+        client = self.app.make_client(log, create_m2m=False)
         remote = client.remote
         conf = client.conf
 
