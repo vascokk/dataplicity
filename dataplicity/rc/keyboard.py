@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 from .device import Device
 
-import threading
-from collections import defaultdict
+import weakref
+import json
 
 import logging
 log = logging.getLogger('m2m.rc')
@@ -15,39 +15,55 @@ class Key(object):
         self.pressed = False
 
     def __repr__(self):
-        return "<key {} '{}'>".format(self.code, unichr(self.code))
+        return "<key {}>".format(self.code)
 
     def on_down(self):
         self.pressed = True
-        log.debug('%r DOWN')
+        #log.debug('KEY %s DOWN', self.code)
 
     def on_up(self):
         self.pressed = False
-        log.debug('%r UP')
+        #log.debug('KEY %s UP', self.code)
 
 
 class KeyboardInstance(object):
 
-    def __init__(self, channel):
+    def __init__(self, keyboard, channel):
+        self._keyboard = weakref.ref(keyboard)
         log.debug('keyboard over %r', channel)
         channel.set_callbacks(on_data=self.on_data)
 
+    @property
+    def keyboard(self):
+        return self._keyboard()
+
     def on_data(self, data):
-        log.debug(repr(data))
+        try:
+            key_event = json.loads(data)
+        except:
+            log.exception('error decoding key event')
+            raise
+        self.keyboard.on_event(key_event)
 
 
 class Keyboard(Device):
     """The state of a remote keyboard"""
 
-    def __init__(self, name):
+    def __init__(self, client, name):
+        self._client = weakref.ref(client)
+        self.name = name
+        self._keys = {}
         super(Keyboard, self).__init__(name)
-        self._keys = defaultdict(Key)
 
     def __repr__(self):
         return "<rckeyboard '{}'>".format(self.name)
 
+    @property
+    def client(self):
+        return self._client()
+
     def make_instance(self, channel):
-        return KeyboardInstance(channel)
+        return KeyboardInstance(self, channel)
 
     def on_event(self, event):
         get = event.get
@@ -58,8 +74,16 @@ class Keyboard(Device):
             key = self._get_key(event['which'])
             if event_type == 'keydown':
                 key.on_down()
+                self.client.tasks.send_signal_from("keyboard.key_down",
+                                                   self.name,
+                                                   keyboard=self,
+                                                   key=key)
             elif event_type == 'keyup':
                 key.on_up()
+                self.client.tasks.send_signal_from("keyboard.key_up",
+                                                   self.name,
+                                                   keyboard=self,
+                                                   key=key)
             else:
                 log.error('unknown keyboard event %r', event_type)
 
@@ -68,9 +92,9 @@ class Keyboard(Device):
         self._keys.clear()
 
     def _get_key(self, code):
-        if isinstance(code, basestring):
-            code = ord(code[0])
-        return self.keys[code]
+        if code not in self._keys:
+            self._keys[code] = Key(code)
+        return self._keys[code]
 
     def is_pressed(self, key):
         """Check if a given key is pressed"""
