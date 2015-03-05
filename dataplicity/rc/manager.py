@@ -2,6 +2,7 @@ import weakref
 
 from .keyboard import Keyboard
 from .button import ButtonGroup
+from ..client.tools import parse_lines
 
 import logging
 log = logging.getLogger('m2m.rc')
@@ -40,10 +41,13 @@ class RCManager(object):
             keyboard = manager.add_keyboard(name)
             log.debug("%r created", keyboard)
 
-        for section, name in conf.qualified_section('button'):
-            group = conf.get('section', 'group')
-            button_group = manager.add_button_group(group)
-            button_group.add_button(name, conf, section)
+        for section, name in conf.qualified_sections('buttons'):
+            button_group = manager.add_button_group(name)
+            names = parse_lines(conf.get(section, 'names', ''))
+            log.debug('%r created', button_group)
+            for name in names:
+                button_group.add_button(name)
+                log.debug("  added button '%s'", name)
 
         return manager
 
@@ -58,6 +62,11 @@ class RCManager(object):
         keyboard = self.keyboards[name] = Keyboard(self.client, name)
         return keyboard
 
+    def open_buttons(self, name, channel):
+        log.debug('opening buttons')
+        buttons = self.get_button_group(name)
+        buttons.make_instance(channel)
+
     def get_keyboard(self, name):
         """Get a named keyboard"""
         try:
@@ -68,4 +77,7 @@ class RCManager(object):
     def add_button_group(self, name):
         if name not in self.button_groups:
             self.button_groups[name] = ButtonGroup(self.client, name)
+        return self.button_groups[name]
+
+    def get_button_group(self, name):
         return self.button_groups[name]

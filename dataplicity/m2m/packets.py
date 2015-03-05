@@ -252,7 +252,7 @@ class CommandAddRoutePacket(M2MPacket):
                   ('requester', bytes)]
 
 
-class CommandInstructionPacket(M2MPacket):
+class CommandSendInstructionPacket(M2MPacket):
     """Send an instruction to a client"""
     type = PacketType.command_send_instruction
     attributes = [('command_id', int_types),

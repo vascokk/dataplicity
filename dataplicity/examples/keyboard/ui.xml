@@ -2,9 +2,25 @@
 <ui>
     <interface id="dataplicity">
         <mastertabcontainer title="${device.name} Remote Keyboard Test" id="dataplicity-tabs">
-            <tab title="Keyboard1">
-                <keyboard name="keyboard1" />
+
+            <tab title="Keyboard">
+              <remotekeyboard name="keyboard1"/>
+              <remotebuttons name="group1">
+
+                <button name="left" label="Left" icon="arrow-left" row="1" col="0" />
+                <button name="right" label="Right" icon="arrow-right" row="1" col="2" />
+                <button name="up" label="Up" icon="arrow-up" row="0" col="1" />
+                <button name="down" label="Down" icon="arrow-down" row="2" col="1" />
+
+                <button name="fire" label="Fire" icon="fire" row="1" col="1"/>
+
+                <button name="start" label="Start" icon="play" row="0" col="4"/>
+                <button name="stop" label="Stop" icon="stop" row="1" col="4"/>
+
+
+              </remotebuttons>
             </tab>
+
         </mastertabcontainer>
     </interface>
 </ui>

@@ -72,6 +72,7 @@ class AutoConnectThread(threading.Thread):
         self.lock = threading.RLock()
         self.exit_event = threading.Event()
         threading.Thread.__init__(self)
+        self.daemon = True
 
     @property
     def identity(self):
@@ -202,6 +203,7 @@ class M2MManager(object):
         return self.terminals.get(name, None)
 
     def on_instruction(self, sender, data):
+        log.debug("%r", data)
         action = data['action']
         if action == 'open-terminal':
             port = data['port']
@@ -211,6 +213,10 @@ class M2MManager(object):
             port = data['port']
             keyboard_name = data['name']
             self.open_keyboard(keyboard_name, port)
+        elif action == "open-buttons":
+            port = data['port']
+            buttons_group = data['name']
+            self.open_buttons(buttons_group, port)
 
     def open_terminal(self, name, port):
         terminal = self.get_terminal(name)
@@ -220,5 +226,7 @@ class M2MManager(object):
         terminal.launch(self.m2m_client.get_channel(port))
 
     def open_keyboard(self, name, port):
-        log.debug('open_keyboard %r %r', name, port)
         self.client.rc.open_keyboard(name, self.m2m_client.get_channel(port))
+
+    def open_buttons(self, name, port):
+        self.client.rc.open_buttons(name, self.m2m_client.get_channel(port))

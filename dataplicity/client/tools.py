@@ -11,3 +11,8 @@ def find_conf():
             return conf_path
         path = os.path.dirname(path)
     return None
+
+
+def parse_lines(s):
+    """Split a setting in to a list"""
+    return [l.strip() for l in s.splitlines() if l.strip()]
