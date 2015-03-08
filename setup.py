@@ -24,7 +24,8 @@ setup(name='dataplicity',
                 'dataplicity.app.subcommands',
                 'dataplicity.client',
                 'dataplicity.tasks',
-                'dataplicity.m2m'
+                'dataplicity.m2m',
+                'dataplicity.rc'
                 ],
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
