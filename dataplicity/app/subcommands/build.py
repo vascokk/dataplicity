@@ -14,7 +14,7 @@ def do_build(dataplicity_path):
     """Build firmware in project directory"""
     with fsopendir(dataplicity_path) as src_fs:
         version = firmware.get_version(src_fs)
-        print "Building version {:010}...".format(version)
+        print("Building version {:010}...".format(version))
         filename = "firmware-{}.zip".format(version)
         firmware_path = join('__firmware__', filename)
         src_fs.makedir('__firmware__', allow_recreate=True)
@@ -26,7 +26,7 @@ def do_build(dataplicity_path):
 
         size = src_fs.getsize(firmware_path)
 
-    print "Wrote {} ({:,} bytes)".format(firmware_path, size)
+    print("Wrote {} ({:,} bytes)".format(firmware_path, size))
 
 
 class Build(SubCommand):

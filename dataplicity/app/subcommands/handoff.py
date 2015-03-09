@@ -1,4 +1,7 @@
-import base64
+from __future__ import unicode_literals
+from __future__ import print_function
+
+
 import logging
 from dataplicity.app.subcommand import SubCommand
 
@@ -102,6 +105,6 @@ class Handoff(SubCommand):
         handoff_result = batch.get_result('handoff')
 
         if handoff_result:
-            print 'Device registered successfully'
+            print('Device registered successfully')
         else:
-            print 'There was a problem registering your device'
+            print('There was a problem registering your device')

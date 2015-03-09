@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import getpass
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.app.subcommands.build import do_build
@@ -49,7 +52,7 @@ class Publish(SubCommand):
             try:
                 firmware_contents = src_fs.getcontents(firmware_path, 'rb')
             except ResourceNotFoundError:
-                print "{} is missing, you can build firmware with 'dataplicity build'".format(firmware_path)
+                print("{} is missing, you can build firmware with 'dataplicity build'".format(firmware_path))
                 return -1
 
         firmware_b64 = b64encode(firmware_contents)
@@ -63,7 +66,7 @@ class Publish(SubCommand):
 
         ui = firmware.get_ui(fsopendir(dataplicity_path))
 
-        print "uploading firmware..."
+        print("uploading firmware...")
         with remote.batch() as batch:
             batch.call_with_id('auth_result',
                                'device.check_auth',
@@ -85,11 +88,11 @@ class Publish(SubCommand):
             publish_result = batch.get_result('publish_result')
         except JSONRPCError as e:
             if e.code == ErrorCodes.FIRMWARE_EXISTS:
-                print "Firmware {:010} exists!\nBump the version number in firmware.conf or use --replace to overwrite".format(version)
+                print("Firmware {:010} exists!\nBump the version number in firmware.conf or use --replace to overwrite".format(version))
                 return -1
             raise
 
-        print "visit {} to manage firmware".format(publish_result['url'])
+        print("visit {} to manage firmware".format(publish_result['url']))
 
         if args.bump:
             with fsopendir(dataplicity_path) as src_fs:

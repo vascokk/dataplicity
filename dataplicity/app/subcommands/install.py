@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+
 from dataplicity.app.subcommand import SubCommand
 from dataplicity import firmware
 from dataplicity import constants
@@ -27,7 +30,7 @@ class Install(SubCommand):
         version = firmware.get_version(firmware_fs)
         device_class = firmware_conf.get('device', 'class')
 
-        print "installing firmware {:010} for device class {}...".format(version, device_class)
+        print("installing firmware {:010} for device class {}...".format(version, device_class))
 
         if not os.path.exists(args.install_path):
             try:
@@ -35,7 +38,7 @@ class Install(SubCommand):
             except:
                 raise
             else:
-                print "created {}".format(args.install_path)
+                print("created {}".format(args.install_path))
 
         dst_fs = OSFS(args.install_path)
         install_path = firmware.install(device_class,
@@ -43,4 +46,4 @@ class Install(SubCommand):
                                         firmware_fs,
                                         dst_fs)
 
-        print "installed {} to {}".format(args.path, install_path)
+        print("installed {} to {}".format(args.path, install_path))

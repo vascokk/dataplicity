@@ -1,3 +1,7 @@
+
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.client import settings
 from dataplicity import jsonrpc
@@ -36,7 +40,7 @@ class Manage(SubCommand):
         url = batch.get_result('url_result')
 
         if self.args.url_only:
-            print url
+            print(url)
         else:
             import webbrowser
             webbrowser.open(url)

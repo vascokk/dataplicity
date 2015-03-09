@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import logging
 import datetime
 from time import mktime
@@ -36,9 +39,7 @@ class Sample(SubCommand):
                                sampler_name=sampler,
                                samples=[[timestamp, value]])
         if not batch.get_result('auth_result'):
-            print "Unable to authenticate with the Dataplicity server, check username and password"
+            print("Unable to authenticate with the Dataplicity server, check username and password")
             return -1
         if batch.get_result('add_sample_result'):
-            print "sample sent"
-
-
+            print("sample sent")

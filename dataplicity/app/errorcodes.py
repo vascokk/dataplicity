@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 """JSONRPC error codes. Mirrors ErrorCodes from dataplicityapi/api"""
 
 

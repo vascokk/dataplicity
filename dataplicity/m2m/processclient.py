@@ -7,6 +7,8 @@ A test for remote process
 from __future__ import unicode_literals
 from __future__ import print_function
 
+from dataplicity.compat import raw_input
+
 import sys
 
 import logging

@@ -271,8 +271,7 @@ class D(SubCommand):
                     dataplicity_daemon = self.make_daemon()
                     dataplicity_daemon.start()
 
-
-        except Exception, e:
+        except Exception as e:
             from traceback import print_exc
             print_exc(e)
             return -1

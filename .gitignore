@@ -4,6 +4,7 @@ __firmware__
 .buildinfo
 .doctrees
 .idea
+.tox
 *.pyc
 *.egg-info
 dist/

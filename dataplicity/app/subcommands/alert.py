@@ -33,9 +33,9 @@ class Alert(SubCommand):
                                title=title,
                                text=text)
         if not batch.get_result('auth_result'):
-            print "Unable to authenticate with the Dataplicity server, check username and password"
+            print("Unable to authenticate with the Dataplicity server, check username and password")
             return -1
         if batch.get_result('add_alert_result'):
-            print "alert sent"
+            print("alert sent")
 
 

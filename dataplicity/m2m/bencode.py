@@ -1,11 +1,10 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 """
 Encode / Decode Bencode (http://en.wikipedia.org/wiki/Bencode)
 
 """
-
-from __future__ import unicode_literals
-from __future__ import print_function
-
 
 import io
 import sys

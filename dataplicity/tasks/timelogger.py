@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from dataplicity.client.task import Task
 
 from datetime import datetime

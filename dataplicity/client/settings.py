@@ -1,9 +1,18 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from __future__ import with_statement
 
 from dataplicity import errors
+from dataplicity.compat import PY2, text_type
 
-import ConfigParser
-from ConfigParser import SafeConfigParser
+if PY2:
+    import ConfigParser as configparser
+    from ConfigParser import SafeConfigParser
+else:
+    import configparser
+    from configparser import SafeConfigParser
+
 from os.path import abspath, normpath, exists, expanduser, join, dirname, basename
 
 
@@ -43,20 +52,31 @@ class DPConfigParser(SafeConfigParser):
     def get(self, section, key, default=Ellipsis):
         try:
             return SafeConfigParser.get(self, section, key)
-        except ConfigParser.Error:
+        except configparser.Error:
             if default is Ellipsis:
                 raise errors.ConfigError("required key [{}]/{} is missing from conf file".format(section, key))
             return default
 
-    def get_path(self, section, key):
+    def has_setting(self, section, key):
+        try:
+            SafeConfigParser.get(self, section, key)
+        except configparser.Error:
+            return False
+        else:
+            return True
+
+    def get_path(self, section, key, default=Ellipsis):
         """Gets a path relative to this location of the conf files"""
+        if not self.has_setting(section, key):
+            if default is not Ellipsis:
+                return default
         path = self.get(section, key)
         path = abspath(normpath(join(dirname(self.path), path)))
         return path
 
     def get_bool(self, section, key, default=Ellipsis):
         setting = self.get(section, key, default=default)
-        if isinstance(setting, basestring):
+        if isinstance(setting, text_type):
             return setting.lower() in ('1', 'y', 'yes', 'true')
         else:
             return bool(setting)
@@ -160,7 +180,7 @@ def read(*paths):
         if not exists(path):
             continue
         try:
-            with open(path, 'rb') as conf_file:
+            with open(path, 'rt') as conf_file:
                 cfg.path = path
                 cfg.readfp(conf_file, filename=path)
         except IOError:
@@ -208,8 +228,8 @@ def parse_list(s):
 
 if __name__ == "__main__":
     cfg = read("./test.conf")
-    print repr(cfg.get_list('middle earth', 'hobbits'))
-    print cfg.get_list('middle earth', 'evil')
+    print(repr(cfg.get_list('middle earth', 'hobbits')))
+    print(cfg.get_list('middle earth', 'evil'))
 
     import sys
     cfg.write(sys.stdout)

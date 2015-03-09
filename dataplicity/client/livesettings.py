@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 """
 Settings synced with the server
 
@@ -6,7 +9,7 @@ Settings synced with the server
 from dataplicity.client.settings import read_contents
 from dataplicity import atomicwrite
 
-from cStringIO import StringIO
+from io import BytesIO
 import os
 from os.path import join
 from threading import RLock
@@ -29,15 +32,18 @@ class LiveSettingsManager(object):
 
     @classmethod
     def init_from_conf(cls, client, conf):
-        settings_path = conf.get_path('device', 'settings')
+        settings_path = conf.get_path('device', 'settings', None)
         device_class = conf.get('device', 'class')
-        manager = LiveSettingsManager(settings_path, device_class)
-        for section, name in conf.qualified_sections('settings'):
-            if not conf.get_bool(section, 'enabled', True):
-                continue
-            defaults_path = conf.get_path(section, 'defaults')
-            manager.add(name, defaults_path)
-        manager._init()
+        if settings_path is None:
+            manager = LiveSettingsManager(None, device_class)
+        else:
+            manager = LiveSettingsManager(settings_path, device_class)
+            for section, name in conf.qualified_sections('settings'):
+                if not conf.get_bool(section, 'enabled', True):
+                    continue
+                defaults_path = conf.get_path(section, 'defaults')
+                manager.add(name, defaults_path)
+            manager._init()
         return manager
 
     def _init(self):
@@ -173,7 +179,7 @@ class LiveSettings(object):
 
     def export(self):
         """Write the settings objects to a string"""
-        f = StringIO()
+        f = BytesIO()
         self.settings.write(f)
         contents = f.getvalue()
         f.close()

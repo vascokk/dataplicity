@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 """
 Creates a database of timestamped events.
 
@@ -289,7 +292,7 @@ if __name__ == "__main__":
     timelines.new_timeline('test')
 
     timeline = timelines.get_timeline('test')
-    print timeline
+    print(timeline)
     timeline.add_event('TEXT', text="Hello, World!", title="Greeting")
 
     with timeline.new_event('TEXT', text="Frodo", title="Hobbits") as event:
