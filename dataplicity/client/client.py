@@ -127,7 +127,11 @@ class Client(object):
             else:
                 self.m2m = None
 
-            self.rc = RCManager.init_from_conf(self, conf)
+            if self.m2m:
+                self.rc = RCManager.init_from_conf(self, conf)
+            else:
+                self.rc = None
+
             self.tasks = TaskManager.init_from_conf(self, conf)
             self.samplers = SamplerManager.init_from_conf(self, conf)
             self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
