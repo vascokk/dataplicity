@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
-import urllib
+from moya.compat import urlopen
+
 import json
 
 
@@ -148,11 +149,11 @@ class JSONRPC(object):
         return self.call_id
 
     def _send(self, call):
-        call_json = json.dumps(call)
+        call_json = json.dumps(call).encode('utf-8')
         url_file = None
         try:
-            url_file = urllib.urlopen(self.url, call_json)
-            response_json = url_file.read()
+            url_file = urlopen(self.url, call_json)
+            response_json = url_file.read().decode('utf-8')
         finally:
             if url_file is not None:
                 url_file.close()

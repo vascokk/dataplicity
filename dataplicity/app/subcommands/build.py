@@ -44,4 +44,3 @@ class Build(SubCommand):
         dataplicity_path = dirname(conf_path)
 
         do_build(dataplicity_path)
-

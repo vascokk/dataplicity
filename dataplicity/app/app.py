@@ -52,7 +52,7 @@ class App(object):
     def __init__(self):
         self._conf = None
         self.subcommands = {name: cls(self)
-                            for name, cls in SubCommandMeta.registry.iteritems()}
+                            for name, cls in SubCommandMeta.registry.items()}
 
     def _get_argparser(self):
         parser = argparse.ArgumentParser("dataplicity",

@@ -39,5 +39,6 @@ setup(name='dataplicity',
                         'fs>=0.5.0',
                         'setuptools',
                         'enum34',
-                        'docutils']
+                        'docutils',
+                        'lockfile']
       )

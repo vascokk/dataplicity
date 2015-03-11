@@ -7,6 +7,7 @@ Creates a database of timestamped events.
 """
 
 from dataplicity import constants
+from dataplicity.compat import text_type, itervalues
 
 import os.path
 from os.path import splitext
@@ -168,7 +169,7 @@ class TimelineManager(object):
         return bool(self.timelines)
 
     def __iter__(self):
-        return self.timelines.itervalues()
+        return itervalues(self.timelines)
 
     @classmethod
     def init_from_conf(cls, client, conf):
@@ -236,7 +237,7 @@ class Timeline(object):
         if hasattr(file, 'getvalue'):
             bytes = file.getvalue()
         elif file is not None:
-            if isinstance(file, basestring):
+            if isinstance(file, text_type):
                 with open(file, 'rb') as f:
                     bytes = f.read()
             else:
@@ -252,7 +253,7 @@ class Timeline(object):
         events = []
         for event_filename in self.fs.listdir(wildcard="*.json"):
             with self.fs.open(event_filename, 'rb') as f:
-                event = loads(f.read())
+                event = loads(f.read().decode('utf-8'))
                 events.append(event)
         if sort:
             # sort by timestamp
@@ -280,7 +281,7 @@ class Timeline(object):
         if hasattr(event, 'to_data'):
             event = event.to_data()
         event['event_id'] = event_id
-        event_json = dumps(event, indent=4)
+        event_json = dumps(event, indent=4).encode('utf-8')
         filename = "{}.json".format(event_id)
         with self.fs.open(filename, 'wb') as f:
             f.write(event_json)

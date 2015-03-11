@@ -4,7 +4,7 @@ from __future__ import print_function
 from dataplicity import errors
 from dataplicity.client import importer
 from dataplicity.client.settings import DPConfigParser
-from dataplicity.compat import PY2
+from dataplicity.compat import PY2, itervalues
 
 from threading import Thread, Event, RLock, current_thread
 from time import time
@@ -160,12 +160,12 @@ class TaskManager(object):
     def send_signal(self, name, *args, **kwargs):
         """Send a signal, that may map to one or more commands on a task"""
         self.log.debug("sending signal '{}' with args {!r}, {!r}".format(name, args, kwargs))
-        for task in self._tasks.itervalues():
+        for task in itervalues(self._tasks):
             task._check_signals(name, None, *args, **kwargs)
 
     def send_signal_from(self, name, sender, *args, **kwargs):
         self.log.debug("sending signal '{}' from {} with args {!r}, {!r}".format(name, "'{}'".format(sender) if sender else None, args, kwargs))
-        for task in self._tasks.itervalues():
+        for task in itervalues(self._tasks):
             task._check_signals(name, sender, *args, **kwargs)
 
     __getitem__ = get_task
