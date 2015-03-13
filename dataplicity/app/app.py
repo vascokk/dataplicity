@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import argparse
 import sys
 import os
@@ -49,7 +52,7 @@ class App(object):
     def __init__(self):
         self._conf = None
         self.subcommands = {name: cls(self)
-                            for name, cls in SubCommandMeta.registry.iteritems()}
+                            for name, cls in SubCommandMeta.registry.items()}
 
     def _get_argparser(self):
         parser = argparse.ArgumentParser("dataplicity",

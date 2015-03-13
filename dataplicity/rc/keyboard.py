@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+from __future__ import print_function
+
 from .device import Device
 
 import weakref
@@ -19,11 +21,9 @@ class Key(object):
 
     def on_down(self):
         self.pressed = True
-        #log.debug('KEY %s DOWN', self.code)
 
     def on_up(self):
         self.pressed = False
-        #log.debug('KEY %s UP', self.code)
 
 
 class KeyboardInstance(object):

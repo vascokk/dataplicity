@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import weakref
 
 from .keyboard import Keyboard
@@ -16,18 +19,21 @@ class RCManager(object):
     """Manage remote controls (keyboards, buttons etc) over m2m"""
 
     def __init__(self, m2m):
-        self._m2m = weakref.ref(m2m)
+        if m2m is None:
+            self._m2m = None
+        else:
+            self._m2m = weakref.ref(m2m)
         self.keyboards = {}
         self.button_groups = {}
         self.bindings = {}
 
     @property
     def m2m(self):
-        return self._m2m()
+        return self._m2m() if self._m2m is not None else None
 
     @property
     def client(self):
-        return self.m2m.client
+        return self.m2m.client if self.m2m else None
 
     def __repr__(self):
         return "<rcmanager>"

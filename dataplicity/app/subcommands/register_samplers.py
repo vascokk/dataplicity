@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+
 from dataplicity.app.subcommand import SubCommand
 
 import io
@@ -40,7 +43,7 @@ class RegisterSamplers(SubCommand):
             except IOError:
                 error_msg = 'UI file "{}" could not be read'.format(ui_path)
                 log.exception(error_msg)
-                print error_msg
+                print(error_msg)
                 return -1
         else:
             # No initial UI xml suplied. Fine, not an error
@@ -58,7 +61,7 @@ class RegisterSamplers(SubCommand):
                                    "device.create_samplers",
                                    sampler_names=samplers)
             if not batch.get_result('auth_result'):
-                print "Unable to authenticate with the Dataplicity server, check username and password"
+                print("Unable to authenticate with the Dataplicity server, check username and password")
                 return -1
             batch.get_result('create_samplers_result')
 
@@ -72,4 +75,4 @@ class RegisterSamplers(SubCommand):
                                'device.get_manage_url')
         url = batch.get_result('url_result')
 
-        print "Run 'dataplicity manage' or visit {} to manage your device".format(url)
+        print("Run 'dataplicity manage' or visit {} to manage your device".format(url))

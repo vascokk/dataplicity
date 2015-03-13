@@ -249,7 +249,8 @@ class CommandAddRoutePacket(M2MPacket):
                   ('port1', int_types),
                   ('node2', bytes),
                   ('port2', int_types),
-                  ('requester', bytes)]
+                  ('requester', bytes),
+                  ('forwarded', int_types)]
 
 
 class CommandSendInstructionPacket(M2MPacket):

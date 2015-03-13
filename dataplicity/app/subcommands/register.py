@@ -1,6 +1,7 @@
 from dataplicity.app.subcommand import SubCommand
-from dataplicity.client import Client
+#from dataplicity.client import Client
 
+import sys
 import io
 from os.path import join, dirname, normpath
 
@@ -46,13 +47,13 @@ class Register(SubCommand):
             except IOError:
                 error_msg = 'UI file "{}" could not be read'.format(ui_path)
                 log.exception(error_msg)
-                print error_msg
+                print(error_msg)
                 return -1
         else:
             # No initial UI xml suplied. Fine, not an error
             ui = None
 
-        print "Registering device..."
+        print("Registering device...")
         result = remote.call("device.register",
                              auth_token=client.auth_token,
                              name=name,
@@ -60,7 +61,7 @@ class Register(SubCommand):
                              device_class_name=device_class_name,
                              ui=ui,
                              path=path)
-        print result["message"]
+        print(result["message"])
 
         samplers = client.samplers.enumerate_samplers()
         if samplers:
@@ -74,7 +75,7 @@ class Register(SubCommand):
                                    "device.create_samplers",
                                    sampler_names=samplers)
             if not batch.get_result('auth_result'):
-                print "Unable to authenticate with the Dataplicity server, check username and password"
+                print("Unable to authenticate with the Dataplicity server, check username and password")
                 return -1
             batch.get_result('create_samplers_result')
 
@@ -88,4 +89,4 @@ class Register(SubCommand):
                                'device.get_manage_url')
         url = batch.get_result('url_result')
 
-        print "Run 'dataplicity manage' or visit {} to manage your device".format(url)
+        print("Run 'dataplicity manage' or visit {} to manage your device".format(url))

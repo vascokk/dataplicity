@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import json
 from random import randint
 from dataplicity.client.task import Task, onsignal
-from dataplicity import atomicwrite
 from dataplicity.errors import ConfigError
 
 from io import BytesIO

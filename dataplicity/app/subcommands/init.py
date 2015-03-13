@@ -2,10 +2,14 @@ from __future__ import unicode_literals
 import base64
 
 from dataplicity.app.subcommand import SubCommand
-from dataplicity.app.conf_templates import (conf_template, rpi_conf_template,
-                                            gpio_ini_template, rpi_camera_template, linux_conf_template)
+from dataplicity.app.conf_templates import (conf_template,
+                                            rpi_conf_template,
+                                            gpio_ini_template,
+                                            rpi_camera_template,
+                                            linux_conf_template)
 from dataplicity.client.serial import get_default_serial
 from dataplicity import constants
+from dataplicity.compat import raw_input
 
 import sys
 import os
@@ -116,7 +120,7 @@ class Init(SubCommand):
                     return -1
         else:
             if system in ['rpi', 'linux']:
-                print 'authenticating {}'.format(system)
+                print('authenticating {}'.format(system))
                 auth_token, serial = remote.call('device.auth_rpi',
                                                  usercode=args.usercode)
             else:
@@ -199,7 +203,7 @@ class Init(SubCommand):
             if not os.path.exists(path):
                 try:
                     os.makedirs(path)
-                    os.chmod(path, 0777)
+                    os.chmod(path, 0o777)
                 except OSError:
                     sys.stderr.write('Unable to create directory {} ({})\n'.format(constants.SETTINGS_PATH, e))
                     return -1

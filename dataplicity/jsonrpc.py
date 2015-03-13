@@ -1,4 +1,8 @@
-import urllib
+from __future__ import unicode_literals
+from __future__ import print_function
+
+from moya.compat import urlopen
+
 import json
 
 
@@ -145,11 +149,11 @@ class JSONRPC(object):
         return self.call_id
 
     def _send(self, call):
-        call_json = json.dumps(call)
+        call_json = json.dumps(call).encode('utf-8')
         url_file = None
         try:
-            url_file = urllib.urlopen(self.url, call_json)
-            response_json = url_file.read()
+            url_file = urlopen(self.url, call_json)
+            response_json = url_file.read().decode('utf-8')
         finally:
             if url_file is not None:
                 url_file.close()
@@ -211,24 +215,24 @@ class JSONRPC(object):
 if __name__ == "__main__":
 
     client = JSONRPC("http://127.0.0.1:8000/dataplicityapi/jsonrpc/")
-    print client.call("system.get_motd")
-    print client.call("hello", who="Will")
-    print client.call("system.get_time")
+    print(client.call("system.get_motd"))
+    print(client.call("hello", who="Will"))
+    print(client.call("system.get_time"))
 
     with client.batch() as batch:
         batch.call("system.get_time")
         batch.call_with_id("greet Sam", "greet", who="Sam")
         batch.call_with_id("greet Frodo", "greet", who="Frodo")
         batch.call_with_id("greet Bilbo", "greet", whso="Bilbo")
-    print batch.results
-    print batch.errors
+    print(batch.results)
+    print(batch.errors)
     try:
-        print client.call("test_exception")
+        print(client.call("test_exception"))
     except Exception as e:
-        print e
+        print(e)
 
     try:
-        print client.call("test_error")
+        print(client.call("test_error"))
     except Exception as e:
-        print e
+        print(e)
 

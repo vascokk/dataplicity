@@ -1,12 +1,19 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from dataplicity import errors
 from dataplicity.client import importer
 from dataplicity.client.settings import DPConfigParser
+from dataplicity.compat import PY2, itervalues
 
-from Queue import Queue, Empty
 from threading import Thread, Event, RLock, current_thread
 from time import time
 from collections import defaultdict
-import importlib
+
+if PY2:
+    from Queue import Queue, Empty
+else:
+    from queue import Queue, Empty
 
 import os.path
 import sys
@@ -153,12 +160,12 @@ class TaskManager(object):
     def send_signal(self, name, *args, **kwargs):
         """Send a signal, that may map to one or more commands on a task"""
         self.log.debug("sending signal '{}' with args {!r}, {!r}".format(name, args, kwargs))
-        for task in self._tasks.itervalues():
+        for task in itervalues(self._tasks):
             task._check_signals(name, None, *args, **kwargs)
 
     def send_signal_from(self, name, sender, *args, **kwargs):
         self.log.debug("sending signal '{}' from {} with args {!r}, {!r}".format(name, "'{}'".format(sender) if sender else None, args, kwargs))
-        for task in self._tasks.itervalues():
+        for task in itervalues(self._tasks):
             task._check_signals(name, sender, *args, **kwargs)
 
     __getitem__ = get_task
@@ -491,40 +498,41 @@ if __name__ == "__main__":
             self.count = 0
 
         def poll(self):
-            print self.count
+            print(self.count)
             self.count += 1
 
         @command
         def wait(self):
             from time import sleep
-            print "ok, waiting 3 seconds..."
+            print("ok, waiting 3 seconds...")
             sleep(3)
-            print "done, waiting"
+            print("done, waiting")
 
         @onsignal("test")
         def test_signal(self, text):
-            print "Got signal: %s" % text
+            print("Got signal: %s" % text)
 
         @onsignal("test")
         def reverser(self, text):
-            print text[::-1]
+            print(text[::-1])
 
     class Capitalizer(Task):
 
         @onsignal("test")
         def caps(self, text):
-            print text.upper()
+            print(text.upper())
 
         def on_shutdown(self):
             from time import sleep
-            print "Shutting down capitalizer"
+            print("Shutting down capitalizer")
             sleep(3)
-            print "Capitalizer has shut down"
+            print("Capitalizer has shut down")
 
     tasks = TaskManager()
     tasks.add_task("counter", SecondCounter())
     tasks.add_task("caps", Capitalizer())
     tasks.start()
+    from dataplicity.compat import raw_input
     try:
         while 1:
             input = raw_input(":-) ")

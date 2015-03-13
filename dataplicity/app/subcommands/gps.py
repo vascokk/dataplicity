@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import logging
 from dataplicity.app.subcommand import SubCommand
 
@@ -24,7 +27,7 @@ class GPS(SubCommand):
             lat = float(lat)
             lng = float(lng)
         except ValueError:
-            print "lat and lng must be float values"
+            print("lat and lng must be float values")
             return -1
 
         with remote.batch() as batch:
@@ -38,9 +41,7 @@ class GPS(SubCommand):
                                lat=lat,
                                lng=lng)
         if not batch.get_result('auth_result'):
-            print "Unable to authenticate with the Dataplicity server, check username and password"
+            print("Unable to authenticate with the Dataplicity server, check username and password")
             return -1
         if batch.get_result('add_gps_result'):
-            print "gps coords sent"
-
-
+            print("gps coords sent")

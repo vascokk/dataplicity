@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from dataplicity.client import settings, serial
 from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
@@ -10,18 +13,21 @@ from dataplicity.jsonrpc import JSONRPC
 from dataplicity import constants
 from dataplicity import firmware
 
+
 from fs.zipfs import ZipFS
 from fs.osfs import OSFS
 
-from urllib2 import urlopen, HTTPError
+#from urllib2 import urlopen, HTTPError
+from dataplicity.compat import urlopen, HTTPError, xrange
+
 from time import time, sleep
 import os
 import os.path
 import logging
 import random
 from base64 import b64decode
-from cStringIO import StringIO
 from threading import Lock, Event
+from io import BytesIO
 
 # Number of seconds to wait between failed connections
 CONNECT_WAIT = 5
@@ -96,7 +102,7 @@ class Client(object):
 
             self.firmware_conf = settings.read_default(os.path.join(conf_dir, 'firmware.conf'))
             self.current_firmware_version = int(self.firmware_conf.get('firmware', 'version', 1))
-            self.firmware_path = conf.get('firmware', 'path')
+            self.firmware_path = conf.get('firmware', 'path', None)
             self.log.info('running firmware {:010}'.format(self.current_firmware_version))
             self.rpc_url = conf.get('server',
                                     'url',
@@ -426,7 +432,7 @@ class Client(object):
         version = fw['version']
 
         firmware_bin = b64decode(fw['firmware'])
-        firmware_file = StringIO(firmware_bin)
+        firmware_file = BytesIO(firmware_bin)
         firmware_fs = ZipFS(firmware_file)
 
         dst_fs = OSFS(constants.FIRMWARE_PATH, create=True)

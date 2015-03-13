@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.client import settings
 from dataplicity import constants
@@ -14,7 +17,7 @@ import sys
 import os
 import os.path
 from base64 import b64decode
-from cStringIO import StringIO
+from io import BytesIO
 
 
 class Deploy(SubCommand):
@@ -38,7 +41,7 @@ class Deploy(SubCommand):
             sys.stderr.write("please run 'dataplicity init' first\n")
             return -1
 
-        print "reading conf from {}".format(conf_path)
+        print("reading conf from {}".format(conf_path))
         cfg = settings.read(conf_path)
         serial = cfg.get('device', 'serial')
         auth_token = cfg.get('device', 'auth')
@@ -46,7 +49,7 @@ class Deploy(SubCommand):
 
         remote = jsonrpc.JSONRPC(server_url)
 
-        print "downloading firmware..."
+        print("downloading firmware...")
         with remote.batch() as batch:
             batch.call_with_id('register_result',
                                'device.register',
@@ -71,7 +74,7 @@ class Deploy(SubCommand):
         version = fw['version']
 
         firmware_bin = b64decode(fw['firmware'])
-        firmware_file = StringIO(firmware_bin)
+        firmware_file = BytesIO(firmware_bin)
         firmware_fs = ZipFS(firmware_file)
 
         dst_fs = OSFS(constants.FIRMWARE_PATH, create=True)
@@ -82,7 +85,7 @@ class Deploy(SubCommand):
                          dst_fs)
 
         fw_path = dst_fs.getsyspath('/')
-        print "installed firmware {} to {}".format(version, fw_path)
+        print("installed firmware {} to {}".format(version, fw_path))
 
         firmware.activate(device_class, version, dst_fs)
-        print "activated {}".format(version)
+        print("activated {}".format(version))

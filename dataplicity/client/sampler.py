@@ -88,7 +88,7 @@ class Sampler(object):
         self.samples_path = join(path, 'samples.smp')
         self.samples_snapshot_path = join(path, 'samples.smp.snapshot')
 
-        sample_format = self.sample_format = b'<' + time_format + value_format
+        sample_format = self.sample_format = '<' + time_format + value_format
         sample_struct = self.sample_struct = struct.Struct(sample_format)
         self.sample_pack = sample_struct.pack
         self.sample_unpack = sample_struct.unpack
@@ -105,14 +105,14 @@ class Sampler(object):
     def header(self):
         """Header is text based, the rest of the file is binary. No validation is done at the moment,
         but this format is future proofed for expansion."""
-        return "sampler v1\n" + self.sample_format + '\n'
+        return b"sampler v1\n" + self.sample_format.encode('utf-8') + b'\n'
 
     @classmethod
     def _read_header(self, f):
         """Read the sampler header from a file object"""
         f.readline()  # First line reserved for expansion
         # Second line contains struct format
-        return f.readline().rstrip('\n')
+        return f.readline().rstrip(b'\n')
 
     @property
     def full(self):
@@ -132,7 +132,7 @@ class Sampler(object):
         if samples_path is None:
             samples_path = self.samples_path
         with open(samples_path, 'rb') as f:
-            sample_format = self._read_header(f)
+            sample_format = self._read_header(f).decode('utf-8')
             sample_struct = struct.Struct(sample_format)
             sample_size = sample_struct.size
             read_sample = partial(f.read, sample_size)
@@ -187,6 +187,6 @@ if __name__ == "__main__":
     sampler.add_sample(time(), 1.4)
     sampler.add_sample(time(), 1.7)
     sampler.add_sample(time(), 1.10)
-    print sampler.read_samples()
+    print(sampler.read_samples())
     sampler.reset()
-    print sampler.read_samples()
+    print(sampler.read_samples())

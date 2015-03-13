@@ -1,10 +1,11 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 """
 Dispatches incoming packets
 
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
 
 from dataplicity.compat import text_type
 

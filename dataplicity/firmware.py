@@ -1,21 +1,27 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from dataplicity import constants
 from dataplicity.client import settings
+from dataplicity.compat import PY2
 
-from ConfigParser import SafeConfigParser
+if PY2:
+    from ConfigParser import SafeConfigParser
+else:
+    from configparser import SafeConfigParser
 
 from fs.utils import copyfile, copydir
 from fs.errors import ResourceNotFoundError
-from fs.tempfs import TempFS
 from fs.zipfs import ZipFS
 from fs.osfs import OSFS
 import zipfile
 
 import os
 import base64
-from cStringIO import StringIO
 from os.path import basename, join
 from fnmatch import fnmatch
 from logging import getLogger
+from io import BytesIO
 
 log = getLogger('dataplicity')
 
@@ -66,7 +72,7 @@ def bump(src_fs):
     cfg.set('firmware', 'version', str(new_version))
     with src_fs.open('firmware.conf', 'wb') as f:
         cfg.write(f)
-    print "firmware version bumped to {}".format(new_version)
+    print("firmware version bumped to {}".format(new_version))
     return new_version
 
 
@@ -115,7 +121,7 @@ def install_encoded(device_class, version, firmware_b64, activate_firmware=True)
     # decode from b64
     firmware_bin = base64.b64decode(firmware_b64)
     # Make a file-like object
-    firmware_file = StringIO(firmware_bin)
+    firmware_file = BytesIO(firmware_bin)
     # Open zip
     firmware_fs = ZipFS(firmware_file)
     # Open firmware dir

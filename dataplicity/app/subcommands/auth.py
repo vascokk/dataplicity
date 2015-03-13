@@ -1,6 +1,6 @@
 from dataplicity.app.subcommand import SubCommand
 from dataplicity.client.serial import get_default_serial
-from dataplicity.constants import *
+from dataplicity.constants import SERVER_URL
 
 
 class Auth(SubCommand):
@@ -28,4 +28,4 @@ class Auth(SubCommand):
                                  serial=serial,
                                  username=args.user,
                                  password=args.password)
-        print auth_token
+        print(auth_token)

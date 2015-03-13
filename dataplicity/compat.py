@@ -1,15 +1,19 @@
 """
 Python 2/3 compatibility layer
 
+Base on the following post:
+
 http://lucumr.pocoo.org/2013/5/21/porting-to-python-3-redux/
 
 """
 
 import sys
 
+# Use these flags for code for a particular PY version
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
+# Basic types and builtine
 if PY2:
     text_type = unicode
     binary_type = str
@@ -18,6 +22,9 @@ if PY2:
     unichr = unichr
     int_types = (int, long)
     py2bytes = lambda s: s.encode('utf-8')
+    number_types = (int, long, float)
+    next_method_name = "next"
+    raw_input = raw_input
 else:
     text_type = str
     binary_type = bytes
@@ -26,8 +33,11 @@ else:
     unichr = chr
     int_types = (int,)
     py2bytes = lambda s: s
+    number_types = (int, float)
+    next_method_name = "__next__"
+    raw_input = input
 
-
+# Use these functions for iterating over keys / values / items
 if PY2:
     iterkeys = lambda d: d.iterkeys()
     itervalues = lambda d: d.itervalues()
@@ -38,25 +48,29 @@ else:
     iteritems = lambda d: iter(d.items())
 
 
+# These functions have been re-arranges in PY3
 if PY2:
     import urlparse
     from urlparse import urlparse, parse_qs, urlunparse
     from urllib import urlencode, quote
     from itertools import izip_longest as zip_longest
-    #import cookie
+    from urllib2 import urlopen, HTTPError
 else:
     from urllib.parse import urlparse, parse_qs, urlunparse
     from urllib.parse import urlencode, quote
     from itertools import zip_longest
-    #from http import cookies as cookie
+    from urllib.request import urlopen, HTTPError
 
 
+# pickle is the C version on PY3
 if PY2:
     import cPickle as pickle
 else:
     import pickle
 
 
+# For classes that convert to a unicode string, return unicode from __str__
+# and decorate with this function
 if PY2:
     def implements_to_string(cls):
         cls.__unicode__ = cls.__str__
@@ -65,7 +79,8 @@ if PY2:
 else:
     implements_to_string = lambda x: x
 
-
+# To implement an iterator, call the next method __next__ and decorate the class
+# with the following
 if PY2:
     def implements_iterator(cls):
         cls.next = cls.__next__
@@ -74,6 +89,7 @@ if PY2:
 else:
     implements_iterator = lambda x: x
 
+# If a class converts to a bool, call the method __bool__, and decorate with this function
 if PY2:
     def implements_bool(cls):
         cls.__nonzero__ = cls.__bool__
@@ -84,16 +100,20 @@ else:
         return cls
 
 
-if PY2:
-    number_types = (int, long, float)
-else:
-    number_types = (int, float)
-
-if PY2:
-    next_method_name = "next"
-else:
-    next_method_name = "__next__"
-
+# Implement metaclasses with the with_metaclass function
+#
+#
+#    class BaseForm(object):
+#        """the metaclass"""
+#        pass
+#
+#    class FormType(type):
+#        """class functionality"""
+#        pass
+#
+#    class Form(with_metaclass(FormType, BaseForm)):
+#        """define class with metaclass"
+#        pass
 
 def with_metaclass(meta, *bases):
     class metaclass(meta):

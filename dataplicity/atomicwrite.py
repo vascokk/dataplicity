@@ -1,4 +1,8 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import os
+import io
 
 
 class AtomicWriter(object):
@@ -11,7 +15,7 @@ class AtomicWriter(object):
         self._f = None
 
     def __enter__(self):
-        self._f = file(self.tmp_path, self.mode)
+        self._f = io.open(self.tmp_path, self.mode)
         return self._f
 
     def __exit__(self, exc_type, exc_value, traceback):

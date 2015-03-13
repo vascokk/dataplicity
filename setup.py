@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-from setuptools import setup
+
+from setuptools import setup, find_packages
 from dataplicity import __version__ as VERSION
 
 classifiers = [
@@ -19,14 +20,18 @@ setup(name='dataplicity',
       author_email='support@dataplicity.com',
       url='http://www.dataplicity.com',
       platforms=['any'],
-      packages=['dataplicity',
-                'dataplicity.app',
-                'dataplicity.app.subcommands',
-                'dataplicity.client',
-                'dataplicity.tasks',
-                'dataplicity.m2m',
-                'dataplicity.rc'
-                ],
+
+      packages=find_packages(),
+
+      # packages=['dataplicity',
+      #           'dataplicity.app',
+      #           'dataplicity.app.subcommands',
+      #           'dataplicity.client',
+      #           'dataplicity.tasks',
+      #           'dataplicity.m2m',
+      #           'dataplicity.rc'
+      #           ],
+
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['websocket-client',
@@ -34,5 +39,6 @@ setup(name='dataplicity',
                         'fs>=0.5.0',
                         'setuptools',
                         'enum34',
-                        'docutils']
+                        'docutils',
+                        'lockfile']
       )

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 """
 Settings synced with the server
 
@@ -5,8 +8,9 @@ Settings synced with the server
 
 from dataplicity.client.settings import read_contents
 from dataplicity import atomicwrite
+from dataplicity.compat import iteritems
 
-from cStringIO import StringIO
+from io import BytesIO
 import os
 from os.path import join
 from threading import RLock
@@ -29,15 +33,18 @@ class LiveSettingsManager(object):
 
     @classmethod
     def init_from_conf(cls, client, conf):
-        settings_path = conf.get_path('device', 'settings')
+        settings_path = conf.get_path('device', 'settings', None)
         device_class = conf.get('device', 'class')
-        manager = LiveSettingsManager(settings_path, device_class)
-        for section, name in conf.qualified_sections('settings'):
-            if not conf.get_bool(section, 'enabled', True):
-                continue
-            defaults_path = conf.get_path(section, 'defaults')
-            manager.add(name, defaults_path)
-        manager._init()
+        if settings_path is None:
+            manager = LiveSettingsManager(None, device_class)
+        else:
+            manager = LiveSettingsManager(settings_path, device_class)
+            for section, name in conf.qualified_sections('settings'):
+                if not conf.get_bool(section, 'enabled', True):
+                    continue
+                defaults_path = conf.get_path(section, 'defaults')
+                manager.add(name, defaults_path)
+            manager._init()
         return manager
 
     def _init(self):
@@ -73,25 +80,25 @@ class LiveSettingsManager(object):
     def jsonify(self):
         """Get the live settings in serialized form"""
         settings_serialized = {name: settings.jsonify()
-                               for name, settings in self._settings.iteritems()}
+                               for name, settings in iteritems(self._settings)}
         return settings_serialized
 
     @property
     def contents_map(self):
         """Gets a dict that maps the conf name on to the file contents"""
         return {name: conf.contents
-                for name, conf in self._settings.iteritems()}
+                for name, conf in iteritems(self._settings)}
 
     def startup(self, tasks):
         if self._settings:
-            for name, conf in self._settings.iteritems():
+            for name, conf in iteritems(self._settings):
                 settings = self._settings[name]
                 tasks.send_signal_from('settings_update', name, name, settings.settings)
 
     def update(self, conf_map, tasks):
         """Update new conf files"""
         with self.lock:
-            for name, conf in conf_map.iteritems():
+            for name, conf in iteritems(conf_map):
                 settings = self._settings[name]
                 settings.write(conf)
                 tasks.send_signal_from('settings_update', name, name, settings.settings)
@@ -173,7 +180,7 @@ class LiveSettings(object):
 
     def export(self):
         """Write the settings objects to a string"""
-        f = StringIO()
+        f = BytesIO()
         self.settings.write(f)
         contents = f.getvalue()
         f.close()

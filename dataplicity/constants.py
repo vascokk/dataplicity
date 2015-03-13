@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 SERVER_URL = "https://api.dataplicity.com"
 PUSH_URL = "https://sync.dataplicity.com/pushwait/"
 CONF_PATH = "/etc/dataplicity/dataplicity.conf"
