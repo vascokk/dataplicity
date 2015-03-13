@@ -10,7 +10,7 @@ class SubCommandMeta(type):
 
     def __new__(cls, name, base, attrs):
         new_class = type.__new__(cls, name, base, attrs)
-        if name != "SubCommand":
+        if name not in ("SubCommand", "SubCommandType"):
             cls.registry[name.lower()] = new_class
         return new_class
 
