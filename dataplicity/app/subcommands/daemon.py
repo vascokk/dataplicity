@@ -80,8 +80,6 @@ class Daemon(object):
 
         self.log.debug('starting dataplicity service with conf {}'.format(self.conf_path))
 
-        #server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         self.client.tasks.start()
         self.log.debug('ready')
         sync_push_thread = Thread(target=self._push_wait,
@@ -90,7 +88,11 @@ class Daemon(object):
                                         self.sync_now))
         sync_push_thread.daemon = True
         try:
-            sync_push_thread.start()
+            if self.client.m2m:
+                self.log.debug('pushwait long poll disabled')
+            else:
+                self.log.debug('starting pushwait long poll')
+                sync_push_thread.start()
 
             try:
                 while not self.exit_event.is_set():

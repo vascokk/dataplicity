@@ -108,7 +108,7 @@ class AutoConnectThread(threading.Thread):
                     continue
                 if identity != self._identity:
                     self._identity = identity
-            if self.exit_event.wait(5.0):
+            if self.exit_event.wait(1.0):
                 break
         self.manager.set_identity(None)
         with self.lock:
@@ -203,9 +203,11 @@ class M2MManager(object):
         return self.terminals.get(name, None)
 
     def on_instruction(self, sender, data):
-        log.debug("%r", data)
+        log.debug("instruction %r", data)
         action = data['action']
-        if action == 'open-terminal':
+        if action == 'sync':
+            self.client.sync()
+        elif action == 'open-terminal':
             port = data['port']
             terminal_name = data['name']
             self.open_terminal(terminal_name, port)

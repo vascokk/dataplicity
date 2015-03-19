@@ -73,7 +73,8 @@ class Channel(object):
 
     def on_data(self, data):
         """On incoming data"""
-
+        if self._closed:
+            log.debug('%s bytes from closed %r ignored', len(data), self)
         if self._data_callback is not None:
             self._data_callback(data)
         else:
@@ -240,6 +241,7 @@ class WSClient(ThreadedDispatcher):
         self.ready_event.set()
         self._started = False
         self._closed = True
+        self.identity = None
 
     def wait_ready(self, timeout=None):
         """Wait until the server is ready, and return identity"""
@@ -355,6 +357,7 @@ class WSClient(ThreadedDispatcher):
         if self.has_channel(channel_no):
             channel = self.get_channel(channel_no)
             channel.close()
+            del self.channels[channel_no]
 
     @expose(PacketType.notify_login_success)
     def on_login_success(self, packet_type, user):

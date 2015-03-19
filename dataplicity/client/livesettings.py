@@ -184,7 +184,6 @@ class LiveSettings(object):
         self.settings.write(f)
         contents = f.getvalue()
         f.close()
-        log.debug('written settings {}'.format(self))
         return contents
 
     def write(self, contents):
