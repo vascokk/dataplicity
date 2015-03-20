@@ -151,7 +151,8 @@ class M2MManager(object):
 
     @classmethod
     def init_from_conf(cls, client, conf):
-        enabled = conf.get('m2m', 'enabled', 'no') == 'yes'
+        # m2m is now on by default
+        enabled = conf.get('m2m', 'enabled', 'yes') == 'yes'
         if not enabled:
             log.debug('m2m is not enabled')
             return None
