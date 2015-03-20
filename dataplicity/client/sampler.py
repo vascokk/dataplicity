@@ -1,4 +1,8 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 from dataplicity import errors
+from dataplicity.compat import py2bytes
 
 from time import time
 import os
@@ -89,7 +93,7 @@ class Sampler(object):
         self.samples_snapshot_path = join(path, 'samples.smp.snapshot')
 
         sample_format = self.sample_format = '<' + time_format + value_format
-        sample_struct = self.sample_struct = struct.Struct(sample_format)
+        sample_struct = self.sample_struct = struct.Struct(py2bytes(sample_format))
         self.sample_pack = sample_struct.pack
         self.sample_unpack = sample_struct.unpack
         self.sample_size = sample_struct.size
@@ -133,7 +137,7 @@ class Sampler(object):
             samples_path = self.samples_path
         with open(samples_path, 'rb') as f:
             sample_format = self._read_header(f).decode('utf-8')
-            sample_struct = struct.Struct(sample_format)
+            sample_struct = struct.Struct(py2bytes(sample_format))
             sample_size = sample_struct.size
             read_sample = partial(f.read, sample_size)
             unpack = sample_struct.unpack
