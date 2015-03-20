@@ -23,15 +23,6 @@ setup(name='dataplicity',
 
       packages=find_packages(),
 
-      # packages=['dataplicity',
-      #           'dataplicity.app',
-      #           'dataplicity.app.subcommands',
-      #           'dataplicity.client',
-      #           'dataplicity.tasks',
-      #           'dataplicity.m2m',
-      #           'dataplicity.rc'
-      #           ],
-
       classifiers=classifiers,
       scripts=["dataplicity/app/dataplicity"],
       install_requires=['websocket-client',

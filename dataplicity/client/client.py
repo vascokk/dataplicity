@@ -17,7 +17,6 @@ from dataplicity import firmware
 from fs.zipfs import ZipFS
 from fs.osfs import OSFS
 
-#from urllib2 import urlopen, HTTPError
 from dataplicity.compat import urlopen, HTTPError, xrange
 
 from time import time, sleep
