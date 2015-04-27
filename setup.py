@@ -31,6 +31,7 @@ setup(name='dataplicity',
                         'setuptools',
                         'enum34',
                         'docutils',
-                        'lockfile'
+                        'lockfile',
+                        'six'
                         ]
       )
