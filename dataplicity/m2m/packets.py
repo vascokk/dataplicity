@@ -165,12 +165,14 @@ class RoutePacket(M2MPacket):
 
 class PingPacket(M2MPacket):
     """Ping packet to check connection"""
+    no_log = True
     type = PacketType.ping
     attributes = [('data', bytes)]
 
 
 class PongPacket(M2MPacket):
     """Response to Ping packet"""
+    no_log = True
     type = PacketType.pong
     attributes = [('data', bytes)]
 
