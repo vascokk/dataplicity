@@ -102,6 +102,7 @@ class Init(SubCommand):
         name = args.name_prefix + name
 
         from dataplicity import jsonrpc
+        sys.stdout.write('dataplicity api URL is {}\n'.format(args.server))
         remote = jsonrpc.JSONRPC(args.server)
 
         auto_device_subdomain = None

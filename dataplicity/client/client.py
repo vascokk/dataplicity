@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
-from dataplicity.client import settings, serial
+from dataplicity.client import settings, serial, tools
 from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
@@ -111,7 +111,7 @@ class Client(object):
                                      constants.PUSH_URL)
             self.remote = JSONRPC(self.rpc_url)
 
-            self.serial = conf.get('device', 'serial', None)
+            self.serial = tools.resolve_value(conf.get('device', 'serial', None))
             if self.serial is None:
                 self.serial = serial.get_default_serial()
                 self.log.info('auto generated device serial, %r', self.serial)
@@ -193,6 +193,7 @@ class Client(object):
 
         finally:
             self.log.debug('connect_wait thread exiting')
+
 
     @property
     def auth_token(self):
