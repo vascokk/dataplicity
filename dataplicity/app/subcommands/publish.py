@@ -30,12 +30,27 @@ class Publish(SubCommand):
         parser.add_argument('-b', '--build', dest="build", action="store_true", default=False,
                             help="Build the current firmware")
 
+        parser.add_argument('-u', '--username', dest="username", default=None,
+                            help="Dataplicity.com username")
+
+        parser.add_argument('-p', '--password', dest="password", default=None,
+                            help="Dataplicity.com password")
+
+        parser.add_argument('--company', dest="company", default=None,
+                            help="Dataplicity company (id or subdomain)")
+
     def run(self):
-        username = raw_input('username: ')
-        password = getpass.getpass('password: ')
 
         log.setLevel(logging.ERROR)
         args = self.args
+
+        username = args.username
+        password = args.password
+        if username is None:
+            username = raw_input('username: ')
+        if password is None:
+            password = getpass.getpass('password: ')
+        company = args.company
 
         conf_path = self.app.conf
 
@@ -68,11 +83,11 @@ class Publish(SubCommand):
 
         print("uploading firmware...")
         with remote.batch() as batch:
-            batch.call_with_id('auth_result',
-                               'device.check_auth',
-                               device_class=device_class_name,
-                               serial=client.serial,
-                               auth_token=client.auth_token)
+            # batch.call_with_id('auth_result',
+            #                    'device.check_auth',
+            #                    device_class=device_class_name,
+            #                    serial=client.serial,
+            #                    auth_token=client.auth_token)
             batch.call_with_id("publish_result",
                                "device.publish",
                                device_class=device_class_name,
@@ -81,9 +96,10 @@ class Publish(SubCommand):
                                ui=ui,
                                username=username,
                                password=password,
+                               company=company,
                                replace=args.replace)
 
-        batch.get_result('auth_result')
+        #batch.get_result('auth_result')
         try:
             publish_result = batch.get_result('publish_result')
         except JSONRPCError as e:

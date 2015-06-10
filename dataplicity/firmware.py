@@ -140,11 +140,11 @@ def install_encoded(device_class, version, firmware_b64, activate_firmware=True)
     return install_path
 
 
-def activate(device_class, version, dst_fs):
+def activate(device_class, version, dst_fs, fw_path=constants.FIRMWARE_PATH):
     """Make a given version active"""
     dst_path = join(device_class, str(version))
     firmware_path = dst_fs.getsyspath(dst_path)
-    current_path = os.path.join(constants.FIRMWARE_PATH, 'current')
+    current_path = os.path.join(fw_path, 'current')
     try:
         # Remove old symlink
         os.remove(current_path)
