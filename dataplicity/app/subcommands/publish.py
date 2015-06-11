@@ -72,7 +72,7 @@ class Publish(SubCommand):
 
         firmware_b64 = b64encode(firmware_contents)
 
-        client = self.app.make_client(log)
+        client = self.app.make_client(log, create_m2m=False)
         conf = client.conf
         remote = client.remote
 
