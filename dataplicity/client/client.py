@@ -194,7 +194,6 @@ class Client(object):
         finally:
             self.log.debug('connect_wait thread exiting')
 
-
     @property
     def auth_token(self):
         """get the auth_token, which may be in dataplicity.cfg, or reference another file"""
@@ -202,7 +201,7 @@ class Client(object):
             auth_token_path = self._auth_token.split(':', 1)[-1]
             try:
                 with open(auth_token_path, 'rt') as f:
-                    auth_token = f.read()
+                    auth_token = f.read().strip()
             except IOError:
                 return None
             else:
