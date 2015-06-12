@@ -28,6 +28,7 @@ class Daemon(object):
     def __init__(self,
                  conf_path=None,
                  foreground=False,
+                 rpc_url=None,
                  debug=False):
         self.conf_path = conf_path
         self.foreground = foreground
@@ -37,7 +38,8 @@ class Daemon(object):
 
         client = self.client = Client(conf_path,
                                       check_firmware=not foreground,
-                                      log=self.log)
+                                      log=self.log,
+                                      rpc_url=rpc_url)
         conf = client.conf
 
         self.poll_rate_seconds = conf.get_float("daemon", "poll", 60.0)
