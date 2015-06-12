@@ -103,7 +103,10 @@ class App(object):
             path = tools.find_conf()
         if path is None:
             raise ProjectNotFoundError('unable to locate dataplicity.conf for project')
-        client = Client(path, log=log, create_m2m=create_m2m)
+        client = Client(path,
+                        log=log,
+                        create_m2m=create_m2m,
+                        rpc_url=self.args.server_url)
         return client
 
     @property
