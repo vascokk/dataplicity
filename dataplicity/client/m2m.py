@@ -168,7 +168,7 @@ class M2MManager(object):
         for section, name in conf.qualified_sections('terminal'):
             cmd = conf.get(section, 'command', os.environ.get('SHELL', None))
             if cmd is None:
-                cmd = "sh"
+                cmd = "bash"
             manager.add_terminal(name, cmd)
 
         return manager
