@@ -15,7 +15,8 @@ class Run(SubCommand):
         self.app.init_logging()
         dataplicity_daemon = Daemon(self.app.conf,
                                     foreground=True,
-                                    debug=debug)
+                                    debug=debug,
+                                    rpc_url=self.args.server_url)
         return dataplicity_daemon
 
     def run(self):

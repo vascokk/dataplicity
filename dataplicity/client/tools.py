@@ -19,3 +19,19 @@ def find_conf():
 def parse_lines(s):
     """Split a setting in to a list"""
     return [l.strip() for l in s.splitlines() if l.strip()]
+
+
+def resolve_value(value):
+    """resolve a value which may have a file: prefix"""
+    if value is None:
+        return value
+    value = value.strip()
+    if value.startswith('file:'):
+        path = value.split(':', 1)[-1]
+        try:
+            with open(path, 'rt') as f:
+                value = f.read().strip()
+        except IOError:
+            value = None
+
+    return value

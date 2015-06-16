@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
-from dataplicity.client import settings, serial
+from dataplicity.client import settings, serial, tools
 from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
@@ -80,7 +80,7 @@ def _wait_on_url(url, closing_event, log):
 class Client(object):
     """The main interface to the dataplicity server"""
 
-    def __init__(self, conf_paths, check_firmware=True, log=None, create_m2m=True):
+    def __init__(self, conf_paths, check_firmware=True, log=None, create_m2m=True, rpc_url=None):
         self.check_firmware = check_firmware
         if log is None:
             log = logging.getLogger('dataplicity.client')
@@ -90,6 +90,8 @@ class Client(object):
             conf_paths = [conf_paths]
         self.conf_paths = conf_paths
         self.create_m2m = create_m2m
+        self.rpc_url = rpc_url
+
         self._sync_lock = Lock()
         self.exit_event = Event()
         self._init()
@@ -103,15 +105,17 @@ class Client(object):
             self.current_firmware_version = int(self.firmware_conf.get('firmware', 'version', 1))
             self.firmware_path = conf.get('firmware', 'path', None)
             self.log.info('running firmware {:010}'.format(self.current_firmware_version))
-            self.rpc_url = conf.get('server',
-                                    'url',
-                                    constants.SERVER_URL)
+            if self.rpc_url is None:
+                self.rpc_url = conf.get('server',
+                                        'url',
+                                        constants.SERVER_URL)
+            self.log.debug('api url is %s', self.rpc_url)
             self.push_url = conf.get('server',
                                      'push_url',
                                      constants.PUSH_URL)
             self.remote = JSONRPC(self.rpc_url)
 
-            self.serial = conf.get('device', 'serial', None)
+            self.serial = tools.resolve_value(conf.get('device', 'serial', None))
             if self.serial is None:
                 self.serial = serial.get_default_serial()
                 self.log.info('auto generated device serial, %r', self.serial)
@@ -201,7 +205,7 @@ class Client(object):
             auth_token_path = self._auth_token.split(':', 1)[-1]
             try:
                 with open(auth_token_path, 'rt') as f:
-                    auth_token = f.read()
+                    auth_token = f.read().strip()
             except IOError:
                 return None
             else:
@@ -225,6 +229,9 @@ class Client(object):
     def set_m2m_identity(self, identity):
         if self.auth_token is not None:
             try:
+                self.log.debug('notiying server (%s) of m2m identity (%s)',
+                               self.remote.url,
+                               identity or '<None>')
                 with self.remote.batch() as batch:
                     # Authenticate
                     batch.call_with_id('authenticate_result',
@@ -232,7 +239,7 @@ class Client(object):
                                        device_class=self.device_class,
                                        serial=self.serial,
                                        auth_token=self.auth_token)
-                    batch.notify('m2m.associate', identity = identity or '')
+                    batch.notify('m2m.associate', identity=identity or '')
                 return identity
             except:
                 self.log.exception('unable to set m2m identity')

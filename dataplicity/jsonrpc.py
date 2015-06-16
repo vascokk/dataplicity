@@ -10,6 +10,15 @@ class ProtocolError(Exception):
     """Errors where the server didn't return the correct response"""
 
 
+class ServerUnreachableError(Exception):
+    """Can't reach JSONRPC server"""
+
+    def __init__(self, url, original):
+        self.url = url
+        self.original = original
+        super(ServerUnreachableError, self).__init__("unable to contact JSONRPC server '{}' ({})".format(url, original))
+
+
 class JSONRPCError(Exception):
     """Base class for exceptions returned from the server"""
     def __init__(self, method, code, data, message):
@@ -152,11 +161,14 @@ class JSONRPC(object):
         call_json = json.dumps(call).encode('utf-8')
         url_file = None
         try:
-            url_file = urlopen(self.url, call_json)
-            response_json = url_file.read().decode('utf-8')
-        finally:
-            if url_file is not None:
-                url_file.close()
+            try:
+                url_file = urlopen(self.url, call_json)
+                response_json = url_file.read().decode('utf-8')
+            finally:
+                if url_file is not None:
+                    url_file.close()
+        except Exception as e: # TODO: Exceptions are different for Python 2/3
+            raise ServerUnreachableError(self.url, e)
         return response_json
 
     def call(self, method, **params):
