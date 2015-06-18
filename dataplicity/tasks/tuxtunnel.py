@@ -27,12 +27,11 @@ class DeviceMetaInfo(Task):
             pass
 
         # get cpu speed
-        process = Popen(['cat', '/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq'], stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
-        if not stderr:
-            mhz = int(stdout) / 1000
-        else:
-            mhz = None
+        with open('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq', 'r') as fp:
+            try:
+                mhz = int(fp.read())/1000
+            except ValueError:
+                mhz = None
 
         # get total memory
         total_memory = psutil.virtual_memory().total/1024/1024
