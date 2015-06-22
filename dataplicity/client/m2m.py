@@ -7,7 +7,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from dataplicity import constants
-from dataplicity.m2m import WSClient
+from dataplicity.m2m import WSClient, EchoService
 from dataplicity.m2m.remoteprocess import RemoteProcess
 
 import os
@@ -220,6 +220,9 @@ class M2MManager(object):
             port = data['port']
             buttons_group = data['name']
             self.open_buttons(buttons_group, port)
+        elif action == "open-echo":
+            port = data['port']
+            self.open_echo_service(port)
 
     def open_terminal(self, name, port):
         terminal = self.get_terminal(name)
@@ -233,3 +236,7 @@ class M2MManager(object):
 
     def open_buttons(self, name, port):
         self.client.rc.open_buttons(name, self.m2m_client.get_channel(port))
+
+    def open_echo_service(self, port):
+        log.debug('opening echo service on m2m port %s', port)
+        EchoService(self.m2m_client.get_channel(port))
