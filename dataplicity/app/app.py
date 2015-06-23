@@ -67,6 +67,8 @@ class App(object):
                             help="Location of logging conf file")
         parser.add_argument('-s', '--server-url', metavar="URL", dest="server_url", default=None,
                             help="URL of dataplicity.com api")
+        parser.add_argument('-q', '--quiet', action="store_true", default=False,
+                            help="hide output")
 
         subparsers = parser.add_subparsers(title='available sub-commands',
                                            dest="subcommand",
@@ -81,6 +83,8 @@ class App(object):
         return parser
 
     def init_logging(self, path=None, foreground=True):
+        if self.args.quiet:
+            return
         if path is not None and os.path.exists(path):
             logging.config.fileConfig(path)
         else:
