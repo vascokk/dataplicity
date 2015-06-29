@@ -46,6 +46,7 @@ class Daemon(object):
         self.last_check_time = None
         self.pid_path = abspath(conf.get('daemon', 'pidfile', '/var/run/dataplicity.pid'))
         self.pipe_path = abspath(conf.get('daemon', 'pipe', '/tmp/dataplicitypipe'))
+        self.auto_restart = conf.get('daemon', 'auto_restart', 'true').lower() in ('true', 'yes')
 
         self.server_closing_event = Event()
 
@@ -58,7 +59,10 @@ class Daemon(object):
 
     def exit(self, command=None):
         """Exit daemon now, and run optional command"""
-        self.exit_command = command
+        if self.auto_restart:
+            self.exit_command = command
+        else:
+            self.exit_command = False
         self.exit_event.set()
         self.client.close()
 
@@ -125,7 +129,7 @@ class Daemon(object):
                 return
 
         except ForceRestart:
-            self.log.info('restarting...')
+            self.log.info('restart requested')
             self.exit(' '.join(sys.argv))
 
         except Exception as e:
@@ -144,11 +148,13 @@ class Daemon(object):
             self.client.close()
             self.log.debug("goodbye")
 
-            if self.exit_event.is_set() and self.exit_command is not None:
-                time.sleep(1)  # Maybe redundant
-                self.log.debug("Executing %s" % self.exit_command)
-                os.system(self.exit_command)
-
+            if self.exit_event.is_set():
+                if self.exit_command is None:
+                    self.log.debug('auto restart is disabled')
+                else:
+                    time.sleep(1)  # Maybe redundant
+                    self.log.debug("Executing %s" % self.exit_command)
+                    os.system(self.exit_command)
 
     def poll(self, t):
         self.sync_now(t)
