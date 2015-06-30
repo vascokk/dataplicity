@@ -7,6 +7,8 @@ class Run(SubCommand):
     help = """Run a dataplicity service in the foreground (useful for debugging)"""
 
     def add_arguments(self, parser):
+        parser.add_argument('--no-update', dest="noupdate", action="store_true", default=False,
+                            help="disable auto update")
         return parser
 
     def make_daemon(self, debug=True):
@@ -16,6 +18,7 @@ class Run(SubCommand):
         dataplicity_daemon = Daemon(self.app.conf,
                                     foreground=True,
                                     debug=debug,
+                                    auto_update=not sel.args.noupdate,
                                     rpc_url=self.args.server_url)
         return dataplicity_daemon
 

@@ -28,6 +28,7 @@ class Daemon(object):
     def __init__(self,
                  conf_path=None,
                  foreground=False,
+                 auto_update=True,
                  rpc_url=None,
                  debug=False):
         self.conf_path = conf_path
@@ -37,7 +38,7 @@ class Daemon(object):
         self.log = logging.getLogger('dataplicity')
 
         client = self.client = Client(conf_path,
-                                      check_firmware=not foreground,
+                                      check_firmware=auto_update,
                                       log=self.log,
                                       rpc_url=rpc_url)
         conf = client.conf
@@ -67,7 +68,6 @@ class Daemon(object):
         self.client.close()
 
     def start(self):
-
         pipe = None
         if self.pipe_path:
             try:
