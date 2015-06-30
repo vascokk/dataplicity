@@ -18,7 +18,7 @@ class Run(SubCommand):
         dataplicity_daemon = Daemon(self.app.conf,
                                     foreground=True,
                                     debug=debug,
-                                    auto_update=not sel.args.noupdate,
+                                    auto_update=not self.args.noupdate,
                                     rpc_url=self.args.server_url)
         return dataplicity_daemon
 
