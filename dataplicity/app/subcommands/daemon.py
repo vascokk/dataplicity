@@ -149,7 +149,7 @@ class Daemon(object):
             self.log.debug("goodbye")
 
             if self.exit_event.is_set():
-                if self.exit_command is None:
+                if not self.exit_command:
                     self.log.debug('auto restart is disabled')
                 else:
                     time.sleep(1)  # Maybe redundant
