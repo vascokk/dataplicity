@@ -140,3 +140,8 @@ class App(object):
             debug_cmd = ' '.join([cmd, '--debug'] + sys.argv[1:])
             sys.stderr.write("(run '{}' for a full traceback)\n".format(debug_cmd))
             return -1
+
+
+def main():
+    """Dataplicity entry point"""
+    sys.exit(App().run())
