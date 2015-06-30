@@ -403,7 +403,10 @@ class Client(object):
                 version = firmware_result['version']
                 self.log.debug("new firmware, version v{} for device class '{}'".format(version, device_class))
                 self.log.info("installing firmware v{}".format(version))
-                install_path = firmware.install_encoded(device_class, version, firmware_b64)
+                install_path = firmware.install_encoded(device_class,
+                                                        version,
+                                                        firmware_b64,
+                                                        firmware_path=self.firmware_path)
 
                 self.log.info('firmware installed in "{}"'.format(install_path))
                 self.get_comms().restart()
