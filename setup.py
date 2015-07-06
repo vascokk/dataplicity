@@ -37,7 +37,6 @@ setup(
         'setuptools',
         'enum34',
         'docutils',
-        'lockfile',
         'six'
     ]
 )

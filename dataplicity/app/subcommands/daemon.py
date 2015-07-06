@@ -13,7 +13,6 @@ from daemon.pidfile import TimeoutPIDLockFile
 import sys
 import os
 import time
-import socket
 from threading import Event, Thread
 from os.path import abspath
 import logging
