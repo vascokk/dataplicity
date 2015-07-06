@@ -33,7 +33,7 @@ class RemoteProcess(proxy.Interceptor):
         return "RemoteProcess({!r}, {!r})".format(self.command, self.channel)
 
     def run(self):
-        self.spawn([self.command])
+        self.spawn(self.command.split(' '))
 
     def on_data(self, data):
         try:
