@@ -89,7 +89,7 @@ class Interceptor(object):
         assert self.master_fd is not None
 
         # Get the terminal size of the real terminal, set it on the pseudoterminal.
-        buf = array.array('h', [80, 0, 80, 24])
+        buf = array.array('h', [80, 24, 0, 0])
         #fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
         fcntl.ioctl(self.master_fd, termios.TIOCSWINSZ, buf)
 
