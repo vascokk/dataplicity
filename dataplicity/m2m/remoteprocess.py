@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import os
 import signal
+import shlex
 
 from dataplicity.m2m import proxy
 
@@ -33,7 +34,7 @@ class RemoteProcess(proxy.Interceptor):
         return "RemoteProcess({!r}, {!r})".format(self.command, self.channel)
 
     def run(self):
-        self.spawn(self.command.split(' '))
+        self.spawn(shlex.split(self.command))
 
     def on_data(self, data):
         try:
