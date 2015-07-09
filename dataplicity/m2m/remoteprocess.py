@@ -16,16 +16,17 @@ import json
 
 class RemoteProcess(proxy.Interceptor):
 
-    def __init__(self, command, channel):
+    def __init__(self, command, channel, size=None):
         self.command = command
         self.channel = channel
+        self.size = size
 
         self._closed = False
 
         self.channel.set_callbacks(on_data=self.on_data,
                                    on_close=self.on_close)
 
-        super(RemoteProcess, self).__init__()
+        super(RemoteProcess, self).__init__(size=size)
 
     @property
     def is_closed(self):

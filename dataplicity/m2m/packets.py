@@ -80,7 +80,7 @@ class PacketType(IntEnum):
     route_control = 21
 
     # Send a route_control packet
-    request_route_control = 22
+    request_send_control = 22
 
     response = 100
 

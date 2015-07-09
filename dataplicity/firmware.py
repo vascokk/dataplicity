@@ -14,7 +14,6 @@ from fs.utils import copyfile, copydir
 from fs.errors import ResourceNotFoundError
 from fs.zipfs import ZipFS
 from fs.osfs import OSFS
-import zipfile
 
 import os
 import base64
