@@ -30,12 +30,14 @@ class Terminal(object):
         """Remove closed processes"""
         self.processes[:] = [process for process in self.processes if not process.is_closed]
 
-    def launch(self, channel):
+    def launch(self, channel, size=None):
+        if size is None:
+            size = [80, 24]
         self._prune_closed()
         log.debug('opening terminal %s', self.name)
         remote_process = None
         try:
-            remote_process = RemoteProcess(self.command, channel)
+            remote_process = RemoteProcess(self.command, channel, size=size)
         except:
             log.exception("error launching terminal process '%s'", self.command)
             if remote_process is not None:
@@ -211,7 +213,8 @@ class M2MManager(object):
         elif action == 'open-terminal':
             port = data['port']
             terminal_name = data['name']
-            self.open_terminal(terminal_name, port)
+            size = data.get('size', None)
+            self.open_terminal(terminal_name, port, size=size)
         elif action == "open-keyboard":
             port = data['port']
             keyboard_name = data['name']
@@ -224,12 +227,12 @@ class M2MManager(object):
             port = data['port']
             self.open_echo_service(port)
 
-    def open_terminal(self, name, port):
+    def open_terminal(self, name, port, size=None):
         terminal = self.get_terminal(name)
         if terminal is None:
             log.warning("no terminal called '%s'", name)
             return
-        terminal.launch(self.m2m_client.get_channel(port))
+        terminal.launch(self.m2m_client.get_channel(port), size=size)
 
     def open_keyboard(self, name, port):
         self.client.rc.open_keyboard(name, self.m2m_client.get_channel(port))

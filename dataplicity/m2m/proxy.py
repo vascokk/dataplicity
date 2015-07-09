@@ -42,8 +42,12 @@ class Interceptor(object):
     This class does the actual work of the pseudo terminal. The spawn() function is the main entrypoint.
     '''
 
-    def __init__(self):
+    def __init__(self, size=None):
+        if size is None:
+            size = [80, 24]
+        self.size = size
         self.master_fd = None
+
 
     def spawn(self, argv=None):
         '''
@@ -89,7 +93,8 @@ class Interceptor(object):
         assert self.master_fd is not None
 
         # Get the terminal size of the real terminal, set it on the pseudoterminal.
-        buf = array.array('h', [80, 24, 0, 0])
+        rows, cols = self.size
+        buf = array.array('h', [rows, cols, 0, 0])
         #fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
         fcntl.ioctl(self.master_fd, termios.TIOCSWINSZ, buf)
 
@@ -104,6 +109,11 @@ class Interceptor(object):
             if master_fd in rfds:
                 data = os.read(self.master_fd, 1024)
                 self.master_read(data)
+
+    def resize_terminal(self, size):
+        """Resize terminal to [COLUMNS, LINES]"""
+        self.size = size
+        self._set_pty_size()
 
     def write_stdout(self, data):
         '''

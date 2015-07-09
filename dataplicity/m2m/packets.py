@@ -76,6 +76,12 @@ class PacketType(IntEnum):
     # Client wishes to disconnect
     request_leave = 20
 
+    # An out of band route control packet
+    route_control = 21
+
+    # Send a route_control packet
+    request_route_control = 22
+
     response = 100
 
     command_add_route = 101
@@ -159,6 +165,22 @@ class RoutePacket(M2MPacket):
     """Route data"""
     no_log = True
     type = PacketType.route
+    attributes = [('channel', int_types),
+                  ('data', bytes)]
+
+
+class RouteControlPacket(M2MPacket):
+    """Route data"""
+    no_log = True
+    type = PacketType.route_control
+    attributes = [('channel', int_types),
+                  ('data', bytes)]
+
+
+class RequestSendControlPacket(M2MPacket):
+    """Request to send data to a connection"""
+    no_log = True
+    type = PacketType.request_send_control
     attributes = [('channel', int_types),
                   ('data', bytes)]
 

@@ -75,6 +75,7 @@ class Channel(object):
         """On incoming data"""
         if self._closed:
             log.debug('%s bytes from closed %r ignored', len(data), self)
+            return
         if self._data_callback is not None:
             self._data_callback(data)
         else:
@@ -82,9 +83,18 @@ class Channel(object):
                 self.deque.append(data)
                 self._data_event.set()
 
-    def set_callbacks(self, on_data=None, on_close=None):
+    def on_control(self, data):
+        """On control data"""
+        if self._closed:
+            log.debug('%s bytes from closed %r ignored', len(data), self)
+            return
+        if self._control_callback is not None:
+            self._control_callback(data)
+
+    def set_callbacks(self, on_data=None, on_close=None, on_control=None):
         self._data_callback = on_data
         self._close_callback = on_close
+        self._on_control = on_control
 
     @property
     def size(self):
@@ -140,9 +150,10 @@ class ThreadedDispatcher(threading.Thread, Dispatcher):
 
 class WSClient(ThreadedDispatcher):
 
-    def __init__(self, url, uuid=None, log=None, channel_callback=None, **kwargs):
+    def __init__(self, url, uuid=None, log=None, channel_callback=None, control_callback=None, **kwargs):
         self.url = url
         self.channel_callback = channel_callback
+        self.control_callback = control_callback
         kwargs['on_open'] = self.on_open
         kwargs['on_message'] = self.on_message
         kwargs['on_error'] = self.on_error
@@ -345,6 +356,15 @@ class WSClient(ThreadedDispatcher):
             except:
                 log.exception('error in channel callback')
         channel.on_data(data)
+
+    @expose(PacketType.route_control)
+    def handle_route_control(self, packet_type, channel, data):
+        channel = self.get_channel(channel)
+        if self.controll_callback is not None:
+            try:
+                self.control_callback(channel, data)
+            except:
+                log.exception('error in channel callback')
 
     @expose(PacketType.notify_open)
     def on_notify_open(self, packet_type, channel_no):

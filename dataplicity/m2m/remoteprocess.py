@@ -11,6 +11,7 @@ from dataplicity.m2m import proxy
 
 import logging
 log = logging.getLogger('dataplicity.m2m')
+import json
 
 
 class RemoteProcess(proxy.Interceptor):
@@ -41,6 +42,20 @@ class RemoteProcess(proxy.Interceptor):
             self.stdin_read(data)
         except:
             self.channel.close()
+
+    def on_control(self, data):
+        try:
+            control = json.loads(data)
+        except:
+            log.exception("error decoding control")
+            return
+        control_type = control.get('type', None)
+        if control_type == "window_resize":
+            size = control['size']
+            log.debug('resize terminal to {} X {}').format(*size)
+            self.resize_terminal(size)
+        else:
+            log.warning('unknown control packet {}'.format(control_type))
 
     def on_close(self):
         self.close()
