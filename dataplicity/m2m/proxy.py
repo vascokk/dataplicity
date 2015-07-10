@@ -25,7 +25,7 @@ import pty
 import select
 import sys
 import termios
-#import poll
+
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
@@ -47,7 +47,6 @@ class Interceptor(object):
             size = [80, 24]
         self.size = size
         self.master_fd = None
-
 
     def spawn(self, argv=None):
         '''
@@ -94,7 +93,7 @@ class Interceptor(object):
 
         # Get the terminal size of the real terminal, set it on the pseudoterminal.
         rows, cols = self.size
-        buf = array.array('h', [rows, cols, 0, 0])
+        buf = array.array('h', [cols, rows, 0, 0])
         #fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
         fcntl.ioctl(self.master_fd, termios.TIOCSWINSZ, buf)
 

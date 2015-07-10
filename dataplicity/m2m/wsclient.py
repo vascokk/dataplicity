@@ -94,7 +94,7 @@ class Channel(object):
     def set_callbacks(self, on_data=None, on_close=None, on_control=None):
         self._data_callback = on_data
         self._close_callback = on_close
-        self._on_control = on_control
+        self._control_callback = on_control
 
     @property
     def size(self):
@@ -188,8 +188,6 @@ class WSClient(ThreadedDispatcher):
     def __exit__(self, *args, **kwargs):
         if not self.close_event.is_set():
             self.close()
-            #self.send(PacketType.request_leave)
-            #self.close_event.wait(3)
 
     @property
     def is_closed(self):
@@ -360,11 +358,12 @@ class WSClient(ThreadedDispatcher):
     @expose(PacketType.route_control)
     def handle_route_control(self, packet_type, channel, data):
         channel = self.get_channel(channel)
-        if self.controll_callback is not None:
+        if self.control_callback is not None:
             try:
                 self.control_callback(channel, data)
             except:
                 log.exception('error in channel callback')
+        channel.on_control(data)
 
     @expose(PacketType.notify_open)
     def on_notify_open(self, packet_type, channel_no):

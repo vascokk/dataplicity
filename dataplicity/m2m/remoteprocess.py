@@ -24,7 +24,8 @@ class RemoteProcess(proxy.Interceptor):
         self._closed = False
 
         self.channel.set_callbacks(on_data=self.on_data,
-                                   on_close=self.on_close)
+                                   on_close=self.on_close,
+                                   on_control=self.on_control)
 
         super(RemoteProcess, self).__init__(size=size)
 
@@ -53,7 +54,7 @@ class RemoteProcess(proxy.Interceptor):
         control_type = control.get('type', None)
         if control_type == "window_resize":
             size = control['size']
-            log.debug('resize terminal to {} X {}').format(*size)
+            log.debug('resize terminal to {} X {}'.format(*size))
             self.resize_terminal(size)
         else:
             log.warning('unknown control packet {}'.format(control_type))
