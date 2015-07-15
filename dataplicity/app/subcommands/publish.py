@@ -41,7 +41,7 @@ class Publish(SubCommand):
 
     def run(self):
 
-        log.setLevel(logging.ERROR)
+        log.setLevel(logging.DEBUG)
         args = self.args
 
         username = args.username
@@ -55,6 +55,7 @@ class Publish(SubCommand):
         conf_path = self.app.conf
 
         dataplicity_path = dirname(conf_path)
+        log.debug('dataplicity path is {}'.format(dataplicity_path))
 
         if args.build:
             do_build(dataplicity_path)
@@ -80,6 +81,8 @@ class Publish(SubCommand):
         #serial = conf.get('device', 'serial')
 
         ui = firmware.get_ui(fsopendir(dataplicity_path))
+
+        remote = self.app.make_client(log, create_m2m=False, conf="/etc/dataplicity/dataplicity.conf").remote
 
         print("uploading firmware...")
         with remote.batch() as batch:

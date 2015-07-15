@@ -34,7 +34,7 @@ setup(
         'websocket-client',
         'python-daemon==2.0.1',
         'fs>=0.5.0',
-        'setuptools',
+        #'setuptools',
         'enum34',
         'docutils',
         'six'

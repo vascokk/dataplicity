@@ -171,7 +171,7 @@ class RoutePacket(M2MPacket):
 
 class RouteControlPacket(M2MPacket):
     """Route data"""
-    no_log = False
+    no_log = True
     type = PacketType.route_control
     attributes = [('channel', int_types),
                   ('data', bytes)]
