@@ -32,9 +32,8 @@ setup(
 
     install_requires=[
         'websocket-client',
-        'python-daemon==2.0.1',
+        'python-daemon>=2.0.5',
         'fs>=0.5.0',
-        #'setuptools',
         'enum34',
         'docutils',
         'six'
