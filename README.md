@@ -1,7 +1,8 @@
-Dataplicity
-===========
+Dataplicity Core
+================
 
-Dataplicity is a platform for connected devices.
+Dataplicity Core is a client framework on which Dataplicity Shell (http://shell.dataplicity.com) and other products are built upon.
+
 
 Dependencies
 ------------
