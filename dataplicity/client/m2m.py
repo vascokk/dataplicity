@@ -18,9 +18,11 @@ log = logging.getLogger('dataplicity.m2m')
 
 
 class Terminal(object):
-    def __init__(self, name, command):
+    def __init__(self, name, command, user=None, group=None):
         self.name = name
         self.command = command
+        self.user = user
+        self.group = group
         self.processes = []
 
     def __repr__(self):
@@ -37,7 +39,11 @@ class Terminal(object):
         log.debug('opening terminal %s', self.name)
         remote_process = None
         try:
-            remote_process = RemoteProcess(self.command, channel, size=size)
+            remote_process = RemoteProcess(self.command,
+                                           channel,
+                                           user=self.user,
+                                           group=self.group,
+                                           size=size)
         except:
             log.exception("error launching terminal process '%s'", self.command)
             if remote_process is not None:
@@ -171,7 +177,9 @@ class M2MManager(object):
             cmd = conf.get(section, 'command', os.environ.get('SHELL', None))
             if cmd is None:
                 cmd = "bash"
-            manager.add_terminal(name, cmd)
+            user = conf.get(section, 'user', None)
+            group = conf.get(section, 'group', None)
+            manager.add_terminal(name, cmd, user=user, group=group)
 
         return manager
 

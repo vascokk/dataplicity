@@ -25,6 +25,8 @@ import pty
 import select
 import sys
 import termios
+import pwd
+import grp
 
 
 # The following escape codes are xterm codes.
@@ -42,7 +44,9 @@ class Interceptor(object):
     This class does the actual work of the pseudo terminal. The spawn() function is the main entrypoint.
     '''
 
-    def __init__(self, size=None):
+    def __init__(self, user=None, group=None, size=None):
+        self.user = user
+        self.grou = group
         if size is None:
             size = [80, 24]
         self.size = size
@@ -54,14 +58,29 @@ class Interceptor(object):
         Based on the code for pty.spawn().
         '''
         assert self.master_fd is None
-        if not argv:
-            argv = [os.environ['SHELL']]
 
         pid, master_fd = pty.fork()
         self.master_fd = master_fd
         self.pid = pid
         if pid == pty.CHILD:
+            if self.user is not None:
+                try:
+                    uid = pwd.getpwnam(self.user).pw_uid
+                except KeyError:
+                    log.error("No such user: %s", self.user)
+                else:
+                    os.setuid(uid)
+            if self.group is not None:
+                try:
+                    gid = grp.getgrnam(self.group).gr_gid
+                except KeyError:
+                    log.error("No such group: %s", self.group)
+                else:
+                    os.setgid(gid)
+            if not argv:
+                argv = [os.environ['SHELL']]
             os.execlp(argv[0], *argv)
+            # Previous command replaces the process
             return
 
         self._init_fd()

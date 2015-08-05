@@ -16,7 +16,7 @@ import json
 
 class RemoteProcess(proxy.Interceptor):
 
-    def __init__(self, command, channel, size=None):
+    def __init__(self, command, channel, user=None, group=None, size=None):
         self.command = command
         self.channel = channel
         self.size = size
@@ -27,7 +27,7 @@ class RemoteProcess(proxy.Interceptor):
                                    on_close=self.on_close,
                                    on_control=self.on_control)
 
-        super(RemoteProcess, self).__init__(size=size)
+        super(RemoteProcess, self).__init__(user=user, group=group, size=size)
 
     @property
     def is_closed(self):
