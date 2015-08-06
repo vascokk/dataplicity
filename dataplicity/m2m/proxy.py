@@ -46,7 +46,7 @@ class Interceptor(object):
 
     def __init__(self, user=None, group=None, size=None):
         self.user = user
-        self.grou = group
+        self.group = group
         if size is None:
             size = [80, 24]
         self.size = size
