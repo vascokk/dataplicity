@@ -70,6 +70,7 @@ class Interceptor(object):
                     log.error("No such user: %s", self.user)
                 else:
                     os.setuid(uid)
+                    log.debug('switched user for remote process to %s(%s)', self.user, uid)
             if self.group is not None:
                 try:
                     gid = grp.getgrnam(self.group).gr_gid
@@ -77,6 +78,7 @@ class Interceptor(object):
                     log.error("No such group: %s", self.group)
                 else:
                     os.setgid(gid)
+                    log.debug('switched group for remote process to %s(%s)', self.group, gid)
             if not argv:
                 argv = [os.environ['SHELL']]
             os.execlp(argv[0], *argv)

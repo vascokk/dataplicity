@@ -9,7 +9,7 @@ classifiers = [
     'Programming Language :: Python',
 ]
 
-with open('README.txt') as f:
+with open('README.md') as f:
     long_desc = f.read()
 
 setup(
