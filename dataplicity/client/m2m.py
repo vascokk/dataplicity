@@ -206,9 +206,9 @@ class M2MManager(object):
         if self.m2m_client is not None:
             self.m2m_client.close()
 
-    def add_terminal(self, name, remote_process):
+    def add_terminal(self, name, remote_process, user=None, group=None):
         log.debug("adding terminal '%s' %s", name, remote_process)
-        self.terminals[name] = Terminal(name, remote_process)
+        self.terminals[name] = Terminal(name, remote_process, user=user, group=group)
 
     def get_terminal(self, name):
         return self.terminals.get(name, None)
