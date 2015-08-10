@@ -124,7 +124,7 @@ def install_encoded(device_class, version, firmware_b64, activate_firmware=True,
     # Open zip
     firmware_fs = ZipFS(firmware_file)
     # Open firmware dir
-    dst_fs = OSFS(firmware_path or constants.FIRMWARE_PATH, create=True)
+    dst_fs = OSFS(firmware_path or constants.FIRMWARE_PATH, create=True, dir_mode=0o755)
     # Install
     install_path = install(device_class, version, firmware_fs, dst_fs)
     # Move symlink to active firmware

@@ -444,7 +444,7 @@ class Client(object):
         firmware_file = BytesIO(firmware_bin)
         firmware_fs = ZipFS(firmware_file)
 
-        dst_fs = OSFS(constants.FIRMWARE_PATH, create=True)
+        dst_fs = OSFS(constants.FIRMWARE_PATH, create=True, dir_mode=0o775)
 
         firmware.install(self.device_class,
                          version,
