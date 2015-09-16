@@ -127,6 +127,10 @@ class Sampler(object):
         """Create an empty sampler if it doesn't already exist"""
         with self.lock:
             if not exists(self.samples_path):
+                try:
+                    os.makedirs(dirname(self.samples_path))
+                except:
+                    pass
                 with open(self.samples_path, 'wb') as f:
                     f.write(self.header)
 

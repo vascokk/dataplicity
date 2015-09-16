@@ -6,6 +6,10 @@ from dataplicity.compat import urlopen
 import json
 
 
+import logging
+log = logging.getLogger('dataplicity')
+
+
 class ProtocolError(Exception):
     """Errors where the server didn't return the correct response"""
 
@@ -17,6 +21,10 @@ class ServerUnreachableError(Exception):
         self.url = url
         self.original = original
         super(ServerUnreachableError, self).__init__("unable to contact JSONRPC server '{}' ({})".format(url, original))
+
+
+class InvalidResponseError(ProtocolError):
+    """Probably not JSON in response"""
 
 
 class JSONRPCError(Exception):
@@ -181,7 +189,11 @@ class JSONRPC(object):
             "id": call_id
         }
         response_json = self._send(call)
-        response = json.loads(response_json)
+        try:
+            response = json.loads(response_json)
+        except:
+            log.error('unable to decode %s', repr(response_json)[:100])
+            raise InvalidResponseError('unable to decode response as JSON')
 
         if 'jsonrpc' not in response or 'id' not in response:
             raise ProtocolError("Invalid response from server")

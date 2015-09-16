@@ -173,6 +173,7 @@ class WSClient(ThreadedDispatcher):
         self.hooks = defaultdict(list)
 
         super(WSClient, self).__init__(log=log)
+        self.name = "m2m"  # Thread name
         self.daemon = True
 
         self.app = websocket.WebSocketApp(self.url,
@@ -236,14 +237,18 @@ class WSClient(ThreadedDispatcher):
         return channel_no in self.channels
 
     def run(self):
-        self._started = True
-        SO_REUSEPORT = 15  # Not present on rpi ?
-        self.app.run_forever(sockopt=((socket.SOL_SOCKET, SO_REUSEPORT, 1),
-                                      (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)),
-                             sslopt={"cert_reqs": ssl.CERT_NONE})
+        self._started = False
+        try:
+            self.app.run_forever(sockopt=((socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)),
+                                 sslopt={"cert_reqs": ssl.CERT_NONE})
+        except:
+            log.exception('unable to initialise websocket')
+            self._started = False
+        else:
+            self._started = True
 
     def close(self, timeout=5):
-        if not self.close_event.is_set():
+        if not self.close_event.is_set() and self._started:
             self.send(PacketType.request_leave)
             self.close_event.wait(timeout)
             self.clear_callbacks()
