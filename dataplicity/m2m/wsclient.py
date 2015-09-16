@@ -239,7 +239,7 @@ class WSClient(ThreadedDispatcher):
     def run(self):
         self._started = False
         try:
-            self.app.run_forever(sockopt=((socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)),
+            self.app.run_forever(sockopt=[(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)],
                                  sslopt={"cert_reqs": ssl.CERT_NONE})
         except:
             log.exception('unable to initialise websocket')
