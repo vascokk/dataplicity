@@ -244,13 +244,121 @@ class Client(object):
             except:
                 self.log.exception('unable to set m2m identity')
         else:
-            self.log.debug("skipping m2m identiy notify because we don't have an auth token")
+            self.log.debug("skipping m2m identity notify because we don't have an auth token")
             return None
 
-    def _sync(self):
-        start = time()
-        self.log.debug("syncing...")
+    def _sync_samples(self, batch):
+        # Add samples
+        samplers_updated = []
+        try:
+            for sampler_name in self.samplers.enumerate_samplers():
+                sampler = self.samplers.get_sampler(sampler_name)
+                samples = sampler.snapshot_samples()
+                if samples:
+                    batch.call_with_id("samples.{}".format(sampler_name),
+                                       "device.add_samples",
+                                       device_class=self.device_class,
+                                       serial=self.serial,
+                                       sampler_name=sampler_name,
+                                       samples=samples)
+                    samplers_updated.append(sampler_name)
+                else:
+                    sampler.remove_snapshot()
+        except:
+            self.log.exception('error syncing samples')
+        return samplers_updated
 
+    def _update_samples(self, batch, samplers_updated):
+        try:
+            # Remove snapshots that were successfully synced
+            # Unsuccessful snapshots remain on disk, so the next sync will re-attempt them.
+            for sampler_name in samplers_updated:
+                sampler = self.samplers.get_sampler(sampler_name)
+                try:
+                    if not batch.get_result("samples.{}".format(sampler_name)):
+                        self.log("failed to get sampler results '{}'".format(sampler_name))
+                except Exception as e:
+                    self.log.exception("error adding samples to {} ({})".format(sampler_name, e))
+                else:
+                    sampler.remove_snapshot()
+        except:
+            self.log.exception('error updating samples from sync')
+
+    def _update_conf(self, batch):
+        try:
+            try:
+                changed_conf = batch.get_result("conf_result")
+            except:
+                self.log.exception('error sending settings')
+            else:
+                if changed_conf:
+                    self.livesettings.update(changed_conf, self.tasks)
+                    changed_conf_names = ", ".join(sorted(changed_conf.keys()))
+                    self.log.debug("settings file(s) changed: {}".format(changed_conf_names))
+
+            for timeline in self.timelines:
+                try:
+                    timeline_result = batch.get_result('timeline_result_{}'.format(timeline.name))
+                except:
+                    self.log.exception('error sending timeline')
+                else:
+                    timeline.clear_events(timeline_result)
+        except:
+            self.log.error('error updating conf in sync')
+
+    def _sync_conf(self, batch):
+        # Update conf
+        try:
+            conf_map = self.livesettings.contents_map
+            batch.call_with_id("conf_result",
+                               "device.update_conf_map",
+                               conf_map=conf_map)
+        except:
+            self.log.exception('error syncing conf')
+
+    def _sync_timelines(self, batch):
+        # Update timeline(s)
+        try:
+            if self.timelines:
+                for timeline in self.timelines:
+                    batch.call_with_id('timeline_result_{}'.format(timeline.name),
+                                       'device.add_events',
+                                       name=timeline.name,
+                                       events=timeline.get_events())
+        except:
+            self.log.exception('error syncing timelines')
+
+    def _sync_m2m(self, batch):
+        try:
+            if self.m2m is not None:
+                self.m2m.on_sync(batch)
+        except:
+            self.log.exception('error syncing m2m')
+
+    def _sync_firmware(self, batch):
+        if batch is not None and self.check_firmware:
+            try:
+                firmware_result = batch.get_result('firmware_result')
+            except:
+                self.log.exception('error getting firmware_result')
+            else:
+                if firmware_result['current']:
+                    self.log.debug('firmware is current')
+                else:
+                    firmware_b64 = firmware_result['firmware']
+                    device_class = firmware_result['device_class']
+                    version = firmware_result['version']
+                    self.log.debug("new firmware, version v{} for device class '{}'".format(version, device_class))
+                    self.log.info("installing firmware v{}".format(version))
+                    install_path = firmware.install_encoded(device_class,
+                                                            version,
+                                                            firmware_b64,
+                                                            firmware_path=self.firmware_path)
+
+                    self.log.info('firmware installed in "{}"'.format(install_path))
+                    self.get_comms().restart()
+
+    def _check_auth_token(self):
         # If we don't have an auth_token, we are waiting for permission
         if not self.auth_token and self._auth_token.startswith('file:'):
             auth_token_path = self._auth_token.split(':', 1)[-1]
@@ -269,7 +377,7 @@ class Client(object):
                 else:
                     # denied
                     self.log.error('device approval {}'.format(state))
-                return
+                return False
             else:
                 # Device is approved. Write the auth_token.
                 try:
@@ -283,6 +391,15 @@ class Client(object):
                 except:
                     self.log.exception('unable to write auth token')
                     # Will error out on the next command
+        return True
+
+    # Re factored this - WM
+    def _sync(self):
+        start = time()
+        self.log.debug("syncing...")
+
+        if not self._check_auth_token():
+            return
 
         if not self.auth_token:
             self.log.error("sync failed -- no auth token, have you run 'dataplicity register'?")
@@ -299,117 +416,55 @@ class Client(object):
         samplers_updated = []
         random.seed()
         sync_id = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in xrange(12))
-        with self.remote.batch() as batch:
-            # Authenticate
-            batch.call_with_id('authenticate_result',
-                               'device.check_auth',
-                               device_class=self.device_class,
-                               serial=self.serial,
-                               auth_token=self.auth_token,
-                               sync_id=sync_id)
-
-            # Tell the server which firmware we're running
-            batch.call_with_id('set_firmware_result',
-                               'device.set_firmware',
-                               version=self.current_firmware_version)
-
-            # Check for new firmware (if required)
-            if self.check_firmware:
-                batch.call_with_id('firmware_result',
-                                   'device.check_firmware',
-                                   current_version=self.current_firmware_version)
-
-            # Add samples
-            for sampler_name in self.samplers.enumerate_samplers():
-                sampler = self.samplers.get_sampler(sampler_name)
-                samples = sampler.snapshot_samples()
-                if samples:
-                    batch.call_with_id("samples.{}".format(sampler_name),
-                                       "device.add_samples",
-                                       device_class=self.device_class,
-                                       serial=self.serial,
-                                       sampler_name=sampler_name,
-                                       samples=samples)
-                    samplers_updated.append(sampler_name)
-                else:
-                    sampler.remove_snapshot()
-
-            # Update conf
-            conf_map = self.livesettings.contents_map
-            batch.call_with_id("conf_result",
-                               "device.update_conf_map",
-                               conf_map=conf_map)
-
-            # Update timeline(s)
-            if self.timelines:
-                for timeline in self.timelines:
-                    batch.call_with_id('timeline_result_{}'.format(timeline.name),
-                                       'device.add_events',
-                                       name=timeline.name,
-                                       events=timeline.get_events())
-
-            if self.m2m is not None:
-                self.m2m.on_sync(batch)
-
-        # get_result will throw exceptions with (hopefully) helpful error messages if they fail
-        batch.get_result('authenticate_result')
-
-        # If the server doesn't have the current firmware, we don't want to break the rest of the sync
+        batch = None
         try:
-            batch.get_result('set_firmware_result')
-        except Exception as e:
-            self.log.warning("unable to set firmware ({})".format(e))
+            with self.remote.batch() as batch:
+                # Authenticate
+                batch.call_with_id('authenticate_result',
+                                   'device.check_auth',
+                                   device_class=self.device_class,
+                                   serial=self.serial,
+                                   auth_token=self.auth_token,
+                                   sync_id=sync_id)
 
-        # Remove snapshots that were successfully synced
-        # Unsuccessful snapshots remain on disk, so the next sync will re-attempt them.
-        for sampler_name in samplers_updated:
-            sampler = self.samplers.get_sampler(sampler_name)
+                # Tell the server which firmware we're running
+                batch.call_with_id('set_firmware_result',
+                                   'device.set_firmware',
+                                   version=self.current_firmware_version)
+
+                # Check for new firmware (if required)
+                if self.check_firmware:
+                    batch.call_with_id('firmware_result',
+                                       'device.check_firmware',
+                                       current_version=self.current_firmware_version)
+
+                samplers_updated = self._sync_samples(batch)
+                self._sync_conf(batch)
+                self._sync_timelines(batch)
+                self._sync_m2m(batch)
+
+            # get_result will throw exceptions with (hopefully) helpful error messages if they fail
+            batch.get_result('authenticate_result')
+
+            # If the server doesn't have the current firmware, we don't want to break the rest of the sync
             try:
-                if not batch.get_result("samples.{}".format(sampler_name)):
-                    self.log("failed to get sampler results '{}'".format(sampler_name))
+                batch.get_result('set_firmware_result')
             except Exception as e:
-                self.log.exception("error adding samples to {} ({})".format(sampler_name, e))
-            else:
-                sampler.remove_snapshot()
+                self.log.warning("unable to set firmware ({})".format(e))
 
-        try:
-            changed_conf = batch.get_result("conf_result")
-        except:
-            self.log.exception('error sending settings')
-        else:
-            if changed_conf:
-                self.livesettings.update(changed_conf, self.tasks)
-                changed_conf_names = ", ".join(sorted(changed_conf.keys()))
-                self.log.debug("settings file(s) changed: {}".format(changed_conf_names))
+            self._update_samples(batch, samplers_updated)
+            self._update_conf(batch)
 
-        for timeline in self.timelines:
+            ellapsed = time() - start
+            self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
+
+        finally:
+            # We have to run this code so we have a chance to update, if a bug is causing the sync handler to fail
             try:
-                timeline_result = batch.get_result('timeline_result_{}'.format(timeline.name))
-            except:
-                self.log.exception('error sending timeline')
-            else:
-                timeline.clear_events(timeline_result)
-
-        ellapsed = time() - start
-        self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
-
-        if self.check_firmware:
-            firmware_result = batch.get_result('firmware_result')
-            if firmware_result['current']:
-                self.log.debug('firmware is current')
-            else:
-                firmware_b64 = firmware_result['firmware']
-                device_class = firmware_result['device_class']
-                version = firmware_result['version']
-                self.log.debug("new firmware, version v{} for device class '{}'".format(version, device_class))
-                self.log.info("installing firmware v{}".format(version))
-                install_path = firmware.install_encoded(device_class,
-                                                        version,
-                                                        firmware_b64,
-                                                        firmware_path=self.firmware_path)
-
-                self.log.info('firmware installed in "{}"'.format(install_path))
-                self.get_comms().restart()
+                self._sync_firmware()
+            finally:
+                ellapsed = time() - start
+                self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
 
     def deploy(self):
         """Deploy latest firmware"""
