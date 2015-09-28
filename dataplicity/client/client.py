@@ -461,7 +461,7 @@ class Client(object):
         finally:
             # We have to run this code so we have a chance to update, if a bug is causing the sync handler to fail
             try:
-                self._sync_firmware()
+                self._sync_firmware(batch)
             finally:
                 ellapsed = time() - start
                 self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
