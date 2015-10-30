@@ -72,11 +72,11 @@ class Terminal(object):
 
 class AutoConnectThread(threading.Thread):
 
-    def __init__(self, manager, url):
+    def __init__(self, manager, url, identity=None):
         self.manager = manager
         self.url = url
         self._m2m_client = None
-        self._identity = None
+        self._identity = identity
         self.lock = threading.RLock()
         self.exit_event = threading.Event()
         threading.Thread.__init__(self)
@@ -100,7 +100,7 @@ class AutoConnectThread(threading.Thread):
         with self.lock:
             log.debug('connecting to %s', self.url)
             self._identity = None
-            self._m2m_client = M2MClient(self.url, log=log)
+            self._m2m_client = M2MClient(self.url, log=log, uuid=identity)
             self._m2m_client.set_manager(self.manager)
             self._m2m_client.connect(wait=False)
 
@@ -143,9 +143,10 @@ class M2MClient(WSClient):
 
 class M2MManager(object):
 
-    def __init__(self, client, url):
+    def __init__(self, client, url, identity=None):
         self.client = client
         self.url = url
+        self.identity = identity
         self.terminals = {}
         self.identity = None
         self.notified_identity = None
@@ -171,7 +172,11 @@ class M2MManager(object):
             return None
         log.debug('m2m url is %s', url)
 
-        manager = cls(client, url)
+        identity = conf.get('m2m', 'identity', None)
+        if identity is not None:
+            log.debug('m2m identity is %s (works with internal development server only)', identity)
+
+        manager = cls(client, url, identity=identity)
 
         for section, name in conf.qualified_sections('terminal'):
             cmd = conf.get(section, 'command', os.environ.get('SHELL', None))

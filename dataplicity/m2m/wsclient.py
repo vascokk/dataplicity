@@ -241,6 +241,8 @@ class WSClient(ThreadedDispatcher):
         try:
             self.app.run_forever(sockopt=[(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)],
                                  sslopt={"cert_reqs": ssl.CERT_NONE})
+        except (SystemExit, KeyboardInterrupt):
+            log.info('wsclient exit requested')
         except:
             log.exception('unable to initialise websocket')
             self._started = False

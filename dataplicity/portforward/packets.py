@@ -9,13 +9,22 @@ from enum import IntEnum, unique
 @unique
 class PacketType(IntEnum):
 
+	# ------------------------------------------
 	# Packets sent from the remote side
-	remote_error = 1
-	remote_close = 2
+	# ------------------------------------------
 
-	# Packets sent by the client
-	client_close = 100
-	client_send = 101
+	# imcoming connection
+	remote_connect = 1
+	# connection has closed
+	remote_close = 2
+	# connection has data
+	remote_send = 3
+
+
+	# Packets sent from the local network
+	local_close = 100
+	# Data recieved from the socket
+	local_recv = 101
 
 
 
@@ -23,14 +32,16 @@ class Packet(PacketBase):
 	type = -1
 
 
-class RemoteError(Packet):
-	"""One of a number of IO Errors"""
-	type = PacketType.remote_error
-	attributes = [('errno', int)
-				  ('msg', bytes)]
+class RemoteConnect(Packet):
+	type = PacketType.remote_connect
 
 
-class ClientClose(Packet):
-	"""Client closed the connection"""
-	type = PacketType.client_close
+class RemoteClose(Packet):
+	type = PacketType.remote_close
+
+
+class RemoteSend(Packet):
+	type = PacketType.remote_send
+
+
 
