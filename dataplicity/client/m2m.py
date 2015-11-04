@@ -5,6 +5,7 @@ Manages M2M connections
 
 from __future__ import print_function
 from __future__ import unicode_literals
+import subprocess
 
 from dataplicity import constants
 from dataplicity.m2m import WSClient, EchoService
@@ -234,6 +235,9 @@ class M2MManager(object):
         elif action == "open-echo":
             port = data['port']
             self.open_echo_service(port)
+        elif action == 'reboot-device':
+            command = '/usr/bin/sudo /usr/sbin/reboot'
+            subprocess.call(command.split())
 
     def open_terminal(self, name, port, size=None):
         terminal = self.get_terminal(name)
