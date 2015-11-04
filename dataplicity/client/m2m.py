@@ -236,7 +236,7 @@ class M2MManager(object):
             port = data['port']
             self.open_echo_service(port)
         elif action == 'reboot-device':
-            command = '/usr/bin/sudo /usr/sbin/reboot'
+            command = '/usr/bin/sudo /sbin/reboot'
             subprocess.call(command.split())
 
     def open_terminal(self, name, port, size=None):
