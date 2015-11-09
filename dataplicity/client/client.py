@@ -7,6 +7,7 @@ from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
 from dataplicity.client.timeline import TimelineManager
 from dataplicity.client.m2m import M2MManager
+from dataplicity.portforward import PortForwardManager
 from dataplicity.rc.manager import RCManager
 from dataplicity.client.exceptions import ForceRestart
 from dataplicity.jsonrpc import JSONRPC
@@ -80,7 +81,7 @@ def _wait_on_url(url, closing_event, log):
 class Client(object):
     """The main interface to the dataplicity server"""
 
-    def __init__(self, conf_paths, check_firmware=True, log=None, create_m2m=True, rpc_url=None):
+    def __init__(self, conf_paths, check_firmware=True, log=None, create_m2m=True, disable_sync=False, rpc_url=None):
         self.check_firmware = check_firmware
         if log is None:
             log = logging.getLogger('dataplicity.client')
@@ -90,6 +91,7 @@ class Client(object):
             conf_paths = [conf_paths]
         self.conf_paths = conf_paths
         self.create_m2m = create_m2m
+        self.disable_sync = disable_sync
         self.rpc_url = rpc_url
 
         self._sync_lock = Lock()
@@ -127,7 +129,10 @@ class Client(object):
                 # try legacy settings
                 self.subdomain = conf.get('device', 'company', None)
 
-            self._auth_token = conf.get('device', 'auth')
+            if self.disable_sync:
+                self._auth_token = None
+            else:
+                self._auth_token = conf.get('device', 'auth')
             self.auto_register_info = conf.get('device', 'auto_device_text', None)
 
             # Run this first, so it can work asynchronously
@@ -145,6 +150,7 @@ class Client(object):
             self.samplers = SamplerManager.init_from_conf(self, conf)
             self.livesettings = LiveSettingsManager.init_from_conf(self, conf)
             self.timelines = TimelineManager.init_from_conf(self, conf)
+            self.port_forward = PortForwardManager.init_from_conf(self, conf)
 
             self.sample_now = self.samplers.sample_now
             self.sample = self.samplers.sample
@@ -201,6 +207,8 @@ class Client(object):
     @property
     def auth_token(self):
         """get the auth_token, which may be in dataplicity.cfg, or reference another file"""
+        if self._auth_token is None:
+            return None
         if self._auth_token.startswith('file:'):
             auth_token_path = self._auth_token.split(':', 1)[-1]
             try:
@@ -223,6 +231,9 @@ class Client(object):
 
     def sync(self):
         # Serialize syncing
+        if self.disable_sync:
+            self.log.debug('sync disabled')
+            return
         with self._sync_lock:
             self._sync()
 
@@ -244,7 +255,8 @@ class Client(object):
             except:
                 self.log.exception('unable to set m2m identity')
         else:
-            self.log.debug("skipping m2m identity notify because we don't have an auth token")
+            if not self.disable_sync:
+                self.log.debug("skipping m2m identity notify because we don't have an auth token")
             return None
 
     def _sync_samples(self, batch):

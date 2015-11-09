@@ -99,8 +99,7 @@ class AutoConnectThread(threading.Thread):
     def start_connect(self):
         with self.lock:
             log.debug('connecting to %s', self.url)
-            self._identity = None
-            self._m2m_client = M2MClient(self.url, log=log, uuid=identity)
+            self._m2m_client = M2MClient(self.url, log=log, uuid=self._identity)
             self._m2m_client.set_manager(self.manager)
             self._m2m_client.connect(wait=False)
 
@@ -148,10 +147,9 @@ class M2MManager(object):
         self.url = url
         self.identity = identity
         self.terminals = {}
-        self.identity = None
         self.notified_identity = None
         self.connecting_semaphore = threading.Semaphore()
-        self.connect_thread = AutoConnectThread(self, url)
+        self.connect_thread = AutoConnectThread(self, url, identity=self.identity)
         self.connect_thread.start()
 
     @property
@@ -239,6 +237,10 @@ class M2MManager(object):
         elif action == "open-echo":
             port = data['port']
             self.open_echo_service(port)
+        elif action == "open-portforward":
+            service = data['service']
+            route = data['route']
+            self.open_portforward(service, route)
 
     def open_terminal(self, name, port, size=None):
         terminal = self.get_terminal(name)
@@ -256,3 +258,6 @@ class M2MManager(object):
     def open_echo_service(self, port):
         log.debug('opening echo service on m2m port %s', port)
         EchoService(self.m2m_client.get_channel(port))
+
+    def open_portforward(self, service, route):
+        self.client.port_forward.open_service(service, route)

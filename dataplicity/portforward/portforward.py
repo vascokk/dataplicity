@@ -161,11 +161,28 @@ class Service(object):
 class PortForwardManager(object):
     """Managed port forwarded services"""
 
-    def __init__(self, m2m):
-        self.m2m = m2m
-        m2m.set_manager(self)
+    def __init__(self, client):
+        self._client = weakref.ref(client)
         self._services = {}
         self._ports = {}
+
+    @property
+    def client(self):
+        return self._client()
+
+    @property
+    def m2m(self):
+        return self.client.m2m if self.client else None
+
+    @classmethod
+    def init_from_conf(cls, client, conf):
+        manager = PortForwardManager(client)
+        for section, name in conf.qualified_sections('portforward'):
+            if not conf.get_bool(section, 'enabled', True):
+                continue
+            port = conf.get_integer(section, 'port', 80)
+            manager.add_service(name, port)
+        return manager
     
     def run(self):
         self.m2m.run()
@@ -199,6 +216,10 @@ class PortForwardManager(object):
         service = Service(self, name, port, host=host)
         self._services[name] = service
         self._ports[port] = name
+        log.debug("added port forward service '%s' on port %s", name, port)
+
+    def open_service(self, service, route):
+        log.debug('opening service %s on %r', service, route)
 
     def open(self, m2m_port, service=None, port=None):
         """Open a port forward service"""

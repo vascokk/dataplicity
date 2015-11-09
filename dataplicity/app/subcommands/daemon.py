@@ -29,7 +29,8 @@ class Daemon(object):
                  foreground=False,
                  auto_update=True,
                  rpc_url=None,
-                 debug=False):
+                 debug=False,
+                 no_sync=False):
         self.conf_path = conf_path
         self.foreground = foreground
         self.debug = debug
@@ -39,7 +40,8 @@ class Daemon(object):
         client = self.client = Client(conf_path,
                                       check_firmware=auto_update,
                                       log=self.log,
-                                      rpc_url=rpc_url)
+                                      rpc_url=rpc_url,
+                                      disable_sync=no_sync)
         conf = client.conf
 
         self.poll_rate_seconds = conf.get_float("daemon", "poll", 60.0)
