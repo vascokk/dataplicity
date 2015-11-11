@@ -28,11 +28,12 @@ class PacketType(IntEnum):
 	remote_send = 3
 
 
-	# Packets sent from the local network
-	local_close = 100
+	# Connection on the local side established
+	local_connect = 100
+	# Connection on the local side closed
+	local_close = 101
 	# Data recieved from the socket
-	local_recv = 101
-
+	local_recv = 102
 
 
 class Packet(PacketBase):
@@ -41,7 +42,7 @@ class Packet(PacketBase):
 
 class RemoteConnect(Packet):
 	type = PacketType.remote_connect
-
+	
 
 class RemoteClose(Packet):
 	type = PacketType.remote_close
@@ -49,6 +50,18 @@ class RemoteClose(Packet):
 
 class RemoteSend(Packet):
 	type = PacketType.remote_send
+	attributes = [('data', bytes)]
 
 
+class LocalConnect(Packet):
+	type = PacketType.local_connect
 
+
+class LocalClose(Packet):
+	type = PacketType.local_close
+
+
+class LocalRecv(Packet):
+	type = PacketType.local_recv
+	attributes = [('data', bytes)]
+	
