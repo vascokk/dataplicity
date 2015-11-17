@@ -94,6 +94,8 @@ class PacketType(IntEnum):
 
     #command_forward = 105
 
+    command_set_name = 106
+
     peer_add_route = 200
 
     peer_forward = 201
@@ -299,6 +301,14 @@ class CommandBroadcastLogPacket(M2MPacket):
     type = PacketType.command_broadcast_log
     attributes = [('command_id', int_types),
                   ('text', bytes)]
+
+
+class CommandSetName(M2MPacket):
+    """Set an alternative name of a node"""
+    type = PacketType.command_set_name
+    attributes = [('command_id', int_types),
+                  ('node', bytes),
+                  ('name', bytes)]
 
 
 class PeerAddRoutePacket(M2MPacket):
