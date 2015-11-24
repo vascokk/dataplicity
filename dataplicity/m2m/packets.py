@@ -96,6 +96,10 @@ class PacketType(IntEnum):
 
     command_set_name = 106
 
+    command_check_nodes = 107
+
+    command_get_identities = 108
+
     peer_add_route = 200
 
     peer_forward = 201
@@ -309,6 +313,20 @@ class CommandSetName(M2MPacket):
     attributes = [('command_id', int_types),
                   ('node', bytes),
                   ('name', bytes)]
+
+
+class CommandCheckNodes(M2MPacket):
+    """Get identities from a list of names"""
+    type = PacketType.command_check_nodes
+    attributes = [('command_id', int_types),
+                  ('nodes', list)]
+
+
+class CommandGetIdentities(M2MPacket):
+    """Get identities from a list of names"""
+    type = PacketType.command_get_identities
+    attributes = [('command_id', int_types),
+                  ('nodes', list)]
 
 
 class PeerAddRoutePacket(M2MPacket):
