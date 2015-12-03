@@ -9,21 +9,16 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 
-from ..compat import queue, py2bytes
 from ..m2m import bencode, dispatcher
 from . import packets
-from .packets import PacketType
 
 import socket
 import weakref
-
-from enum import IntEnum
 import threading
-from Queue import Queue
-from collections import deque
+
 
 import logging
-log = logging.getLogger("dataplicity.portforward") 
+log = logging.getLogger("dataplicity.portforward")
 
 
 class Connection(threading.Thread):
@@ -36,7 +31,7 @@ class Connection(threading.Thread):
         self._service = weakref.ref(service)
         self.connection_id = connection_id
         self.channel = channel
-        
+
         self._lock = threading.RLock()
         self.dispatcher = dispatcher.Dispatcher(packets.Packet, self)
         self.socket = None
@@ -86,7 +81,7 @@ class Connection(threading.Thread):
             self.service.on_connection_complete(self.connection_id)
 
     def connect(self):
-        # Connect may block, so do it in thread 
+        # Connect may block, so do it in thread
         self.start()
 
     def _connect(self):
@@ -98,7 +93,7 @@ class Connection(threading.Thread):
             _socket.connect((host, port))
             _socket.setblocking(True)
             _socket.settimeout(1)
-        except IOError as e:
+        except IOError:
             log.exception('IO Error when connecting')
             # self.send(PacketType.remote_error, e.errno, py2bytes(e))
             return False
@@ -130,7 +125,6 @@ class Connection(threading.Thread):
                 data = b''.join(self.read_buffer)
                 del self.read_buffer[:]
                 self.socket.sendall(data)
-            
 
     def on_channel_close(self):
         if self.socket is not None:
@@ -219,7 +213,7 @@ class PortForwardManager(object):
             port = conf.get_integer(section, 'port', 80)
             manager.add_service(name, port)
         return manager
-    
+
     @property
     def close_event(self):
         return self._close_event
