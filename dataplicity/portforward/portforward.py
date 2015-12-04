@@ -18,7 +18,7 @@ import threading
 
 
 import logging
-log = logging.getLogger("dataplicity.portforward")
+log = logging.getLogger("dataplicity")
 
 
 class Connection(threading.Thread):
@@ -35,7 +35,7 @@ class Connection(threading.Thread):
         self._lock = threading.RLock()
         self.dispatcher = dispatcher.Dispatcher(packets.Packet, self)
         self.socket = None
-        self.read_buffer = []  # For data recieved before we connected
+        self.read_buffer = []  # For data received before we connected
 
         self.channel.set_callbacks(self.on_channel_data,
                                    self.on_channel_close,
@@ -47,8 +47,7 @@ class Connection(threading.Thread):
 
     @property
     def close_event(self):
-        service = self.service
-        return service.close_event if service is not None else service.close_event
+        return self.service.close_event
 
     @property
     def remote(self):
@@ -59,25 +58,34 @@ class Connection(threading.Thread):
         try:
             # Connect to remote host
             connected = self._connect()
-            if connected is None:
+            if not connected:
                 return
 
             log.debug("entered recv loop")
+
+            self._flush_buffer()
             # Read all the data we can and write it to the channel
             while not self.close_event.is_set():
-                self._flush_buffer()
-                if self.socket is not None:
-                    try:
-                        data = self.socket.recv(self.BUFFER_SIZE)
-                    except socket.timeout:
-                        continue
+                if self.socket is None:
+                    break
+                try:
+                    data = self.socket.recv(self.BUFFER_SIZE)
+                except socket.timeout:
+                    log.debug('timeout')
+                    continue
+                else:
+                    if not data:
+                        break
                     else:
-                        if not data:
-                            break
-                        else:
-                            log.debug('recv %s bytes', len(data))
-                            self.channel.write(data)
+                        self.channel.write(data)
         finally:
+            self.channel.close()
+            if self.socket is not None:
+                try:
+                    self.socket.shutdown()
+                    self.socket.close()
+                except:
+                    log.exception('error closing socket')
             self.service.on_connection_complete(self.connection_id)
 
     def connect(self):
@@ -127,8 +135,9 @@ class Connection(threading.Thread):
                 self.socket.sendall(data)
 
     def on_channel_close(self):
+        log.debug('channel close')
         if self.socket is not None:
-            #self.socket.shutdown()
+            self.socket.shutdown()
             self.socket.close()
             self.socket = None
 
@@ -185,7 +194,6 @@ class Service(object):
         self.remove_connection(connection_id)
 
 
-
 class PortForwardManager(object):
     """Managed port forwarded services"""
 
@@ -223,7 +231,7 @@ class PortForwardManager(object):
         log.debug('m2m exited')
 
     def get_service_on_port(self, port):
-        """Get the service on a numbbered port"""
+        """Get the service on a numbered port"""
         service_name = self._ports.get('port')
         if service_name is None:
             return None
