@@ -250,6 +250,7 @@ class NotifyClosePacket(M2MPacket):
 
 class RequestClosePacket(M2MPacket):
     type = PacketType.request_close
+    attributes = [('port', int)]
 
 
 class RequestLeavePacket(M2MPacket):
