@@ -24,7 +24,7 @@ log = logging.getLogger("dataplicity")
 class Connection(threading.Thread):
     """Handles a single remote controlled TCP/IP connection"""
 
-    BUFFER_SIZE = 1024 * 16
+    BUFFER_SIZE = 1024 * 16 * 4
 
     def __init__(self, service, connection_id, channel):
         super(Connection, self).__init__()
@@ -71,7 +71,6 @@ class Connection(threading.Thread):
                 try:
                     data = self.socket.recv(self.BUFFER_SIZE)
                 except socket.timeout:
-                    log.debug('timeout')
                     continue
                 else:
                     if not data:
@@ -79,10 +78,11 @@ class Connection(threading.Thread):
                     else:
                         self.channel.write(data)
         finally:
+            log.debug("left recv loop")
             self.channel.close()
             if self.socket is not None:
                 try:
-                    self.socket.shutdown()
+                    self.socket.shutdown(socket.SHUT_RDWR)
                     self.socket.close()
                 except:
                     log.exception('error closing socket')
@@ -137,17 +137,13 @@ class Connection(threading.Thread):
     def on_channel_close(self):
         log.debug('channel close')
         if self.socket is not None:
-            self.socket.shutdown()
+            self.socket.shutdown(socket.SHUT_RDWR)
             self.socket.close()
             self.socket = None
 
     def on_channel_control(self, data):
+        log.debug('channel control %r', data)
         pass
-
-    def send(self, packet_type, *args, **kwargs):
-        packet = Packet.create(packet_type, *args, **kwargs)
-        packet_bytes = packet.encode_binary()
-        self.channel.write(packet_bytes)
 
 
 class Service(object):
@@ -178,6 +174,7 @@ class Service(object):
 
     def connect(self, port_no):
         """Add a new connection"""
+        log.debug('new %r connection on port %s', self, port_no)
         with self._lock:
             connection_id = self._connect_index = self._connect_index + 1
             channel = self.m2m.m2m_client.get_channel(port_no)

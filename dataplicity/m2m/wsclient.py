@@ -59,6 +59,7 @@ class Channel(object):
     def close(self):
         if self._closed:
             return True
+        self.client.close_channel(self.number)
         self._closed = True
         try:
             if self._close_callback is not None:
@@ -235,6 +236,10 @@ class WSClient(ThreadedDispatcher):
 
     def has_channel(self, channel_no):
         return channel_no in self.channels
+
+    def close_channel(self, channel_no):
+        log.debug("request close")
+        self.send('request_close', port=channel_no)
 
     def run(self):
         self._started = False
