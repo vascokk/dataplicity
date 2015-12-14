@@ -253,6 +253,10 @@ class WSClient(ThreadedDispatcher):
             self._started = False
         else:
             self._started = True
+        try:
+            self.app.close()
+        except:
+            log.exception('error closing app')
 
     def close(self, timeout=5):
         if not self.close_event.is_set() and self._started:
@@ -263,6 +267,7 @@ class WSClient(ThreadedDispatcher):
         self._started = False
         self._closed = True
         self.identity = None
+        self.app.close()
 
     def wait_ready(self, timeout=None):
         """Wait until the server is ready, and return identity"""
