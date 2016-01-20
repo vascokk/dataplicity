@@ -100,6 +100,8 @@ class PacketType(IntEnum):
 
     command_get_identities = 108
 
+    command_set_auth = 109
+
     peer_add_route = 200
 
     peer_forward = 201
@@ -328,6 +330,14 @@ class CommandGetIdentities(M2MPacket):
     type = PacketType.command_get_identities
     attributes = [('command_id', int_types),
                   ('nodes', list)]
+
+
+class CommandSetAuth(M2MPacket):
+    """Set auth information"""
+    type = PacketType.command_set_auth
+    attributes = [('command_id', int_types),
+                  ('expire', int_types),
+                  ('value', bytes)]
 
 
 class PeerAddRoutePacket(M2MPacket):
