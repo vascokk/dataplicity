@@ -77,7 +77,7 @@ class PacketType(IntEnum):
     request_leave = 20
 
     # An out of band route control packet
-    route_control = 21
+    route_control = 201
 
     # Send a route_control packet
     request_send_control = 22
@@ -101,6 +101,12 @@ class PacketType(IntEnum):
     command_get_identities = 108
 
     command_set_auth = 109
+
+    # Associate meta info with a node
+    command_set_meta = 110
+
+    # Get Meta info
+    command_get_meta = 111
 
     peer_add_route = 200
 
@@ -338,6 +344,23 @@ class CommandSetAuth(M2MPacket):
     attributes = [('command_id', int_types),
                   ('expire', int_types),
                   ('value', bytes)]
+
+
+class CommandSetMeta(M2MPacket):
+    """Set a meta key/value associated with a node"""
+    type = PacketType.command_set_meta
+    attributes = [('command_id', int_types),
+                  ('node', bytes)
+                  ('key', bytes),
+                  ('value', bytes)]
+
+
+class CommandGetMeta(M2MPacket):
+    """Get a dictionary of meta values associated with a node"""
+    type = PacketType.command_get_meta
+    attributes = [('command_id', int_types),
+                  ('requester', bytes),
+                  ('node', bytes)]
 
 
 class PeerAddRoutePacket(M2MPacket):
