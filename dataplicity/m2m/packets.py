@@ -77,7 +77,7 @@ class PacketType(IntEnum):
     request_leave = 20
 
     # An out of band route control packet
-    route_control = 201
+    route_control = 21
 
     # Send a route_control packet
     request_send_control = 22
@@ -350,7 +350,8 @@ class CommandSetMeta(M2MPacket):
     """Set a meta key/value associated with a node"""
     type = PacketType.command_set_meta
     attributes = [('command_id', int_types),
-                  ('node', bytes)
+                  ('requester', bytes), 
+                  ('node', bytes),
                   ('key', bytes),
                   ('value', bytes)]
 
@@ -366,8 +367,8 @@ class CommandGetMeta(M2MPacket):
 class PeerAddRoutePacket(M2MPacket):
     """Tell the peer cluster about a route"""
     type = PacketType.peer_add_route
-    attributes = [('requester', bytes),
-                  ('command_id', int),
+    attributes = [('command_id', int),
+                  ('requester', bytes),
                   ('node1', bytes),
                   ('port1', int_types),
                   ('node2', bytes),
