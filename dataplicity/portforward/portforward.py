@@ -259,4 +259,3 @@ class PortForwardManager(object):
         elif service is not None:
             service = self.get_service(service)
         service.connect(m2m_port)
-
