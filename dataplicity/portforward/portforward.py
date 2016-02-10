@@ -24,6 +24,7 @@ log = logging.getLogger("dataplicity")
 class Connection(threading.Thread):
     """Handles a single remote controlled TCP/IP connection"""
 
+    # Bytes to read at-a-time. Doesn't need to be particularly large.
     BUFFER_SIZE = 1024 * 16 * 4
 
     def __init__(self, service, connection_id, channel):
@@ -68,11 +69,14 @@ class Connection(threading.Thread):
             while not self.close_event.is_set():
                 if self.socket is None:
                     break
+                data = b''
                 try:
                     data = self.socket.recv(self.BUFFER_SIZE)
                 except socket.timeout:
+                    log.debug('timeout in recv loop')
                     continue
                 except:
+                    log.exception('error in recv')
                     break
                 else:
                     if not data:
@@ -81,17 +85,17 @@ class Connection(threading.Thread):
                         self.channel.write(data)
         finally:
             log.debug("left recv loop")
+            self.service.on_connection_complete(self.connection_id)
             self.channel.close()
             if self.socket is not None:
                 try:
-                    self.socket.shutdown(socket.SHUT_RDWR)
+                    self.socket.shutdown(socket.SHUT_RD)
                 except:
                     log.exception('error shutting down socket')
                 try:
                     self.socket.close()
                 except:
                     log.exception('error closing socket')
-            self.service.on_connection_complete(self.connection_id)
 
     def connect(self):
         # Connect may block, so do it in thread
@@ -143,14 +147,14 @@ class Connection(threading.Thread):
         log.debug('channel close')
         if self.socket is not None:
             try:
-                self.socket.shutdown(socket.SHUT_RDWR)
+                self.socket.shutdown(socket.SHUT_RD)
             except:
                 log.exception('shutdown failed')
             try:
                 self.socket.close()
             except:
                 log.exception('socket close failed')
-            self.socket = None
+            #self.socket = None
 
     def on_channel_control(self, data):
         log.debug('channel control %r', data)
