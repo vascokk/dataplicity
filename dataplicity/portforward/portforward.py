@@ -72,6 +72,8 @@ class Connection(threading.Thread):
                     data = self.socket.recv(self.BUFFER_SIZE)
                 except socket.timeout:
                     continue
+                except:
+                    break
                 else:
                     if not data:
                         break
@@ -83,6 +85,9 @@ class Connection(threading.Thread):
             if self.socket is not None:
                 try:
                     self.socket.shutdown(socket.SHUT_RDWR)
+                except:
+                    log.exception('error shutting down socket')
+                try:
                     self.socket.close()
                 except:
                     log.exception('error closing socket')
