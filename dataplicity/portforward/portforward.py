@@ -142,8 +142,14 @@ class Connection(threading.Thread):
     def on_channel_close(self):
         log.debug('channel close')
         if self.socket is not None:
-            self.socket.shutdown(socket.SHUT_RDWR)
-            self.socket.close()
+            try:
+                self.socket.shutdown(socket.SHUT_RDWR)
+            except:
+                log.exception('shutdown failed')
+            try:
+                self.socket.close()
+            except:
+                log.exception('socket close failed')
             self.socket = None
 
     def on_channel_control(self, data):
