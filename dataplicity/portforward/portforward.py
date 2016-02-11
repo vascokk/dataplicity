@@ -15,6 +15,7 @@ from . import packets
 import socket
 import weakref
 import threading
+import select
 
 
 import logging
@@ -67,35 +68,35 @@ class Connection(threading.Thread):
             self._flush_buffer()
             # Read all the data we can and write it to the channel
             while not self.close_event.is_set():
-                if self.socket is None:
-                    break
-                data = b''
-                try:
-                    data = self.socket.recv(self.BUFFER_SIZE)
-                except socket.timeout:
-                    log.debug('timeout in recv loop')
-                    continue
-                except:
-                    log.exception('error in recv')
-                    break
-                else:
-                    if not data:
+                readable, _, _ = select.select([self.socket], [], [], 1.0)
+                if readable:
+                    try:
+                        data = self.socket.recv(self.BUFFER_SIZE)
+                    except:
+                        log.exception('error in recv')
                         break
                     else:
-                        self.channel.write(data)
+                        if data:
+                            self.channel.write(data)
+                        else:
+                            break
         finally:
             log.debug("left recv loop")
-            self.service.on_connection_complete(self.connection_id)
             self.channel.close()
-            if self.socket is not None:
-                try:
-                    self.socket.shutdown(socket.SHUT_RD)
-                except:
-                    log.exception('error shutting down socket')
-                try:
-                    self.socket.close()
-                except:
-                    log.exception('error closing socket')
+            self.service.on_connection_complete(self.connection_id)
+            self._close_socket()
+
+    def _close_socket(self):
+        """Shutdown the socket"""
+        if self.socket is not None:
+            # try:
+            #     self.socket.shutdown(socket.SHUT_RDWR)
+            # except:
+            #     log.exception('error shutting down socket')
+            try:
+                self.socket.close()
+            except:
+                log.exception('error closing socket')
 
     def connect(self):
         # Connect may block, so do it in thread
@@ -108,8 +109,7 @@ class Connection(threading.Thread):
             port = self.service.port
             log.debug('connecting to %s', self.remote)
             _socket.connect((host, port))
-            _socket.setblocking(True)
-            _socket.settimeout(1)
+            _socket.setblocking(False)
         except IOError:
             log.exception('IO Error when connecting')
             # self.send(PacketType.remote_error, e.errno, py2bytes(e))
@@ -147,18 +147,12 @@ class Connection(threading.Thread):
         log.debug('channel close')
         if self.socket is not None:
             try:
-                self.socket.shutdown(socket.SHUT_RD)
+                self.socket.shutdown(socket.SHUT_RDWR)
             except:
-                log.exception('shutdown failed')
-            try:
-                self.socket.close()
-            except:
-                log.exception('socket close failed')
-            #self.socket = None
+                log.exception('error shutting down socket in on_channel_close')
 
     def on_channel_control(self, data):
         log.debug('channel control %r', data)
-        pass
 
 
 class Service(object):
