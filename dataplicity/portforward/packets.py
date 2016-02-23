@@ -21,7 +21,7 @@ class PacketType(IntEnum):
     # Packets sent from the remote side
     # ------------------------------------------
 
-    # imcoming connection
+    # incoming connection
     remote_connect = 1
     # connection has closed
     remote_close = 2
@@ -32,7 +32,7 @@ class PacketType(IntEnum):
     local_connect = 100
     # Connection on the local side closed
     local_close = 101
-    # Data recieved from the socket
+    # Data received from the socket
     local_recv = 102
 
 
