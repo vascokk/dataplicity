@@ -26,7 +26,7 @@ class Connection(threading.Thread):
     """Handles a single remote controlled TCP/IP connection"""
 
     # Bytes to read at-a-time
-    BUFFER_SIZE = 1024 * 8
+    BUFFER_SIZE = 1024 * 8 * 4
 
     def __init__(self, service, connection_id, channel):
         super(Connection, self).__init__()
@@ -78,22 +78,19 @@ class Connection(threading.Thread):
                         break
                     else:
                         if data:
+                            log.debug('write %s bytes', len(data))
                             self.channel.write(data)
                         else:
                             break
         finally:
             log.debug("left recv loop")
-            self.channel.close()
+            #self.channel.close()
             self.service.on_connection_complete(self.connection_id)
             self._close_socket()
 
     def _close_socket(self):
         """Shutdown the socket"""
         if self.socket is not None:
-            # try:
-            #     self.socket.shutdown(socket.SHUT_RDWR)
-            # except:
-            #     log.exception('error shutting down socket')
             try:
                 self.socket.close()
             except:
@@ -144,12 +141,11 @@ class Connection(threading.Thread):
                 self.socket.sendall(data)
 
     def on_channel_close(self):
-        log.debug('channel close')
         if self.socket is not None:
             try:
                 self.socket.shutdown(socket.SHUT_RDWR)
             except:
-                log.exception('error shutting down socket in on_channel_close')
+                pass
 
     def on_channel_control(self, data):
         log.debug('channel control %r', data)
