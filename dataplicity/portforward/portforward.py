@@ -25,8 +25,8 @@ log = logging.getLogger("dataplicity")
 class Connection(threading.Thread):
     """Handles a single remote controlled TCP/IP connection"""
 
-    # Bytes to read at-a-time. Doesn't need to be particularly large.
-    BUFFER_SIZE = 1024 * 16 * 4
+    # Bytes to read at-a-time
+    BUFFER_SIZE = 1024 * 8
 
     def __init__(self, service, connection_id, channel):
         super(Connection, self).__init__()
