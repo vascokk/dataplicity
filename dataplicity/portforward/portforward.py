@@ -132,7 +132,6 @@ class Connection(threading.Thread):
 
     def on_channel_data(self, data):
         """Called by m2m channel"""
-        log.debug("got data %r", data)
         with self._lock:
             self.read_buffer.append(data)
             self._flush_buffer()

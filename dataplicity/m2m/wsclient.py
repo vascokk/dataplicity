@@ -167,7 +167,8 @@ class WSClient(ThreadedDispatcher):
         self.identity = uuid
         self.channels = {}
 
-        self.lock = threading.RLock()
+        self.callback_lock = threading.RLock()
+        self.write_lock = threading.Lock()
         self.ready_event = threading.Event()
         self.close_event = threading.Event()
         self.callbacks = defaultdict(list)
@@ -209,7 +210,7 @@ class WSClient(ThreadedDispatcher):
         self.callbacks[command_id].append(callback)
 
     def callback(self, command_id, result):
-        with self.lock:
+        with self.callback_lock:
             if command_id in self.callbacks:
                 for callback in self.callbacks[command_id]:
                     try:
@@ -220,7 +221,7 @@ class WSClient(ThreadedDispatcher):
 
     def clear_callbacks(self):
         """Clear all callbacks, because they may be blocking"""
-        with self.lock:
+        with self.callback_lock:
             for command_id, callbacks in self.callbacks.items():
                 for callback in callbacks:
                     try:
@@ -302,7 +303,7 @@ class WSClient(ThreadedDispatcher):
 
     def send_bytes(self, packet_bytes):
         """Send bytes over the websocket"""
-        with self.lock:
+        with self.write_lock:
             self.app.sock.send_binary(packet_bytes)
 
     def on_open(self, app):
