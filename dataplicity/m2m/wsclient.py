@@ -302,7 +302,8 @@ class WSClient(ThreadedDispatcher):
 
     def send_bytes(self, packet_bytes):
         """Send bytes over the websocket"""
-        self.app.sock.send_binary(packet_bytes)
+        with self.lock:
+            self.app.sock.send_binary(packet_bytes)
 
     def on_open(self, app):
         """Called when WS is opened"""

@@ -67,6 +67,7 @@ class Connection(threading.Thread):
 
             self._flush_buffer()
             # Read all the data we can and write it to the channel
+            # TODO: Rework this loop to not use the timeout
             while not self.close_event.is_set():
                 readable, _, _ = select.select([self.socket], [], [], 1.0)
                 if readable:
