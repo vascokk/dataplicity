@@ -65,10 +65,10 @@ class Connection(threading.Thread):
             # Read all the data we can and write it to the channel
             # TODO: Rework this loop to not use the timeout
             while not self.close_event.is_set():
-                readable, _, exceptional = select.select([self.socket], [], [self.socket], 5.0)
-                if exceptional:
-                    # Socket has been closed in another thread, possibly due to
-                    # m2m channel closing
+                try:
+                    readable, _, exceptional = select.select([self.socket], [], [self.socket], 5.0)
+                except Exception as e:
+                    log.warning('error %s in select', e)
                     break
                 if readable:
                     try:
@@ -84,6 +84,10 @@ class Connection(threading.Thread):
                         else:
                             # No data means the socket has been closed
                             break
+                if exceptional:
+                    # Socket has been closed in another thread, possibly due to
+                    # m2m channel closing
+                    break
         finally:
             log.debug("left recv loop (read %s bytes)", bytes_written)
             # Tell service we're done with this connection
@@ -148,7 +152,16 @@ class Connection(threading.Thread):
 
     def on_channel_close(self):
         log.debug('channel close')
-        self._close_socket()
+        with self._lock:
+            # Shut down the socket
+            # This will cause an exeptional condition in the select loop,
+            # which will subsequently exit cleanly
+            self._flush_buffer()
+            if self.socket is not None:
+                try:
+                    self.socket.shutdown(socket.SHUT_RDWR)
+                except:
+                    pass
 
     def on_channel_control(self, data):
         log.debug('channel control %r', data)
