@@ -19,10 +19,10 @@ log = logging.getLogger("dataplicity")
 
 
 class Connection(threading.Thread):
-    """Handles a single remote controlled TCP/IP connection"""
+    """Handles a single remote controlled TCP/IP connection."""
 
-    # Bytes to read at-a-time
-    BUFFER_SIZE = 1024 * 16
+    # Max to read at-a-time
+    BUFFER_SIZE = 1024 * 32
 
     def __init__(self, service, connection_id, channel):
         super(Connection, self).__init__()
@@ -52,6 +52,7 @@ class Connection(threading.Thread):
 
     def run(self):
         log.debug("connection started")
+        bytes_written = 0
         try:
             # Connect to remote host
             connected = self._connect()
@@ -62,10 +63,16 @@ class Connection(threading.Thread):
 
             self._flush_buffer()
             # Read all the data we can and write it to the channel
+            # TODO: Rework this loop to not use the timeout
             while not self.close_event.is_set():
-                readable, _, _ = select.select([self.socket], [], [], 3.0)
+                readable, _, exceptional = select.select([self.socket], [], [self.socket], 5.0)
+                if exceptional:
+                    # Socket has been closed in another thread, possibly due to
+                    # m2m channel closing
+                    break
                 if readable:
                     try:
+                        # Reads *up to* BUFFER_SIZE bytes
                         data = self.socket.recv(self.BUFFER_SIZE)
                     except:
                         log.exception('error in recv')
@@ -73,25 +80,30 @@ class Connection(threading.Thread):
                     else:
                         if data:
                             self.channel.write(data)
+                            bytes_written += len(data)
                         else:
+                            # No data means the socket has been closed
                             break
         finally:
-            log.debug("left recv loop")
-            self.channel.close()
+            log.debug("left recv loop (read %s bytes)", bytes_written)
+            # Tell service we're done with this connection
             self.service.on_connection_complete(self.connection_id)
+            # These close methods are a null operation if the objects are already closed
+            self.channel.close()
             self._close_socket()
 
     def _close_socket(self):
         """Shutdown the socket"""
-        if self.socket is not None:
-            try:
-                self.socket.shutdown(socket.SHUT_RDWR)
-            except:
-                pass
-            try:
-                self.socket.close()
-            except:
-                log.exception('error closing socket')
+        with self._lock:
+            if self.socket is not None:
+                try:
+                    self.socket.shutdown(socket.SHUT_RDWR)
+                except:
+                    pass
+                try:
+                    self.socket.close()
+                except:
+                    log.exception('error closing socket')
 
     def connect(self):
         # Connect may block, so do it in thread
@@ -104,7 +116,7 @@ class Connection(threading.Thread):
             port = self.service.port
             log.debug('connecting to %s', self.remote)
             _socket.connect((host, port))
-            _socket.setblocking(False)
+            _socket.setblocking(0)
         except IOError:
             log.exception('IO Error when connecting')
             # self.send(PacketType.remote_error, e.errno, py2bytes(e))
@@ -121,7 +133,6 @@ class Connection(threading.Thread):
 
     def on_channel_data(self, data):
         """Called by m2m channel"""
-        log.debug("got data %r", data)
         with self._lock:
             self.read_buffer.append(data)
             self._flush_buffer()

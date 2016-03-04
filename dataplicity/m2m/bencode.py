@@ -1,5 +1,5 @@
-from __future__ import unicode_literals
 from __future__ import print_function
+from __future__ import unicode_literals
 
 """
 Encode / Decode Bencode (http://en.wikipedia.org/wiki/Bencode)
@@ -286,18 +286,3 @@ if __name__ == '__main__':
 
     unittest.main()
 
-
-
-# if __name__ == "__main__":
-#     print(encode(b'Hello'))
-
-#     print(encode([1, b'test']))
-
-#     d = encode({b'foo': b'bar', b'l': [1, 2, 3]})
-#     print(d)
-#     print(decode(d))
-
-#     d = {b"publisher": b"bob", b"publisher-webpage": b"www.example.com", b"publisher.location": b"home"}
-#     print(encode(d))
-
-#     print(decode(encode(d)))

@@ -1,22 +1,23 @@
-from __future__ import unicode_literals
 from __future__ import print_function
+from __future__ import unicode_literals
+
+
+import logging
+import socket
+import ssl
+import sys
+import threading
+from collections import defaultdict, deque
 
 import websocket
 
-from dataplicity.m2m import bencode
-from dataplicity.m2m import packets
-from dataplicity.compat import text_type
-from dataplicity.m2m.dispatcher import Dispatcher, expose
-from dataplicity.m2m.packets import PacketType
-from dataplicity.m2m.packets import M2MPacket as Packet
+from . import bencode
+from . import packets
+from ..compat import text_type
+from .dispatcher import Dispatcher, expose
+from .packets import M2MPacket as Packet
+from .packets import PacketType
 
-from collections import deque, defaultdict
-import sys
-import socket
-import threading
-import ssl
-
-import logging
 log = logging.getLogger('m2m.client')
 server_log = logging.getLogger('m2m.log')
 
@@ -151,7 +152,8 @@ class ThreadedDispatcher(threading.Thread, Dispatcher):
 
 class WSClient(ThreadedDispatcher):
 
-    def __init__(self, url, uuid=None, log=None, channel_callback=None, control_callback=None, **kwargs):
+    def __init__(self, url, uuid=None, log=None,
+                 channel_callback=None, control_callback=None, **kwargs):
         self.url = url
         self.channel_callback = channel_callback
         self.control_callback = control_callback
@@ -167,7 +169,8 @@ class WSClient(ThreadedDispatcher):
         self.identity = uuid
         self.channels = {}
 
-        self.lock = threading.RLock()
+        self.callback_lock = threading.RLock()
+        self.write_lock = threading.Lock()
         self.ready_event = threading.Event()
         self.close_event = threading.Event()
         self.callbacks = defaultdict(list)
@@ -209,7 +212,7 @@ class WSClient(ThreadedDispatcher):
         self.callbacks[command_id].append(callback)
 
     def callback(self, command_id, result):
-        with self.lock:
+        with self.callback_lock:
             if command_id in self.callbacks:
                 for callback in self.callbacks[command_id]:
                     try:
@@ -220,7 +223,7 @@ class WSClient(ThreadedDispatcher):
 
     def clear_callbacks(self):
         """Clear all callbacks, because they may be blocking"""
-        with self.lock:
+        with self.callback_lock:
             for command_id, callbacks in self.callbacks.items():
                 for callback in callbacks:
                     try:
@@ -243,8 +246,9 @@ class WSClient(ThreadedDispatcher):
 
     def run(self):
         self._started = False
+        sockopt = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
         try:
-            self.app.run_forever(sockopt=[(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)],
+            self.app.run_forever(sockopt=sockopt,
                                  sslopt={"cert_reqs": ssl.CERT_NONE})
         except (SystemExit, KeyboardInterrupt):
             log.info('wsclient exit requested')
@@ -302,7 +306,8 @@ class WSClient(ThreadedDispatcher):
 
     def send_bytes(self, packet_bytes):
         """Send bytes over the websocket"""
-        self.app.sock.send_binary(packet_bytes)
+        with self.write_lock:
+            self.app.sock.send_binary(packet_bytes)
 
     def on_open(self, app):
         """Called when WS is opened"""
