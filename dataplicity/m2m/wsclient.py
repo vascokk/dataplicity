@@ -58,23 +58,27 @@ class Channel(object):
         return "<channel {}>".format(self.number)
 
     def close(self):
+        """Call to *request* a close"""
+        if not self._closed:
+            self.client.close_channel(self.number)
+
+    def on_close(self):
+        """Called when the notify_close packet is recieved."""
         if self._closed:
-            return True
-        self.client.close_channel(self.number)
+            return
         self._closed = True
         try:
             if self._close_callback is not None:
                 self._close_callback()
         except:
-            log.exception('error in channel.close')
-        log.debug('closed %r', self)
+            log.exception('error in close callback')
 
     @property
     def is_closed(self):
         return self._closed
 
     def on_data(self, data):
-        """On incoming data"""
+        """On incoming data."""
         if self._closed:
             log.debug('%s bytes from closed %r ignored', len(data), self)
             return
@@ -86,7 +90,7 @@ class Channel(object):
                 self._data_event.set()
 
     def on_control(self, data):
-        """On control data"""
+        """On control data."""
         if self._closed:
             log.debug('%s bytes from closed %r ignored', len(data), self)
             return
@@ -107,7 +111,7 @@ class Channel(object):
         return self._data_event.is_set()
 
     def read(self, count, timeout=None, block=False):
-        """Read up to `count` bytes"""
+        """Read up to `count` bytes."""
         incoming_bytes = []
         bytes_remaining = count
 
@@ -146,11 +150,13 @@ class Channel(object):
 class ThreadedDispatcher(threading.Thread, Dispatcher):
     def __init__(self, **kwargs):
         # Why didn't super work here?
+        # Because threading.Thread doesn't call super
         threading.Thread.__init__(self)
         Dispatcher.__init__(self, Packet, log=kwargs.get('log'))
 
 
 class WSClient(ThreadedDispatcher):
+    """Interface to the M2M server."""
 
     def __init__(self, url, uuid=None, log=None,
                  channel_callback=None, control_callback=None, **kwargs):
@@ -222,7 +228,7 @@ class WSClient(ThreadedDispatcher):
                 del self.callbacks[command_id]
 
     def clear_callbacks(self):
-        """Clear all callbacks, because they may be blocking"""
+        """Clear all callbacks, because they may be blocking."""
         with self.callback_lock:
             for command_id, callbacks in self.callbacks.items():
                 for callback in callbacks:
@@ -397,7 +403,7 @@ class WSClient(ThreadedDispatcher):
         log.debug('%s closed', channel_no)
         if self.has_channel(channel_no):
             channel = self.get_channel(channel_no)
-            channel.close()
+            channel.on_close()
             del self.channels[channel_no]
 
     @expose(PacketType.notify_login_success)

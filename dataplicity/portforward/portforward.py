@@ -1,5 +1,5 @@
 """
-Port forwarding client
+Port forwarding client.
 
 Reads and writes to a socket, proxied over m2m
 
@@ -92,10 +92,28 @@ class Connection(threading.Thread):
             self.service.on_connection_complete(self.connection_id)
             # These close methods are a null operation if the objects are already closed
             self.channel.close()
-            self._close_socket()
+            self._shutdown_read()
+
+    def _shutdown_read(self):
+        """Shutdown reading."""
+        with self._lock:
+            if self.socket:
+                try:
+                    self.socket.shutdown(socket.SHUT_RD)
+                except:
+                    log.exception('error in shutdown read')
+
+    def _shutdown_write(self):
+        """Shutdown writing."""
+        with self._lock:
+            if self.socket:
+                try:
+                    self.socket.shutdown(socket.SHUT_WR)
+                except:
+                    log.exception('error in shutdown write')
 
     def _close_socket(self):
-        """Shutdown the socket"""
+        """Shutdown the socket."""
         with self._lock:
             if self.socket is not None:
                 try:
@@ -113,6 +131,7 @@ class Connection(threading.Thread):
 
     def _connect(self):
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        _socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         try:
             host = self.service.host
             port = self.service.port
@@ -134,7 +153,7 @@ class Connection(threading.Thread):
         return False
 
     def on_channel_data(self, data):
-        """Called by m2m channel"""
+        """Called by m2m channel."""
         with self._lock:
             self.read_buffer.append(data)
             self._flush_buffer()
@@ -155,18 +174,15 @@ class Connection(threading.Thread):
             # This will cause an exeptional condition in the select loop,
             # which will subsequently exit cleanly
             self._flush_buffer()
-            if self.socket is not None:
-                try:
-                    self.socket.shutdown(socket.SHUT_RDWR)
-                except:
-                    pass
+            self._shutdown_write()
 
     def on_channel_control(self, data):
         log.debug('channel control %r', data)
 
 
 class Service(object):
-    """A service defines a host and port to forward"""
+    """A service defines a host and port to forward."""
+
     def __init__(self, manager, name, port, host="127.0.0.1"):
         self._manager = weakref.ref(manager)
         self.name = name
@@ -177,6 +193,7 @@ class Service(object):
         self._lock = threading.RLock()
 
     def __repr__(self):
+        """Some useful info re the service."""
         return "<service {}:{} '{}'>".format(self.host, self.port, self.name)
 
     @property
@@ -192,7 +209,7 @@ class Service(object):
         return self.manager.close_event
 
     def connect(self, port_no):
-        """Add a new connection"""
+        """Add a new connection."""
         log.debug('new %r connection on port %s', self, port_no)
         with self._lock:
             connection_id = self._connect_index = self._connect_index + 1
@@ -207,13 +224,13 @@ class Service(object):
             self._connections.pop(connection_id, None)
 
     def on_connection_complete(self, connection_id):
-        """Called by a connection when it is finished"""
+        """Called by a connection when it is finished."""
         with self._lock:
             self.remove_connection(connection_id)
 
 
 class PortForwardManager(object):
-    """Managed port forwarded services"""
+    """Managed port forwarded services."""
 
     def __init__(self, client):
         self._client = weakref.ref(client)
@@ -231,7 +248,7 @@ class PortForwardManager(object):
 
     @classmethod
     def init_from_conf(cls, client, conf):
-        """Initialise PF from dataplicity.conf"""
+        """Initialise PF from dataplicity.conf."""
         manager = PortForwardManager(client)
         for section, name in conf.qualified_sections('portforward'):
             if not conf.get_bool(section, 'enabled', True):
@@ -245,22 +262,22 @@ class PortForwardManager(object):
         return self._close_event
 
     def on_client_close(self):
-        """M2M client closed"""
+        """M2M client closed."""
         log.debug('m2m exited')
 
     def get_service_on_port(self, port):
-        """Get the service on a numbered port"""
+        """Get the service on a numbered port."""
         service_name = self._ports.get('port')
         if service_name is None:
             return None
         return self._services[service_name]
 
     def get_service(self, service, default=None):
-        """Get a named service"""
+        """Get a named service."""
         return self._services.get(service, default)
 
     def add_service(self, name, port, host="127.0.0.1"):
-        """Add a service to be exposed"""
+        """Add a service to be exposed."""
         service = Service(self, name, port, host=host)
         self._services[name] = service
         self._ports[port] = name
@@ -272,7 +289,7 @@ class PortForwardManager(object):
         self.open(port2, service)
 
     def open(self, m2m_port, service=None, port=None):
-        """Open a port forward service"""
+        """Open a port forward service."""
         if service is None and port is None:
             raise ValueError("one of service or port is required")
         if port is not None:
