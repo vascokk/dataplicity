@@ -5,20 +5,16 @@ Reads and writes to a socket, proxied over m2m
 
 """
 
-from __future__ import unicode_literals
 from __future__ import print_function
-
-
-from ..m2m import bencode, dispatcher
-from . import packets
-
-import socket
-import weakref
-import threading
-import select
-
+from __future__ import unicode_literals
 
 import logging
+import select
+import socket
+import threading
+import weakref
+
+
 log = logging.getLogger("dataplicity")
 
 
@@ -26,7 +22,7 @@ class Connection(threading.Thread):
     """Handles a single remote controlled TCP/IP connection"""
 
     # Bytes to read at-a-time
-    BUFFER_SIZE = 1024 * 8
+    BUFFER_SIZE = 1024 * 16
 
     def __init__(self, service, connection_id, channel):
         super(Connection, self).__init__()
@@ -35,7 +31,6 @@ class Connection(threading.Thread):
         self.channel = channel
 
         self._lock = threading.RLock()
-        self.dispatcher = dispatcher.Dispatcher(packets.Packet, self)
         self.socket = None
         self.read_buffer = []  # For data received before we connected
 
@@ -68,7 +63,7 @@ class Connection(threading.Thread):
             self._flush_buffer()
             # Read all the data we can and write it to the channel
             while not self.close_event.is_set():
-                readable, _, _ = select.select([self.socket], [], [], 1.0)
+                readable, _, _ = select.select([self.socket], [], [], 3.0)
                 if readable:
                     try:
                         data = self.socket.recv(self.BUFFER_SIZE)
@@ -89,10 +84,10 @@ class Connection(threading.Thread):
     def _close_socket(self):
         """Shutdown the socket"""
         if self.socket is not None:
-            # try:
-            #     self.socket.shutdown(socket.SHUT_RDWR)
-            # except:
-            #     log.exception('error shutting down socket')
+            try:
+                self.socket.shutdown(socket.SHUT_RDWR)
+            except:
+                pass
             try:
                 self.socket.close()
             except:
@@ -124,11 +119,6 @@ class Connection(threading.Thread):
             return True
         return False
 
-    def _on_packet(self, data, _decode=bencode.decode):
-        packet = _decode(data)
-        packet_type, packet_body = packet
-        self.dispatcher.dispatch(packet_type, packet_body)
-
     def on_channel_data(self, data):
         """Called by m2m channel"""
         log.debug("got data %r", data)
@@ -139,17 +129,15 @@ class Connection(threading.Thread):
     def _flush_buffer(self):
         with self._lock:
             if self.socket is not None:
-                data = b''.join(self.read_buffer)
-                del self.read_buffer[:]
-                self.socket.sendall(data)
+                try:
+                    for chunk in self.read_buffer:
+                        self.socket.sendall(chunk)
+                finally:
+                    del self.read_buffer[:]
 
     def on_channel_close(self):
         log.debug('channel close')
-        if self.socket is not None:
-            try:
-                self.socket.shutdown(socket.SHUT_RDWR)
-            except:
-                log.exception('error shutting down socket in on_channel_close')
+        self._close_socket()
 
     def on_channel_control(self, data):
         log.debug('channel control %r', data)
@@ -187,7 +175,8 @@ class Service(object):
         with self._lock:
             connection_id = self._connect_index = self._connect_index + 1
             channel = self.m2m.m2m_client.get_channel(port_no)
-            connection = self._connections[connection_id] = Connection(self, connection_id, channel)
+            connection = Connection(self, connection_id, channel)
+            self._connections[connection_id] = connection
         connection.start()
         return connection_id
 
@@ -197,7 +186,8 @@ class Service(object):
 
     def on_connection_complete(self, connection_id):
         """Called by a connection when it is finished"""
-        self.remove_connection(connection_id)
+        with self._lock:
+            self.remove_connection(connection_id)
 
 
 class PortForwardManager(object):
