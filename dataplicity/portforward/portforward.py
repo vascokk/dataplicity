@@ -60,8 +60,6 @@ class Connection(threading.Thread):
                 return
 
             log.debug("entered recv loop")
-
-            self._flush_buffer()
             # Read all the data we can and write it to the channel
             # TODO: Rework this loop to not use the timeout
             while not self.close_event.is_set():
