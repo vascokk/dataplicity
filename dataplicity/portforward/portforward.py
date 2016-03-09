@@ -25,6 +25,7 @@ class Connection(threading.Thread):
     BUFFER_SIZE = 1024 * 32
 
     def __init__(self, service, connection_id, channel):
+        """Initialize the connection, set up callbacks."""
         super(Connection, self).__init__()
         self._service = weakref.ref(service)
         self.connection_id = connection_id
@@ -40,17 +41,21 @@ class Connection(threading.Thread):
 
     @property
     def service(self):
+        """Get the parent service object (weak reference, may return None)."""
         return self._service()
 
     @property
     def close_event(self):
+        """Get a threading.Event object."""
         return self.service.close_event
 
     @property
     def remote(self):
+        """Information about remote end."""
         return "{}:{}".format(self.service.host, self.service.port)
 
     def run(self):
+        """Main loop, connects to local server, reads data, and writes it to an m2m channel."""
         log.debug("connection started")
         bytes_written = 0
         try:
@@ -101,7 +106,7 @@ class Connection(threading.Thread):
                 try:
                     self.socket.shutdown(socket.SHUT_RD)
                 except:
-                    log.exception('error in shutdown read')
+                    pass
 
     def _shutdown_write(self):
         """Shutdown writing."""
@@ -110,7 +115,7 @@ class Connection(threading.Thread):
                 try:
                     self.socket.shutdown(socket.SHUT_WR)
                 except:
-                    log.exception('error in shutdown write')
+                    pass
 
     def _close_socket(self):
         """Shutdown the socket."""
@@ -126,6 +131,7 @@ class Connection(threading.Thread):
                     log.exception('error closing socket')
 
     def connect(self):
+        """Start thread, and connect to local server."""
         # Connect may block, so do it in thread
         self.start()
 
@@ -168,6 +174,7 @@ class Connection(threading.Thread):
                     del self.read_buffer[:]
 
     def on_channel_close(self):
+        """Called when the channel has been closed."""
         log.debug('channel close')
         with self._lock:
             # Shut down the socket
@@ -177,6 +184,7 @@ class Connection(threading.Thread):
             self._shutdown_write()
 
     def on_channel_control(self, data):
+        """Called when the remote end sends a control packet (currently not used)."""
         log.debug('channel control %r', data)
 
 
