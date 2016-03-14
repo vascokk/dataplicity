@@ -331,16 +331,19 @@ class WSClient(ThreadedDispatcher):
 
     def on_error(self, app, error):
         """Called on WS error."""
-        self.ready_event.set()
         if error:
-            self.log.error(text_type(error))
+            self.log.error("websocket error %r", error)
+        self._closed = True
+        self.identity = None
+        self.close_event.set()
+        self.ready_event.set()
 
     def on_close(self, app):
         self.log.debug('connection closed by peer')
-        self.close_event.set()
-        self.ready_event.set()
         self._closed = True
         self.identity = None
+        self.close_event.set()
+        self.ready_event.set()
 
     def on_packet(self, packet):
         packet_type = packets.PacketType(packet[0])
