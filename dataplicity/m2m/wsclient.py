@@ -27,6 +27,7 @@ class ClientError(Exception):
 
 
 class ChannelFile(object):
+    """Mimicks a writable file."""
 
     def __init__(self, client, channel_no):
         self.client = client
@@ -41,7 +42,7 @@ class ChannelFile(object):
 
 
 class Channel(object):
-    """An interface to a channel"""
+    """An interface to a channel."""
 
     def __init__(self, client, number):
         self.client = client
@@ -58,7 +59,7 @@ class Channel(object):
         return "<channel {}>".format(self.number)
 
     def close(self):
-        """Call to *request* a close"""
+        """Call to *request* a close."""
         if not self._closed:
             self.client.close_channel(self.number)
 
@@ -280,7 +281,7 @@ class WSClient(ThreadedDispatcher):
         self.app.close()
 
     def wait_ready(self, timeout=None):
-        """Wait until the server is ready, and return identity"""
+        """Wait until the server is ready, and return identity."""
         if timeout is None:
             while 1:
                 if self.ready_event.wait(1):
@@ -311,12 +312,12 @@ class WSClient(ThreadedDispatcher):
         self.send_bytes(packet_bytes)
 
     def send_bytes(self, packet_bytes):
-        """Send bytes over the websocket"""
+        """Send bytes over the websocket."""
         with self.write_lock:
             self.app.sock.send_binary(packet_bytes)
 
     def on_open(self, app):
-        """Called when WS is opened"""
+        """Called when WS is opened."""
         log.debug("websocket opened")
         if self.identity is None:
             self.send(PacketType.request_join)
@@ -324,12 +325,12 @@ class WSClient(ThreadedDispatcher):
             self.send(PacketType.request_identify, uuid=self.identity)
 
     def on_message(self, app, data):
-        """a WS message"""
+        """On a WS message."""
         packet = bencode.decode(data)
         self.on_packet(packet)
 
     def on_error(self, app, error):
-        """Called on WS error"""
+        """Called on WS error."""
         self.ready_event.set()
         if error:
             self.log.error(text_type(error))

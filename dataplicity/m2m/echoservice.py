@@ -1,17 +1,19 @@
-from __future__ import unicode_literals
+"""A M2M servers that returns data sent to it. May be used as a heart-beat."""
+
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
-log = logging.getLogger('dataplicity.m2m')
-
 import weakref
+
+log = logging.getLogger('dataplicity.m2m')
 
 
 class EchoService(object):
     """
-    M2M echo service
+    M2M echo service.
 
-    Data will be sent back on the same channel
+    Data will be sent back on the same channel.
 
     """
 

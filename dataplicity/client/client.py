@@ -34,10 +34,10 @@ CONNECT_WAIT = 5
 
 
 def _wait_on_url(url, closing_event, log):
-    """Wait for a long running http request, and respond to a closing event"""
+    """Wait for a long running http request, and respond to a closing event."""
 
     def do_wait(wait_seconds):
-        """Wait for n seconds, or until closing event is set"""
+        """Wait for n seconds, or until closing event is set."""
         for _ in xrange(wait_seconds):
             if closing_event.is_set():
                 return True
@@ -79,7 +79,7 @@ def _wait_on_url(url, closing_event, log):
 
 
 class Client(object):
-    """The main interface to the dataplicity server"""
+    """The main interface to the dataplicity server."""
 
     def __init__(self, conf_paths, check_firmware=True, log=None, create_m2m=True, disable_sync=False, rpc_url=None):
         self.check_firmware = check_firmware
@@ -206,7 +206,7 @@ class Client(object):
 
     @property
     def auth_token(self):
-        """get the auth_token, which may be in dataplicity.cfg, or reference another file"""
+        """get the auth_token, which may be in dataplicity.cfg, or reference another file."""
         if self._auth_token is None:
             return None
         if self._auth_token.startswith('file:'):
@@ -408,7 +408,6 @@ class Client(object):
     # Re factored this - WM
     def _sync(self):
         start = time()
-        self.log.debug("syncing...")
 
         if not self._check_auth_token():
             return
@@ -479,7 +478,7 @@ class Client(object):
                 self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
 
     def deploy(self):
-        """Deploy latest firmware"""
+        """Deploy latest firmware."""
         self.log.info("requesting firmware...")
         with self.remote.batch() as batch:
             batch.call_with_id('register_result',

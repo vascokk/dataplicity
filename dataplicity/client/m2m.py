@@ -1,7 +1,4 @@
-"""
-Manages M2M connections
-
-"""
+"""Manages M2M connections."""
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -18,6 +15,8 @@ log = logging.getLogger('dataplicity.m2m')
 
 
 class Terminal(object):
+    """Configured terminal information."""
+
     def __init__(self, name, command, user=None, group=None):
         self.name = name
         self.command = command
@@ -29,10 +28,11 @@ class Terminal(object):
         return "<terminal '{}' command='{}'>".format(self.name, self.command)
 
     def _prune_closed(self):
-        """Remove closed processes"""
+        """Remove closed processes."""
         self.processes[:] = [process for process in self.processes if not process.is_closed]
 
     def launch(self, channel, size=None):
+        """Launch a terminal instance."""
         if size is None:
             size = [80, 24]
         self._prune_closed()
@@ -71,6 +71,7 @@ class Terminal(object):
 
 
 class AutoConnectThread(threading.Thread):
+    """Maintains a terminal connection."""
 
     def __init__(self, manager, url, identity=None):
         self.manager = manager
@@ -93,7 +94,7 @@ class AutoConnectThread(threading.Thread):
             return self._m2m_client
 
     def close(self):
-        """Close and end the auto-connect thread"""
+        """Close and end the auto-connect thread."""
         self.exit_event.set()
 
     def start_connect(self):
@@ -115,7 +116,7 @@ class AutoConnectThread(threading.Thread):
                     continue
                 if identity != self._identity:
                     self._identity = identity
-            if self.exit_event.wait(1.0):
+            if self.exit_event.wait(5.0):
                 break
         self.manager.set_identity(None)
         with self.lock:
@@ -191,14 +192,14 @@ class M2MManager(object):
             terminal.close()
 
     def set_identity(self, identity):
-        """Sets the m2m identity, and also notifies the dataplicity server if required"""
+        """Sets the m2m identity, and also notifies the dataplicity server if required."""
         if identity != self.identity:
             self.identity = identity
         if identity != self.notified_identity:
             self.notified_identity = self.client.set_m2m_identity(identity)
 
     def on_sync(self, batch):
-        """Called by sync, so it can inject commands in to the batch request"""
+        """Called by sync, so it can inject commands in to the batch request."""
         # deprecated by auto-connect thread
         # May find a use for this at some point
         return

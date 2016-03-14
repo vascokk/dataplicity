@@ -3,18 +3,19 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import json
+import logging
 import os
 import signal
 import shlex
 
-from dataplicity.m2m import proxy
+from . import proxy
 
-import logging
 log = logging.getLogger('dataplicity.m2m')
-import json
 
 
 class RemoteProcess(proxy.Interceptor):
+    """Process managed remotely over m2m."""
 
     def __init__(self, command, channel, user=None, group=None, size=None):
         self.command = command
