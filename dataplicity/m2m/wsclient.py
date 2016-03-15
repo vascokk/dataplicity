@@ -56,6 +56,7 @@ class Channel(object):
         self._data_event = threading.Event()
 
     def __repr__(self):
+        """Show the channel number."""
         return "<channel {}>".format(self.number)
 
     def close(self):
@@ -64,7 +65,7 @@ class Channel(object):
             self.client.close_channel(self.number)
 
     def on_close(self):
-        """Called when the notify_close packet is recieved."""
+        """Called when the notify_close packet is received."""
         if self._closed:
             return
         self._closed = True
@@ -149,6 +150,8 @@ class Channel(object):
 
 
 class ThreadedDispatcher(threading.Thread, Dispatcher):
+    """Dispatches packets from a thread."""
+
     def __init__(self, **kwargs):
         # Why didn't super work here?
         # Because threading.Thread doesn't call super
@@ -191,7 +194,7 @@ class WSClient(ThreadedDispatcher):
                                           **self.kwargs)
 
     def __repr__(self):
-        return 'WSClient({!r})>'.format(self.url)
+        return 'WSClient({!r})'.format(self.url)
 
     def __enter__(self):
         self.wait_ready()
@@ -207,9 +210,11 @@ class WSClient(ThreadedDispatcher):
 
     @property
     def open_channels(self):
+        """List of open channels."""
         return self.channels.keys()
 
     def connect(self, wait=True, timeout=None):
+        """Connect and optinally wait until we are ready to communicate with the server."""
         self.start()
         if wait:
             return self.wait_ready(timeout=timeout)
@@ -250,6 +255,11 @@ class WSClient(ThreadedDispatcher):
     def close_channel(self, channel_no):
         log.debug("request close")
         self.send('request_close', port=channel_no)
+
+    def hard_close_channels(self):
+        """Called when all the channels have been abruptly closed."""
+        for channel in self.channels.values():
+            channel.on_close()
 
     def run(self):
         self._started = False
@@ -319,15 +329,20 @@ class WSClient(ThreadedDispatcher):
     def on_open(self, app):
         """Called when WS is opened."""
         log.debug("websocket opened")
-        if self.identity is None:
-            self.send(PacketType.request_join)
-        else:
-            self.send(PacketType.request_identify, uuid=self.identity)
+        if not self.is_closed:
+            if self.identity is None:
+                self.send(PacketType.request_join)
+            else:
+                self.send(PacketType.request_identify, uuid=self.identity)
 
     def on_message(self, app, data):
         """On a WS message."""
-        packet = bencode.decode(data)
-        self.on_packet(packet)
+        try:
+            packet = bencode.decode(data)
+        except:
+            log.exception('packet could not be decoded')
+        else:
+            self.on_packet(packet)
 
     def on_error(self, app, error):
         """Called on WS error."""
@@ -337,6 +352,13 @@ class WSClient(ThreadedDispatcher):
         self.identity = None
         self.close_event.set()
         self.ready_event.set()
+        self.clear_callbacks()
+        self.hard_close_channels()
+        try:
+            # Not entirely sure if this is neccesary
+            self.app.close()
+        except:
+            log.exception('error closing ws app in on_error')
 
     def on_close(self, app):
         self.log.debug('connection closed by peer')
@@ -344,11 +366,16 @@ class WSClient(ThreadedDispatcher):
         self.identity = None
         self.close_event.set()
         self.ready_event.set()
+        self.clear_callbacks()
 
     def on_packet(self, packet):
-        packet_type = packets.PacketType(packet[0])
-        packet_body = packet[1:]
-        self.dispatch(packet_type, packet_body)
+        try:
+            packet_type = packets.PacketType(packet[0])
+            packet_body = packet[1:]
+        except:
+            log.exception('packet is badly formatted')
+        else:
+            self.dispatch(packet_type, packet_body)
 
     def channel_write(self, channel, data):
         self.send(PacketType.request_send, channel=channel, data=data)
@@ -362,23 +389,29 @@ class WSClient(ThreadedDispatcher):
 
     @expose(PacketType.set_identity)
     def handle_set_identity(self, packet_type, identity):
-        self.identity = identity
-        self.log.debug('setting identity to %s', self.identity)
+        """Server is telling us about our identity."""
+        if not self.is_closed:
+            self.identity = identity
+            self.log.debug('setting identity to %s', self.identity)
 
     @expose(PacketType.ping)
     def handle_ping(self, packet_type, data):
+        """Ping send from the server, send back a pong with the same data."""
         self.send('pong', data=data[:1024])
 
     @expose(PacketType.welcome)
     def handle_welcome(self, packet_type):
+        """Welcome packet means we can start talking to the m2m server."""
         self.ready_event.set()
 
     @expose(PacketType.log)
     def handle_log(self, packet_type, msg):
+        """The server has sent a message for us to write to the logs."""
         server_log.info(msg)
 
     @expose(PacketType.route)
     def handle_route(self, packet_type, channel, data):
+        """Route packet containing data to write to a 'channel'."""
         channel = self.get_channel(channel)
         if self.channel_callback is not None:
             try:
@@ -389,6 +422,7 @@ class WSClient(ThreadedDispatcher):
 
     @expose(PacketType.route_control)
     def handle_route_control(self, packet_type, channel, data):
+        """A control packet is out of band data associated with an existing channel."""
         channel = self.get_channel(channel)
         if self.control_callback is not None:
             try:
@@ -399,11 +433,13 @@ class WSClient(ThreadedDispatcher):
 
     @expose(PacketType.notify_open)
     def on_notify_open(self, packet_type, channel_no):
+        """The server has told us of a new channel."""
         channel = self.get_channel(channel_no)
         log.debug('%s opened', channel)
 
     @expose(PacketType.notify_close)
     def on_notify_close(self, packet_type, channel_no):
+        """The server has told us of a channel being closed."""
         log.debug('%s closed', channel_no)
         if self.has_channel(channel_no):
             channel = self.get_channel(channel_no)
@@ -412,15 +448,18 @@ class WSClient(ThreadedDispatcher):
 
     @expose(PacketType.notify_login_success)
     def on_login_success(self, packet_type, user):
+        """Logged in users have special privalages (typically not needed by dpcore clients)."""
         self.user = user
         log.debug('logged in as %s', user)
 
     @expose(PacketType.response)
     def on_response(self, packet_type, command_id, result):
+        """We have received a response to a command."""
         self.callback(command_id, result)
 
     @expose(PacketType.instruction)
     def on_instruction_packet(self, packet_type, sender, data):
+        """An instruction packet contains application specific data."""
         self.on_instruction(sender, data)
 
 

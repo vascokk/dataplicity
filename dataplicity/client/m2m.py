@@ -105,19 +105,25 @@ class AutoConnectThread(threading.Thread):
             self._m2m_client.connect(wait=False)
 
     def run(self):
+        # Immediately start the connect process
         self.start_connect()
-        self.m2m_client.wait_ready(5)
+
         while 1:
-            identity = self.m2m_client.wait_ready(0)
+            # Get the identity, and tell the server about it
+            identity = self._identity = self.m2m_client.wait_ready(10)
             self.manager.set_identity(identity)
+
             with self.lock:
-                if not identity and self.m2m_client.is_closed:
+                # If we aren't connected, kick off the connect process
+                if not identity or self.m2m_client.is_closed:
                     self.start_connect()
-                    continue
-                if identity != self._identity:
-                    self._identity = identity
-            if self.exit_event.wait(5.0):
+
+            # We are connected, so wait on the exit event
+            # The timeout prevents hammering of the server
+            if self.exit_event.wait(3.0):
                 break
+
+        # Tell the server we are no longer connected to m2m
         self.manager.set_identity(None)
         with self.lock:
             if self.m2m_client is not None:
@@ -192,7 +198,7 @@ class M2MManager(object):
             terminal.close()
 
     def set_identity(self, identity):
-        """Sets the m2m identity, and also notifies the dataplicity server if required."""
+        """Set the m2m identity, and also notifies the dataplicity server if required."""
         if identity != self.identity:
             self.identity = identity
         if identity != self.notified_identity:
