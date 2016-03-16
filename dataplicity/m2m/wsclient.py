@@ -175,7 +175,6 @@ class WSClient(ThreadedDispatcher):
 
         self._started = False
         self._closed = False
-        self._active = False
         self.identity = uuid
         self.channels = {}
 
@@ -280,14 +279,13 @@ class WSClient(ThreadedDispatcher):
             log.exception('error closing app')
 
     def close(self, timeout=5):
-        if not self.close_event.is_set() and self._started:
+        if not self._closed and self._started:
             self.send(PacketType.request_leave)
             self.close_event.wait(timeout)
             self.clear_callbacks()
-        self.ready_event.set()
-        self._started = False
         self._closed = True
         self.identity = None
+        self.ready_event.set()
         self.app.close()
 
     def wait_ready(self, timeout=None):
@@ -305,6 +303,7 @@ class WSClient(ThreadedDispatcher):
         return self.identity
 
     def wait_close(self):
+        """Wait for the close event."""
         while 1:
             if self.close_event.wait(1):
                 break
@@ -352,8 +351,8 @@ class WSClient(ThreadedDispatcher):
         self.identity = None
         self.close_event.set()
         self.ready_event.set()
-        self.clear_callbacks()
         self.hard_close_channels()
+        self.clear_callbacks()
         try:
             # Not entirely sure if this is neccesary
             self.app.close()
@@ -361,6 +360,7 @@ class WSClient(ThreadedDispatcher):
             log.exception('error closing ws app in on_error')
 
     def on_close(self, app):
+        """Called by WS app when socket closes."""
         self.log.debug('connection closed by peer')
         self._closed = True
         self.identity = None
@@ -448,7 +448,7 @@ class WSClient(ThreadedDispatcher):
 
     @expose(PacketType.notify_login_success)
     def on_login_success(self, packet_type, user):
-        """Logged in users have special privalages (typically not needed by dpcore clients)."""
+        """Logged in users have special privileges (typically not needed by dpcore clients)."""
         self.user = user
         log.debug('logged in as %s', user)
 
