@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 from __future__ import unicode_literals
+import subprocess
 
 from dataplicity import constants
 from dataplicity.m2m import WSClient, EchoService
@@ -248,6 +249,9 @@ class M2MManager(object):
             service = data['service']
             route = data['route']
             self.open_portforward(service, route)
+        elif action == 'reboot-device':
+            command = '/usr/bin/sudo /sbin/reboot'
+            subprocess.call(command.split())
 
     def open_terminal(self, name, port, size=None):
         terminal = self.get_terminal(name)
