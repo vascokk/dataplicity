@@ -1,1 +1,1 @@
-__version__ = "0.3.19"
+from ._version import VERSION as __version__

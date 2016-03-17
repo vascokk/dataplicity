@@ -1,5 +1,5 @@
-from __future__ import unicode_literals
 from __future__ import print_function
+from __future__ import unicode_literals
 
 """
 Encode / Decode Bencode (http://en.wikipedia.org/wiki/Bencode)
@@ -88,19 +88,19 @@ def encode(obj):
 
 
 def decode(data):
-    """Decode Bencode, return an object"""
+    """Decode Bencode, return an object."""
     assert isinstance(data, bytes), "decode takes bytes"
     return _decode(io.BytesIO(data).read)
 
 
 def _decode(read):
-    """decoder implementation, read should be a callable that returns number of bytes"""
+    """Decode bebcode, `read` should be a callable that returns number of bytes."""
     # TODO: Some input validation
     obj_type = read(1)
     if obj_type == b'e':
         return None
     if obj_type == b'i':
-        number_bytes = ''
+        number_bytes = b''
         while 1:
             c = read(1)
             if not c.isdigit():
@@ -141,6 +141,7 @@ def _decode(read):
 class StringDecoder(object):
     """
     A bencode stream decoder.
+
     Turns a bencode string stream in to a number of discreet strings.
 
     """
@@ -154,7 +155,6 @@ class StringDecoder(object):
         that there should be no maximum string size.
 
         """
-
         self.max_size = max_size
 
         self.data_pos = 0
@@ -172,11 +172,11 @@ class StringDecoder(object):
         return "<benstring decoder, {} bytes in buffer>".format(count)
 
     def peek_buffer(self):
-        """Returns any bytes not used by decoder."""
+        """Return any bytes not used by decoder."""
         return self.data_out.getvalue()
 
     def reset(self):
-        """Resets decoder to initial state, and discards any cached stream data."""
+        """Reset decoder to initial state, and discards any cached stream data."""
         self.data_pos = 0
         self.string_start = 0
         self.size_string = b""
@@ -190,10 +190,9 @@ class StringDecoder(object):
         """
         A generator that yields 0 or more strings from the given data.
 
-        data -- A string containing complete or partial benstring data
+        data -- A string containing complete or partial benstring data.
 
         """
-
         if not isinstance(data, bytes):
             raise ValueError("data should be of type 'bytes'")
 
@@ -285,19 +284,3 @@ if __name__ == '__main__':
                 self.assertEqual(decoded_data, self.test_data.split())
 
     unittest.main()
-
-
-
-# if __name__ == "__main__":
-#     print(encode(b'Hello'))
-
-#     print(encode([1, b'test']))
-
-#     d = encode({b'foo': b'bar', b'l': [1, 2, 3]})
-#     print(d)
-#     print(decode(d))
-
-#     d = {b"publisher": b"bob", b"publisher-webpage": b"www.example.com", b"publisher.location": b"home"}
-#     print(encode(d))
-
-#     print(decode(encode(d)))

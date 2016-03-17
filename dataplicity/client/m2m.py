@@ -1,7 +1,4 @@
-"""
-Manages M2M connections
-
-"""
+"""Manages M2M connections."""
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -19,6 +16,8 @@ log = logging.getLogger('dataplicity.m2m')
 
 
 class Terminal(object):
+    """Configured terminal information."""
+
     def __init__(self, name, command, user=None, group=None):
         self.name = name
         self.command = command
@@ -30,10 +29,11 @@ class Terminal(object):
         return "<terminal '{}' command='{}'>".format(self.name, self.command)
 
     def _prune_closed(self):
-        """Remove closed processes"""
+        """Remove closed processes."""
         self.processes[:] = [process for process in self.processes if not process.is_closed]
 
     def launch(self, channel, size=None):
+        """Launch a terminal instance."""
         if size is None:
             size = [80, 24]
         self._prune_closed()
@@ -72,12 +72,13 @@ class Terminal(object):
 
 
 class AutoConnectThread(threading.Thread):
+    """Maintains a terminal connection."""
 
-    def __init__(self, manager, url):
+    def __init__(self, manager, url, identity=None):
         self.manager = manager
         self.url = url
         self._m2m_client = None
-        self._identity = None
+        self._identity = identity
         self.lock = threading.RLock()
         self.exit_event = threading.Event()
         threading.Thread.__init__(self)
@@ -94,31 +95,36 @@ class AutoConnectThread(threading.Thread):
             return self._m2m_client
 
     def close(self):
-        """Close and end the auto-connect thread"""
+        """Close and end the auto-connect thread."""
         self.exit_event.set()
 
     def start_connect(self):
         with self.lock:
             log.debug('connecting to %s', self.url)
-            self._identity = None
-            self._m2m_client = M2MClient(self.url, log=log)
+            self._m2m_client = M2MClient(self.url, log=log, uuid=self._identity)
             self._m2m_client.set_manager(self.manager)
             self._m2m_client.connect(wait=False)
 
     def run(self):
+        # Immediately start the connect process
         self.start_connect()
-        self.m2m_client.wait_ready(5)
+
         while 1:
-            identity = self.m2m_client.wait_ready(0)
+            # Get the identity, and tell the server about it
+            identity = self._identity = self.m2m_client.wait_ready(10)
             self.manager.set_identity(identity)
+
             with self.lock:
-                if not identity and self.m2m_client.is_closed:
+                # If we aren't connected, kick off the connect process
+                if not identity or self.m2m_client.is_closed:
                     self.start_connect()
-                    continue
-                if identity != self._identity:
-                    self._identity = identity
-            if self.exit_event.wait(1.0):
+
+            # We are connected, so wait on the exit event
+            # The timeout prevents hammering of the server
+            if self.exit_event.wait(3.0):
                 break
+
+        # Tell the server we are no longer connected to m2m
         self.manager.set_identity(None)
         with self.lock:
             if self.m2m_client is not None:
@@ -144,14 +150,14 @@ class M2MClient(WSClient):
 
 class M2MManager(object):
 
-    def __init__(self, client, url):
+    def __init__(self, client, url, identity=None):
         self.client = client
         self.url = url
+        self.identity = identity
         self.terminals = {}
-        self.identity = None
         self.notified_identity = None
         self.connecting_semaphore = threading.Semaphore()
-        self.connect_thread = AutoConnectThread(self, url)
+        self.connect_thread = AutoConnectThread(self, url, identity=self.identity)
         self.connect_thread.start()
 
     @property
@@ -172,7 +178,11 @@ class M2MManager(object):
             return None
         log.debug('m2m url is %s', url)
 
-        manager = cls(client, url)
+        identity = conf.get('m2m', 'identity', None)
+        if identity is not None:
+            log.debug('m2m identity is %s (works with internal development server only)', identity)
+
+        manager = cls(client, url, identity=identity)
 
         for section, name in conf.qualified_sections('terminal'):
             cmd = conf.get(section, 'command', os.environ.get('SHELL', None))
@@ -189,14 +199,14 @@ class M2MManager(object):
             terminal.close()
 
     def set_identity(self, identity):
-        """Sets the m2m identity, and also notifies the dataplicity server if required"""
+        """Set the m2m identity, and also notifies the dataplicity server if required."""
         if identity != self.identity:
             self.identity = identity
         if identity != self.notified_identity:
             self.notified_identity = self.client.set_m2m_identity(identity)
 
     def on_sync(self, batch):
-        """Called by sync, so it can inject commands in to the batch request"""
+        """Called by sync, so it can inject commands in to the batch request."""
         # deprecated by auto-connect thread
         # May find a use for this at some point
         return
@@ -235,6 +245,10 @@ class M2MManager(object):
         elif action == "open-echo":
             port = data['port']
             self.open_echo_service(port)
+        elif action == "open-portforward":
+            service = data['service']
+            route = data['route']
+            self.open_portforward(service, route)
         elif action == 'reboot-device':
             command = '/usr/bin/sudo /sbin/reboot'
             subprocess.call(command.split())
@@ -255,3 +269,6 @@ class M2MManager(object):
     def open_echo_service(self, port):
         log.debug('opening echo service on m2m port %s', port)
         EchoService(self.m2m_client.get_channel(port))
+
+    def open_portforward(self, service, route):
+        self.client.port_forward.open_service(service, route)

@@ -55,11 +55,13 @@ if PY2:
     from urllib import urlencode, quote
     from itertools import izip_longest as zip_longest
     from urllib2 import urlopen, HTTPError
+    import Queue as queue
 else:
     from urllib.parse import urlparse, parse_qs, urlunparse
     from urllib.parse import urlencode, quote
     from itertools import zip_longest
     from urllib.request import urlopen, HTTPError
+    import queue
 
 
 # pickle is the C version on PY3

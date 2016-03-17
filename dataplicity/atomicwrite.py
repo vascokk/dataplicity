@@ -1,12 +1,12 @@
-from __future__ import unicode_literals
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import io
 
 
 class AtomicWriter(object):
-    """Context manager to perform atomic writes"""
+    """Context manager to perform atomic writes."""
 
     def __init__(self, path, mode='w'):
         self.path = path
@@ -32,7 +32,7 @@ class AtomicWriter(object):
 
 
 def open(path, mode='w'):
-    """Replaces builtin, but ensures atomic write"""
+    """Replace builtin, but ensures atomic write."""
     return AtomicWriter(path, mode=mode)
 
 

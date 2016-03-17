@@ -9,17 +9,21 @@ class Run(SubCommand):
     def add_arguments(self, parser):
         parser.add_argument('--no-update', dest="noupdate", action="store_true", default=False,
                             help="disable auto update")
+        parser.add_argument('--no-sync', dest="nosync", action="store_true", default=False,
+                            help="do not sync (for debugging purposes)")
         return parser
 
     def make_daemon(self, debug=True):
+        args = self.args
         if debug is None:
-            debug = self.args.debug
+            debug = args.debug
         self.app.init_logging()
         dataplicity_daemon = Daemon(self.app.conf,
                                     foreground=True,
                                     debug=debug,
-                                    auto_update=not self.args.noupdate,
-                                    rpc_url=self.args.server_url)
+                                    auto_update=not args.noupdate,
+                                    no_sync=args.nosync,
+                                    rpc_url=args.server_url)
         return dataplicity_daemon
 
     def run(self):
