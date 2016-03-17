@@ -132,7 +132,7 @@ class Connection(threading.Thread):
 
     def connect(self):
         """Start thread, and connect to local server."""
-        # Connect may block, so do it in thread
+        # Connect may block, so do it in a thread
         self.start()
 
     def _connect(self):
@@ -146,7 +146,6 @@ class Connection(threading.Thread):
             _socket.setblocking(0)
         except IOError:
             log.exception('IO Error when connecting')
-            # self.send(PacketType.remote_error, e.errno, py2bytes(e))
             return False
         except:
             log.exception('error connecting')
