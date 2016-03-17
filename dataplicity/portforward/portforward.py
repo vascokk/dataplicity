@@ -155,7 +155,6 @@ class Connection(threading.Thread):
             self.socket = _socket
             self._flush_buffer()
             return True
-        return False
 
     def on_channel_data(self, data):
         """Called by m2m channel."""
