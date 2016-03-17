@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-from dataplicity import __version__ as VERSION
 
 classifiers = [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
     'Programming Language :: Python',
 ]
+
+# http://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
+with open('dataplicity/_version.py') as f:
+    exec(f.read())
 
 with open('README.md') as f:
     long_desc = f.read()
@@ -32,10 +35,9 @@ setup(
 
     install_requires=[
         'websocket-client',
-        'python-daemon>=2.0.5',
         'fs>=0.5.0',
         'enum34',
-        #'docutils',
         'six'
+        'python-daemon==2.1.1',
     ]
 )
