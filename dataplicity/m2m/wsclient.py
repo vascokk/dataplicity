@@ -51,6 +51,7 @@ class Channel(object):
 
         self._data_callback = None
         self._close_callback = None
+        self._control_callback = None
         self._lock = threading.RLock()
         self.deque = deque()
         self._data_event = threading.Event()
