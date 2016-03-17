@@ -35,7 +35,7 @@ setup(
         'python-daemon>=2.0.5',
         'fs>=0.5.0',
         'enum34',
-        'docutils',
+        #'docutils',
         'six'
     ]
 )
