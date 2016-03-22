@@ -267,6 +267,7 @@ class Client(object):
             self.log.exception('unable to set m2m identity')
             return None
         else:
+            self.log.debug('server received m2m identity %s', identity)
             return identity
 
     def _sync_samples(self, batch):

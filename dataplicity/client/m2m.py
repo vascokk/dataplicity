@@ -207,9 +207,9 @@ class M2MManager(object):
 
     def on_sync(self, batch):
         """Called by sync, so it can inject commands in to the batch request."""
-        # deprecated by auto-connect thread
-        # May find a use for this at some point
-        return
+        # Send the m2m identity on every sync
+        # This shouldn't be neccesary, but could mitigate any screw ups server side
+        batch.notify('m2m.associate', identity=self.identity or '')
 
     def close(self):
         log.debug('m2m manager close')

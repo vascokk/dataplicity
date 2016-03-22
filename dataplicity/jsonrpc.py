@@ -1,12 +1,12 @@
-from __future__ import unicode_literals
 from __future__ import print_function
-
-from dataplicity.compat import urlopen
+from __future__ import unicode_literals
 
 import json
-
-
 import logging
+
+from dataplicity.compat import urlopen, text_type
+
+
 log = logging.getLogger('dataplicity')
 
 
@@ -94,7 +94,7 @@ class Batch(object):
             self.send()
 
     def call(self, method, **params):
-        """Add a call to the batch, using a default id"""
+        """Add a call to the batch, using a default id."""
         call = {
             "jsonrpc": "2.0",
             "method": method,
@@ -105,7 +105,7 @@ class Batch(object):
         self.methods[call['id']] = method
 
     def call_with_id(self, call_id, method, **params):
-        """Add a call to the batch with a supplied id"""
+        """Add a call to the batch with a supplied id."""
         if call_id in self.ids_used:
             raise ValueError("duplicate call id in batch")
         call = {
@@ -140,7 +140,7 @@ class Batch(object):
         self.results = {r['id']: r for r in response if 'id' in r and 'error' not in r}
 
     def get_result(self, call_id, default=Ellipsis):
-        """Get a result from the batch, potentially raising rpc errors"""
+        """Get a result from the batch, potentially raising rpc errors."""
         if call_id in self.results:
             return self.results[call_id].get('result', None)
         elif call_id in self.errors:
@@ -153,7 +153,7 @@ class Batch(object):
 
 
 class JSONRPC(object):
-    """A client for a JSONRPC server"""
+    """A client for a JSONRPC server."""
 
     unknown_error_msg = "the server did not supply further information"
 
@@ -166,7 +166,10 @@ class JSONRPC(object):
         return self.call_id
 
     def _send(self, call):
-        call_json = json.dumps(call).encode('utf-8')
+        call_json = json.dumps(call)
+        # Py2 returns bytes, Py3 returns unicode str
+        if isinstance(call_json, text_type):
+            call_json = call_json.encode('utf-8')
         url_file = None
         try:
             try:
@@ -175,12 +178,12 @@ class JSONRPC(object):
             finally:
                 if url_file is not None:
                     url_file.close()
-        except Exception as e: # TODO: Exceptions are different for Python 2/3
+        except Exception as e:
             raise ServerUnreachableError(self.url, e)
         return response_json
 
     def call(self, method, **params):
-        """Call a remote method"""
+        """Call a remote method."""
         call_id = self.new_call_id()
         call = {
             "jsonrpc": "2.0",
@@ -211,7 +214,7 @@ class JSONRPC(object):
         return response.get('result', None)
 
     def notify(self, method, **params):
-        """Send a notification to the server"""
+        """Send a notification to the server."""
         notify = {
             "jsonrpc": "2.0",
             "method": method,
@@ -220,7 +223,7 @@ class JSONRPC(object):
         self._send(notify)
 
     def batch(self):
-        """Create a batch object that can be used to send multiple calls / notifications"""
+        """Create a batch object that can be used to send multiple calls / notifications."""
         return Batch(self)
 
     def _handle_error(self, method, error):
