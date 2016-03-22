@@ -132,6 +132,7 @@ class AutoConnectThread(threading.Thread):
 
 
 class M2MClient(WSClient):
+    """Client for M2M server."""
 
     def set_manager(self, manager):
         self._manager = manager
@@ -149,6 +150,7 @@ class M2MClient(WSClient):
 
 
 class M2MManager(object):
+    """Manages M2M Services."""
 
     def __init__(self, client, url, identity=None):
         self.client = client
@@ -209,6 +211,7 @@ class M2MManager(object):
         """Called by sync, so it can inject commands in to the batch request."""
         # Send the m2m identity on every sync
         # This shouldn't be neccesary, but could mitigate any screw ups server side
+        self.log.debug('syncing m2m identity (%s)', self.identity or '<None>')
         batch.notify('m2m.associate', identity=self.identity or '')
 
     def close(self):
@@ -250,8 +253,8 @@ class M2MManager(object):
             route = data['route']
             self.open_portforward(service, route)
         elif action == 'reboot-device':
-            command = '/usr/bin/sudo /sbin/reboot'
-            subprocess.call(command.split())
+            log.debug('reboot requested')
+            self.reboot()
 
     def open_terminal(self, name, port, size=None):
         terminal = self.get_terminal(name)
@@ -272,3 +275,14 @@ class M2MManager(object):
 
     def open_portforward(self, service, route):
         self.client.port_forward.open_service(service, route)
+
+    def reboot(self):
+        """Initiate a reboot."""
+        command = '/usr/bin/sudo /sbin/reboot'
+        try:
+            output = subprocess.check_output(command.split())
+        except subprocess.CalledProcessError as e:
+            log.debug('reboot failed with return code %s', e.returncode)
+        else:
+            log.debug('[reboot]')
+            log.debug(output)

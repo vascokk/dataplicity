@@ -206,7 +206,7 @@ class Client(object):
 
     @property
     def auth_token(self):
-        """get the auth_token, which may be in dataplicity.cfg, or reference another file."""
+        """Get the auth_token, which may be in dataplicity.cfg, or reference another file."""
         if self._auth_token is None:
             return None
         if self._auth_token.startswith('file:'):
