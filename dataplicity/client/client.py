@@ -10,7 +10,7 @@ from dataplicity.client.m2m import M2MManager
 from dataplicity.portforward import PortForwardManager
 from dataplicity.rc.manager import RCManager
 from dataplicity.client.exceptions import ForceRestart
-from dataplicity.jsonrpc import JSONRPC
+from dataplicity.jsonrpc import JSONRPC, JSONRPCError
 from dataplicity import constants
 from dataplicity import firmware
 
@@ -238,26 +238,36 @@ class Client(object):
             self._sync()
 
     def set_m2m_identity(self, identity):
-        if self.auth_token is not None:
-            try:
-                self.log.debug('notiying server (%s) of m2m identity (%s)',
-                               self.remote.url,
-                               identity or '<None>')
-                with self.remote.batch() as batch:
-                    # Authenticate
-                    batch.call_with_id('authenticate_result',
-                                       'device.check_auth',
-                                       device_class=self.device_class,
-                                       serial=self.serial,
-                                       auth_token=self.auth_token)
-                    batch.notify('m2m.associate', identity=identity or '')
-                return identity
-            except:
-                self.log.exception('unable to set m2m identity')
-        else:
+        if self.auth_token is None:
             if not self.disable_sync:
                 self.log.debug("skipping m2m identity notify because we don't have an auth token")
             return None
+
+        try:
+            self.log.debug('notiying server (%s) of m2m identity (%s)',
+                           self.remote.url,
+                           identity or '<None>')
+            with self.remote.batch() as batch:
+                batch.call_with_id('authenticate_result',
+                                   'device.check_auth',
+                                   device_class=self.device_class,
+                                   serial=self.serial,
+                                   auth_token=self.auth_token)
+                batch.call_with_id('associate_result',
+                                   'm2m.associate',
+                                   identity=identity or '')
+            # These methods may potentially throw JSONRPCErrors
+            batch.get_result('authenticate_result')
+            batch.get_result('associate_result')
+        except JSONRPCError as e:
+            self.log.error('unable to associate m2m identity %s %s %s',
+                           e.method, e.code, e.message)
+            return None
+        except:
+            self.log.exception('unable to set m2m identity')
+            return None
+        else:
+            return identity
 
     def _sync_samples(self, batch):
         # Add samples
@@ -467,7 +477,6 @@ class Client(object):
             self._update_conf(batch)
 
             ellapsed = time() - start
-            self.log.debug('sync complete {:0.2f}s'.format(ellapsed))
 
         finally:
             # We have to run this code so we have a chance to update, if a bug is causing the sync handler to fail
