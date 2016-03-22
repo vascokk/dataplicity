@@ -211,7 +211,7 @@ class M2MManager(object):
         """Called by sync, so it can inject commands in to the batch request."""
         # Send the m2m identity on every sync
         # This shouldn't be neccesary, but could mitigate any screw ups server side
-        self.log.debug('syncing m2m identity (%s)', self.identity or '<None>')
+        log.debug('syncing m2m identity (%s)', self.identity or '<None>')
         batch.notify('m2m.associate', identity=self.identity or '')
 
     def close(self):
