@@ -248,7 +248,7 @@ class M2MManager(object):
         elif action == "open-echo":
             port = data['port']
             self.open_echo_service(port)
-        elif action == "open-portforward":
+        elif action == 'open-portforward':
             service = data['service']
             route = data['route']
             self.open_portforward(service, route)

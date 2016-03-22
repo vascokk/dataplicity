@@ -416,7 +416,6 @@ class Client(object):
                     # Will error out on the next command
         return True
 
-    # Re factored this - WM
     def _sync(self):
         start = time()
 
@@ -435,6 +434,7 @@ class Client(object):
                 self.log.exception("unable to deploy firmware")
             raise ForceRestart("new firmware")
 
+        self.log.debug('sync started')
         samplers_updated = []
         random.seed()
         sync_id = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in xrange(12))
@@ -448,6 +448,9 @@ class Client(object):
                                    serial=self.serial,
                                    auth_token=self.auth_token,
                                    sync_id=sync_id)
+
+                # Give m2m a higher priority in the unlikely event that something fails below
+                self._sync_m2m(batch)
 
                 # Tell the server which firmware we're running
                 batch.call_with_id('set_firmware_result',
@@ -463,7 +466,6 @@ class Client(object):
                 samplers_updated = self._sync_samples(batch)
                 self._sync_conf(batch)
                 self._sync_timelines(batch)
-                self._sync_m2m(batch)
 
             # get_result will throw exceptions with (hopefully) helpful error messages if they fail
             batch.get_result('authenticate_result')
