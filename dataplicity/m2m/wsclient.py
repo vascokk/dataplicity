@@ -194,19 +194,26 @@ class WSClient(ThreadedDispatcher):
                                           **self.kwargs)
 
     def __repr__(self):
+        """Return the URL."""
         return 'WSClient({!r})'.format(self.url)
 
     def __enter__(self):
+        """Wait until the client is connected and ready."""
         self.wait_ready()
         return self
 
     def __exit__(self, *args, **kwargs):
+        """Auto close the client."""
         if not self.close_event.is_set():
             self.close()
 
     @property
     def is_closed(self):
         return self._closed
+
+    @property
+    def is_ready(self):
+        return self.ready_event.is_set()
 
     @property
     def open_channels(self):
@@ -461,7 +468,10 @@ class WSClient(ThreadedDispatcher):
     @expose(PacketType.instruction)
     def on_instruction_packet(self, packet_type, sender, data):
         """An instruction packet contains application specific data."""
-        self.on_instruction(sender, data)
+        try:
+            self.on_instruction(sender, data)
+        except:
+            log.excetion('error handling instruction')
 
 
 if __name__ == "__main__":
