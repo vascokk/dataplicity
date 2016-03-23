@@ -158,7 +158,7 @@ class M2MManager(object):
         self.identity = identity
         self.terminals = {}
         self.notified_identity = None
-        self.connect_thread = AutoConnectThread(self, self.url, identity=self.identity)
+        self.connect_thread = AutoConnectThread(self, url, identity=self.identity)
         self.connect_thread.start()
 
     @property
@@ -215,8 +215,7 @@ class M2MManager(object):
 
     def close(self):
         log.debug('m2m manager close')
-        if self.connect_thread is not None:
-            self.connect_thread.close()
+        self.connect_thread.close()
         if self.m2m_client is not None:
             self.m2m_client.close()
 
@@ -278,11 +277,8 @@ class M2MManager(object):
 
     def reboot(self):
         """Initiate a reboot."""
+        # TODO: consider initiating a graceful shutdown of dpcore that ends in a rebooot
         command = '/usr/bin/sudo /sbin/reboot'
-        try:
-            output = subprocess.check_output(command.split())
-        except subprocess.CalledProcessError as e:
-            log.debug('reboot failed with return code %s', e.returncode)
-        else:
-            log.debug('[reboot]')
-            log.debug(output)
+        # Why not subprocess.call? Because it will block this process and prevent graceful exit!
+        pid = subprocess.Popen(command.split()).pid
+        log.debug('opened reboot process %s', pid)
