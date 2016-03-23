@@ -238,6 +238,7 @@ class Client(object):
             self._sync()
 
     def set_m2m_identity(self, identity):
+        """Tell the server of our m2m identity, return the identity if it was set, or None if it could not be set."""
         if self.auth_token is None:
             if not self.disable_sync:
                 self.log.debug("skipping m2m identity notify because we don't have an auth token")
@@ -267,6 +268,8 @@ class Client(object):
             self.log.exception('unable to set m2m identity')
             return None
         else:
+            # If we made it here the server has acknowledged it received the identity
+            # It will be sent again on sync anyway, as a precaution
             self.log.debug('server received m2m identity %s', identity)
             return identity
 
