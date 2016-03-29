@@ -121,7 +121,7 @@ class AutoConnectThread(threading.Thread):
 
             # We are connected, so wait on the exit event
             # The timeout prevents hammering of the server
-            if self.exit_event.wait(3.0):
+            if self.exit_event.wait(5.0):
                 break
 
         # Tell the server we are no longer connected to m2m
@@ -132,6 +132,7 @@ class AutoConnectThread(threading.Thread):
 
 
 class M2MClient(WSClient):
+    """Client for M2M server."""
 
     def set_manager(self, manager):
         self._manager = manager
@@ -149,6 +150,7 @@ class M2MClient(WSClient):
 
 
 class M2MManager(object):
+    """Manages M2M Services."""
 
     def __init__(self, client, url, identity=None):
         self.client = client
@@ -156,7 +158,6 @@ class M2MManager(object):
         self.identity = identity
         self.terminals = {}
         self.notified_identity = None
-        self.connecting_semaphore = threading.Semaphore()
         self.connect_thread = AutoConnectThread(self, url, identity=self.identity)
         self.connect_thread.start()
 
@@ -200,16 +201,17 @@ class M2MManager(object):
 
     def set_identity(self, identity):
         """Set the m2m identity, and also notifies the dataplicity server if required."""
-        if identity != self.identity:
-            self.identity = identity
-        if identity != self.notified_identity:
+        self.identity = identity
+        if identity and identity != self.notified_identity:
             self.notified_identity = self.client.set_m2m_identity(identity)
 
     def on_sync(self, batch):
         """Called by sync, so it can inject commands in to the batch request."""
-        # deprecated by auto-connect thread
-        # May find a use for this at some point
-        return
+        # Send the m2m identity on every sync
+        # This shouldn't be neccesary, but could mitigate any screw ups server side
+        if self.identity:
+            log.debug('syncing m2m identity (%s)', self.identity)
+            batch.notify('m2m.associate', identity=self.identity)
 
     def close(self):
         log.debug('m2m manager close')
@@ -225,7 +227,7 @@ class M2MManager(object):
         return self.terminals.get(name, None)
 
     def on_instruction(self, sender, data):
-        log.debug("instruction %r", data)
+        log.debug("instruction %r from %s", data, sender)
         action = data['action']
         if action == 'sync':
             self.client.sync()
@@ -245,13 +247,13 @@ class M2MManager(object):
         elif action == "open-echo":
             port = data['port']
             self.open_echo_service(port)
-        elif action == "open-portforward":
+        elif action == 'open-portforward':
             service = data['service']
             route = data['route']
             self.open_portforward(service, route)
         elif action == 'reboot-device':
-            command = '/usr/bin/sudo /sbin/reboot'
-            subprocess.call(command.split())
+            log.debug('reboot requested')
+            self.reboot()
 
     def open_terminal(self, name, port, size=None):
         terminal = self.get_terminal(name)
@@ -272,3 +274,11 @@ class M2MManager(object):
 
     def open_portforward(self, service, route):
         self.client.port_forward.open_service(service, route)
+
+    def reboot(self):
+        """Initiate a reboot."""
+        # TODO: consider initiating a graceful shutdown of dpcore that ends in a rebooot
+        command = '/usr/bin/sudo /sbin/reboot'
+        # Why not subprocess.call? Because it will block this process and prevent graceful exit!
+        pid = subprocess.Popen(command.split()).pid
+        log.debug('opened reboot process %s', pid)
