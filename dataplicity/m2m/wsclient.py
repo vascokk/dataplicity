@@ -471,7 +471,7 @@ class WSClient(ThreadedDispatcher):
         try:
             self.on_instruction(sender, data)
         except:
-            log.excetion('error handling instruction')
+            log.exception('error handling instruction')
 
 
 if __name__ == "__main__":
