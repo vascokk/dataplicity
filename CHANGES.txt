@@ -1,6 +1,8 @@
 0.3.21
 ------
 
+Fix for reconnect issues
+
 0.3.20
 ------
 
