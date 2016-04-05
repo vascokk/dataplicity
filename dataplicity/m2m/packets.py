@@ -111,6 +111,9 @@ class PacketType(IntEnum):
 
     peer_notify_disconnect = 202
 
+    # Tell peers about a named connection
+    peer_notify_name = 203
+
 
 class M2MPacket(PacketBase):
     """Base class, not a real packet."""
@@ -420,6 +423,14 @@ class PeerNotifyDisconnect(M2MPacket):
 
     type = PacketType.peer_notify_disconnect
     attributes = [('node', bytes)]
+
+
+class PeerNotifyName(M2MPacket):
+    """Notify peer(s) about a named connection."""
+
+    type = PacketType.peer_notify_name
+    attributes = [('node', bytes),
+                  ('name', bytes)]
 
 
 if __name__ == "__main__":
