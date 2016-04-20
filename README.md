@@ -1,7 +1,7 @@
 Dataplicity Core
 ================
 
-Dataplicity Core is a client framework on which Dataplicity Shell (http://shell.dataplicity.com) and other products are built upon.
+Dataplicity Core is a client framework on which Dataplicity (https://dataplicity.com) is built upon.
 
 
 Dependencies

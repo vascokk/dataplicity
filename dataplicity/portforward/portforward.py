@@ -49,28 +49,24 @@ class Connection(threading.Thread):
         """Get a threading.Event object."""
         return self.service.close_event
 
-    @property
-    def remote(self):
-        """Information about remote end."""
-        return "{}:{}".format(self.service.host, self.service.port)
-
     def run(self):
         """Main loop, connects to local server, reads data, and writes it to an m2m channel."""
         log.debug("connection started")
         bytes_written = 0
         try:
             # Connect to remote host
-            connected = self._connect()
-            if not connected:
+            if not self._connect():
                 return
 
             log.debug("entered recv loop")
             # Read all the data we can and write it to the channel
             # TODO: Rework this loop to not use the timeout
             while not self.close_event.is_set():
+                # Block for a period of time until the socket becomes readable, or there is an error
                 try:
                     readable, _, exceptional = select.select([self.socket], [], [self.socket], 5.0)
                 except Exception as e:
+                    # For paranoia only.
                     log.warning('error %s in select', e)
                     break
                 if readable:
@@ -136,14 +132,19 @@ class Connection(threading.Thread):
         self.start()
 
     def _connect(self):
+        """Connect to a local server, return True on success."""
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # No Nagle since we are going for as close to realtime as possible
         _socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        # Set the timeout for initial connect, as default is too high
+        _socket.settimeout(5.0)
+
+        log.debug('connecting to %s', self.service.url)
         try:
-            host = self.service.host
-            port = self.service.port
-            log.debug('connecting to %s', self.remote)
-            _socket.connect((host, port))
-            _socket.setblocking(0)
+            _socket.connect(self.service.host_port)
+        except socket.timeout:
+            log.exception('timed out connecting to server')
+            return False
         except IOError:
             log.exception('IO Error when connecting')
             return False
@@ -151,7 +152,8 @@ class Connection(threading.Thread):
             log.exception('error connecting')
             return False
         else:
-            log.debug("connected to %s", self.remote)
+            log.debug("connected to %s", self.service.url)
+            _socket.setblocking(0)  # set non-blocking
             self.socket = _socket
             self._flush_buffer()
             return True
@@ -204,15 +206,28 @@ class Service(object):
 
     @property
     def manager(self):
+        """Get the manager from weakref."""
         return self._manager()
 
     @property
     def m2m(self):
+        """Get the M2M interface."""
         return self.manager.m2m
 
     @property
     def close_event(self):
+        """The one close event to rule them all."""
         return self.manager.close_event
+
+    @property
+    def host_port(self):
+        """A tuple of (host, port) as a convenience for socket.connect."""
+        return (self.host, self.port)
+
+    @property
+    def url(self):
+        """URL of server we're connecting to."""
+        return "http://{0}:{1}".format(self.host, self.port)
 
     def connect(self, port_no):
         """Add a new connection."""
