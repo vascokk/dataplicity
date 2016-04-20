@@ -221,7 +221,7 @@ class Service(object):
 
     @property
     def host_port(self):
-        """A tuple of (host, port) as a conenvience for socket.connect."""
+        """A tuple of (host, port) as a convenience for socket.connect."""
         return (self.host, self.port)
 
     @property
