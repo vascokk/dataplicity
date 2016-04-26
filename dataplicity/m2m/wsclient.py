@@ -271,8 +271,8 @@ class WSClient(ThreadedDispatcher):
         sockopt = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
         try:
             self.app.run_forever(sockopt=sockopt,
-                                 ping_interval=1,
-                                 ping_timeout=10,
+                                 ping_interval=5,
+                                 ping_timeout=20,
                                  sslopt={"cert_reqs": ssl.CERT_NONE})
         except (SystemExit, KeyboardInterrupt):
             log.info('wsclient exit requested')
