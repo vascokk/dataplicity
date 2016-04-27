@@ -282,7 +282,7 @@ class WSClient(ThreadedDispatcher):
         self.identity = None
         self.ready_event.set()
         try:
-            self.app.close(timeout=1)
+            self.app.close()
         except:
             log.exception('error closing app')
 
