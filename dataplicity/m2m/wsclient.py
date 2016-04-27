@@ -220,7 +220,7 @@ class WSClient(ThreadedDispatcher):
         return self.channels.keys()
 
     def connect(self, wait=True, timeout=None):
-        """Connect and optinally wait until we are ready to communicate with the server."""
+        """Connect and optionally wait until we are ready to communicate with the server."""
         self.start()
         if wait:
             return self.wait_ready(timeout=timeout)
@@ -297,18 +297,11 @@ class WSClient(ThreadedDispatcher):
         self.ready_event.set()
         self.app.close()
 
-    def wait_ready(self, timeout=None):
+    def wait_ready(self, timeout=10):
         """Wait until the server is ready, and return identity."""
-        if timeout is None:
-            while 1:
-                if self.ready_event.wait(1):
-                    break
-        elif timeout > 0.0:
-            wait_time = float(timeout)
-            while wait_time >= 0.0:
-                if self.ready_event.wait(1.0):
-                    break
-                wait_time -= 1.0
+        # Q. What are we waiting for?
+        # A. Establishing a m2m connection, and for the server to send us an identity.
+        self.ready_event.wait(timeout)
         return self.identity
 
     def send(self, packet, *args, **kwargs):
