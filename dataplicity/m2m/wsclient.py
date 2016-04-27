@@ -174,7 +174,6 @@ class WSClient(ThreadedDispatcher):
         kwargs['on_close'] = self.on_close
         self.kwargs = kwargs
 
-        self._started = False
         self._closed = False
         self.identity = uuid
         self.channels = {}
@@ -221,7 +220,7 @@ class WSClient(ThreadedDispatcher):
         return self.channels.keys()
 
     def connect(self, wait=True, timeout=None):
-        """Connect and optinally wait until we are ready to communicate with the server."""
+        """Connect and optionally wait until we are ready to communicate with the server."""
         self.start()
         if wait:
             return self.wait_ready(timeout=timeout)
@@ -269,52 +268,41 @@ class WSClient(ThreadedDispatcher):
             channel.on_close()
 
     def run(self):
-        self._started = False
         sockopt = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
         try:
             self.app.run_forever(sockopt=sockopt,
+                                 ping_interval=5,
+                                 ping_timeout=20,
                                  sslopt={"cert_reqs": ssl.CERT_NONE})
         except (SystemExit, KeyboardInterrupt):
             log.info('wsclient exit requested')
         except:
             log.exception('unable to initialise websocket')
-            self._started = False
-        else:
-            self._started = True
+
+        self.identity = None
+        self.ready_event.set()
         try:
             self.app.close()
         except:
             log.exception('error closing app')
 
     def close(self, timeout=5):
-        if not self._closed and self._started:
+        if not self._closed and self.ready_event.is_set():
             self.send(PacketType.request_leave)
-            self.close_event.wait(timeout)
+            if timeout:
+                self.close_event.wait(timeout)
             self.clear_callbacks()
         self._closed = True
         self.identity = None
         self.ready_event.set()
         self.app.close()
 
-    def wait_ready(self, timeout=None):
+    def wait_ready(self, timeout=10):
         """Wait until the server is ready, and return identity."""
-        if timeout is None:
-            while 1:
-                if self.ready_event.wait(1):
-                    break
-        elif timeout > 0:
-            wait_time = float(timeout)
-            while wait_time >= 0:
-                if self.ready_event.wait(.25):
-                    wait_time -= .25
-                    break
+        # Q. What are we waiting for?
+        # A. Establishing a m2m connection, and for the server to send us an identity.
+        self.ready_event.wait(timeout)
         return self.identity
-
-    def wait_close(self):
-        """Wait for the close event."""
-        while 1:
-            if self.close_event.wait(1):
-                break
 
     def send(self, packet, *args, **kwargs):
         """Send a packet. Will encode if necessary."""
