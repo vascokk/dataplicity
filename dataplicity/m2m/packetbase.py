@@ -7,25 +7,23 @@ Packet management
 """
 
 from dataplicity.m2m import bencode
-from dataplicity.compat import int_types, text_type
+from dataplicity.compat import int_types, text_type, with_metaclass
 
 
 class PacketError(Exception):
-    """A packet format error"""
+    """A packet format error."""
 
 
 class PacketFormatError(PacketError):
-    """Packet is badly formatted"""
-    pass
+    """Packet is badly formatted."""
 
 
 class UnknownPacketError(PacketError):
-    """A packet we don't know how to handle"""
-    pass
+    """A packet we don't know how to handle."""
 
 
 class PacketMeta(type):
-    """Maintains a registry of packet classes"""
+    """Maintains a registry of packet classes."""
 
     def __new__(mcs, name, bases, attrs):
         packet_cls = super(PacketMeta, mcs).__new__(mcs, name, bases, attrs)
@@ -36,8 +34,8 @@ class PacketMeta(type):
         return packet_cls
 
 
-class PacketBase(object):
-    __metaclass__ = PacketMeta
+class PacketBaseType(object):
+    """Metaclass to register packet type."""
 
     registry = {}
 
@@ -67,7 +65,7 @@ class PacketBase(object):
 
     @classmethod
     def create(cls, packet_type, *args, **kwargs):
-        """Dynamically create a packet from its type and parameters"""
+        """Dynamically create a packet from its type and parameters."""
         packet_cls = cls.registry.get(cls.process_packet_type(packet_type))
         if packet_cls is None:
             raise ValueError('no packet type {}'.format(packet_type))
@@ -75,7 +73,7 @@ class PacketBase(object):
 
     @classmethod
     def from_bytes(cls, packet_bytes):
-        """Return a packet from a bytes string"""
+        """Return a packet from a bytes string."""
         try:
             packet_data = bencode.decode(packet_bytes)
         except bencode.DecodeError as e:
@@ -95,7 +93,7 @@ class PacketBase(object):
 
     @classmethod
     def from_body(cls, packet_body):
-        """Return a packet object from a packet body"""
+        """Return a packet object from a packet body."""
         params = {}
         for (attrib_name, attrib_type), value in zip(cls.attributes, packet_body):
             params[attrib_name] = value
@@ -114,7 +112,7 @@ class PacketBase(object):
         return args, kwargs
 
     def init_params(self, args, kwargs):
-        """Initialize from parameters"""
+        """Initialize from parameters."""
         # Default implementation copies named attributes
 
         params = {}
@@ -137,20 +135,24 @@ class PacketBase(object):
             setattr(self, attrib_name, params[attrib_name])
 
     def validate(self):
-        """Check packet data for errors"""
+        """Check packet data for errors."""
         pass
 
     @property
     def as_bytes(self):
-        """packet as bytes"""
+        """Encode the packet as bytes."""
         return self.encode_binary()
 
     def encode_binary(self):
-        """Encode the packet in to a byte string"""
+        """Encode the packet in to a byte string."""
         return bencode.encode(self.encode())
 
     def encode(self):
-        """Encode the packet (including type header)"""
+        """Encode the packet (including type header)."""
         data = ([int(self.type)] +
                 [getattr(self, attrib_name) for attrib_name, attrib_type in self.attributes])
         return data
+
+
+class PacketBase(with_metaclass(PacketMeta, PacketBaseType)):
+    """Base class for packets."""
