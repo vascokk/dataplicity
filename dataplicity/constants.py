@@ -10,4 +10,4 @@ SETTINGS_PATH = "/var/dataplicity/"
 FIRMWARE_PATH = "/srv/dataplicity/fw/"
 TIMELINE_PATH = "/tmp/dataplicitytimeline/"
 PID_PATH = "/var/run/dataplicity.pid"
-M2M_URL = "wss://m2m.dataplicity.com/m2m/"
+M2M_URL = os.environ.get('DATAPLICITY_M2M_URL', "wss://m2m.dataplicity.com/m2m/")
