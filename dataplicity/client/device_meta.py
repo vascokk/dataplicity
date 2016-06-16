@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import platform
 
 from .. import rpi
-from ._version import VERSION
+from .._version import VERSION
 
 
 # Cache the meta dict because it never changes
