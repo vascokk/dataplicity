@@ -357,7 +357,7 @@ class Client(object):
             batch.call_with_id(
                 'set_machine_type_result',
                 'device.set_machine_type',
-                machine_type=meta['machine_type']
+                machine_type=meta['machine_type'] or 'other'
             )
             batch.call_with_id(
                 'set_os_version_result',
@@ -495,6 +495,7 @@ class Client(object):
                                        current_version=self.current_firmware_version)
 
                 if not self._sent_meta:
+                    self.log.debug('sending meta')
                     self._sync_meta(batch)
                 samplers_updated = self._sync_samples(batch)
                 self._sync_conf(batch)
@@ -520,6 +521,7 @@ class Client(object):
                 except Exception as e:
                     self.log.warning('failed to set device meta (%s)', e)
                 else:
+                    # Success! Don't send again.
                     self._sent_meta = True
 
             self._update_samples(batch, samplers_updated)
