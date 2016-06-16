@@ -151,6 +151,11 @@ class Batch(object):
         else:
             raise KeyError("No such call_id in response")
 
+    def check(self, *call_ids):
+        """Check call IDs for exceptions, discard results."""
+        for call_id in call_ids:
+            self.get_result(call_id)
+
 
 class JSONRPC(object):
     """A client for a JSONRPC server."""
