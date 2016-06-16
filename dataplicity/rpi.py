@@ -15,15 +15,16 @@ RPI_REVISIONS = {
     '000f': 'rpi_1b',
     '0010': 'rpi_1b_plus',
     '0011': 'rpi_cm',
-    '0012': 'rpi_a1_plus',
+    '0012': 'rpi_1a_plus',
     '0013': 'rpi_1b_plus',
     'a01041': 'rpi_2b',
     'a21041': 'rpi_2b',
     '900092': 'rpi_0',
-    'a02082': 'rpi_3B',
-    'a22082': 'rpi_3B',
+    'a02082': 'rpi_3b',
+    'a22082': 'rpi_3b',
 
 }
+
 
 def get_machine_type():
     """
