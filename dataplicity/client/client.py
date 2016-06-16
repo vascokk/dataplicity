@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
-from dataplicity.client import settings, serial, tools
+from dataplicity.client import device_meta, settings, serial, tools
 from dataplicity.client.task import TaskManager
 from dataplicity.client.sampler import SamplerManager
 from dataplicity.client.livesettings import LiveSettingsManager
@@ -93,6 +93,7 @@ class Client(object):
         self.create_m2m = create_m2m
         self.disable_sync = disable_sync
         self.rpc_url = rpc_url
+        self._sent_meta = False
 
         self._sync_lock = Lock()
         self.exit_event = Event()
@@ -342,6 +343,33 @@ class Client(object):
         except:
             self.log.exception('error syncing conf')
 
+    def _sync_meta(self, batch):
+        try:
+            meta = device_meta.get_meta()
+        except:
+            self.log.exception('error getting meta')
+        else:
+            batch.call_with_id(
+                'set_agent_version_result',
+                'device.set_agent_version',
+                agent_version=meta['agent_version']
+            )
+            batch.call_with_id(
+                'set_machine_type_result',
+                'device.set_machine_type',
+                machine_type=meta['machine_type']
+            )
+            batch.call_with_id(
+                'set_os_version_result',
+                'device.set_os_version',
+                os_version=meta['os_version']
+            )
+            batch.call_with_id(
+                'set_uname_result',
+                'device.set_uname',
+                uname=meta['uname']
+            )
+
     def _sync_timelines(self, batch):
         # Update timeline(s)
         try:
@@ -466,6 +494,8 @@ class Client(object):
                                        'device.check_firmware',
                                        current_version=self.current_firmware_version)
 
+                if not self._sent_meta:
+                    self._sync_meta(batch)
                 samplers_updated = self._sync_samples(batch)
                 self._sync_conf(batch)
                 self._sync_timelines(batch)
@@ -477,7 +507,20 @@ class Client(object):
             try:
                 batch.get_result('set_firmware_result')
             except Exception as e:
-                self.log.warning("unable to set firmware ({})".format(e))
+                self.log.warning("unable to set firmware (%s)", e)
+
+            if not self._sent_meta:
+                try:
+                    batch.check(
+                        'set_agent_version_result',
+                        'set_machine_type_result',
+                        'set_os_version_result',
+                        'set_uname_result'
+                    )
+                except Exception as e:
+                    self.log.warning('failed to set device meta (%s)', e)
+                else:
+                    self._sent_meta = True
 
             self._update_samples(batch, samplers_updated)
             self._update_conf(batch)
