@@ -114,6 +114,8 @@ class PacketType(IntEnum):
     # Tell peers about a named connection
     peer_notify_name = 203
 
+    peer_close_port = 204
+
 
 class M2MPacket(PacketBase):
     """Base class, not a real packet."""
@@ -431,6 +433,14 @@ class PeerNotifyName(M2MPacket):
     type = PacketType.peer_notify_name
     attributes = [('node', bytes),
                   ('name', bytes)]
+
+
+class PeerClosePort(M2MPacket):
+    """Tell peer about a closed port."""
+
+    type = PacketType.peer_close_port
+    attributes = [('node', bytes),
+                  ('port', int)]
 
 
 if __name__ == "__main__":
